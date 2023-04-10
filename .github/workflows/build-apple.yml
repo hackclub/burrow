@@ -14,15 +14,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - scheme: App (iOS)
+        - scheme: Burrow
           destination: generic/platform=iOS
           platform: iOS
           sdk-name: iphoneos
-        - scheme: App (iOS)
+        - scheme: Burrow
           destination: platform=iOS Simulator,OS=16.2,name=iPhone 14 Pro
           platform: iOS Simulator
           sdk-name: iphonesimulator
-        - scheme: App (macOS)
+        - scheme: Burrow
           destination: platform=macOS
           platform: macOS
           sdk-name: macos

@@ -48,8 +48,4 @@ jobs:
         targets: ${{ join(matrix.targets, ', ') }}
     - name: Build
       shell: bash
-      run: cargo build --verbose --workspace --all-features 
-    - uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --workspace --all-features --target ${{ join(matrix.targets, ' --target ') }}
+      run: cargo build --verbose --workspace --all-features --target ${{ join(matrix.targets, ' --target ') }}
