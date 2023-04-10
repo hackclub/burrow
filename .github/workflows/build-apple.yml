@@ -1,0 +1,70 @@
+name: Apple Build
+on:
+  push:
+    branches:  
+    - main
+  pull_request:
+    branches:
+    - "*"
+jobs:
+  build:
+    name: Build App (${{ matrix.platform }})
+    runs-on: macos-12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - scheme: App (iOS)
+          destination: generic/platform=iOS
+          platform: iOS
+          sdk-name: iphoneos
+        - scheme: App (iOS)
+          destination: platform=iOS Simulator,OS=16.2,name=iPhone 14 Pro
+          platform: iOS Simulator
+          sdk-name: iphonesimulator
+        - scheme: App (macOS)
+          destination: platform=macOS
+          platform: macOS
+          sdk-name: macos
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_14.2.app/Contents/Developer
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        ssh-key: ${{ secrets.DEPLOY_KEY }}
+        submodules: recursive
+    - name: Import Certificate
+      uses: ./.github/actions/import-cert
+      with:
+        certificate: ${{ secrets.DEVELOPER_CERT }}
+        password: ${{ secrets.DEVELOPER_CERT_PASSWORD }}
+    - name: Build
+      id: build
+      uses: ./.github/actions/build-for-testing
+      with:
+        scheme: ${{ matrix.scheme }}
+        destination: ${{ matrix.destination }}
+        app-store-key: ${{ secrets.APPSTORE_KEY }}
+        app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+        app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
+    - name: Xcode Unit Test
+      if: ${{ matrix.xcode-unit-test != '' }}
+      continue-on-error: true
+      uses: ./.github/actions/test-without-building
+      with:
+        scheme: ${{ matrix.scheme }}
+        destination: ${{ matrix.destination }}
+        test-plan: ${{ matrix.xcode-unit-test }}
+        artifact-prefix: unit-tests-${{ matrix.sdk-name }}
+        check-name: Xcode Unit Tests (${{ matrix.platform }})
+    - name: Xcode UI Test
+      if: ${{ matrix.xcode-ui-test != '' }}
+      continue-on-error: true
+      uses: ./.github/actions/test-without-building
+      with:
+        scheme: ${{ matrix.scheme }}
+        destination: ${{ matrix.destination }}
+        test-plan: ${{ matrix.xcode-ui-test }}
+        artifact-prefix: ui-tests-${{ matrix.sdk-name }}
+        check-name: Xcode UI Tests (${{ matrix.platform }})

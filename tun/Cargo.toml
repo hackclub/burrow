@@ -1,0 +1,24 @@
+[package]
+name = "tun"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+libc = "0.2"
+nix = { version = "0.25", features = ["ioctl"] }
+socket2 = "0.4"
+tokio = { version = "1.21", features = [] }
+
+[target.'cfg(windows)'.dependencies]
+libloading = "0.7"
+widestring = "1.0"
+
+[target.'cfg(windows)'.build-dependencies]
+anyhow = "1.0"
+bindgen = "0.61"
+hex-literal = "0.3"
+platforms = "3.0"
+reqwest = { version = "0.11", features = ["native-tls"] }
+sha2 = "0.10"
+tokio = { version = "1.21", features = ["rt"] }
+zip = { version = "0.6", features = ["deflate"] }

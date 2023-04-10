@@ -1,0 +1,37 @@
+name: Build For Testing
+inputs:
+  scheme:
+    description: Scheme
+    required: true
+  destination:
+    description: Destination
+    required: true
+  app-store-key:
+    description: App Store key in PEM PKCS#8 format
+    required: true
+  app-store-key-id:
+    description: App Store key ID
+    required: true
+  app-store-key-issuer-id:
+    description: App Store key issuer ID
+    required: true
+runs:
+  using: composite
+  steps:
+  - shell: bash
+    working-directory: Apple
+    run: |
+      echo "${{ inputs.app-store-key }}" > AuthKey_${{ inputs.app-store-key-id }}.p8
+
+      xcodebuild clean build-for-testing \
+        -allowProvisioningUpdates \
+        -allowProvisioningDeviceRegistration \
+        -authenticationKeyID ${{ inputs.app-store-key-id }} \
+        -authenticationKeyIssuerID ${{ inputs.app-store-key-issuer-id }} \
+        -authenticationKeyPath "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8" \
+        -onlyUsePackageVersionsFromResolvedFile \
+        -scheme '${{ inputs.scheme }}' \
+        -destination '${{ inputs.destination }}' \
+        -resultBundlePath BuildResults.xcresult
+      
+      rm -rf AuthKey_${{ inputs.app-store-key-id }}.p8

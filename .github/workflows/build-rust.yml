@@ -1,0 +1,55 @@
+name: Rust Build
+on:
+  push:
+    branches:  
+    - main
+  pull_request:
+    branches:
+    - "*"
+jobs:
+  build:
+    name: Build Crate (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - os: ubuntu-latest
+          platform: Linux
+          targets:
+          - x86_64-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
+        - os: macos-12
+          platform: macOS
+          targets:
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
+          - aarch64-apple-ios
+          - aarch64-apple-ios-sim
+          - x86_64-apple-ios
+        - os: windows-2022
+          platform: Windows
+          targets:
+          - x86_64-pc-windows-msvc
+          - aarch64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_14.2.app/Contents/Developer
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        ssh-key: ${{ secrets.DEPLOY_KEY }}
+        submodules: recursive
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: stable
+        components: rustfmt
+        targets: ${{ join(matrix.targets, ', ') }}
+    - name: Build
+      shell: bash
+      run: cargo build --verbose --workspace --all-features 
+    - uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --workspace --all-features --target ${{ join(matrix.targets, ' --target ') }}

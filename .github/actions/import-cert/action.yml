@@ -1,0 +1,26 @@
+name: Import Certificate
+inputs:
+  certificate:
+    description: 'The certificate in p12 format, encoded as base64'
+    required: true
+  password:
+    description: 'The certificate password'
+    required: true
+runs:
+  using: composite
+  steps:
+  - shell: bash
+    run: |
+      echo -n "${{ inputs.certificate }}" | base64 -d > Developer.p12
+      security create-keychain -p password Developer.keychain
+      security set-keychain-settings -lut 21600 Developer.keychain
+      security unlock-keychain -p password Developer.keychain
+      security import Developer.p12 \
+        -k Developer.keychain \
+        -f pkcs12 \
+        -A \
+        -T /usr/bin/codesign \
+        -T /usr/bin/security \
+        -P ${{ inputs.password }}
+      security set-key-partition-list -S apple-tool:,apple: -k password Developer.keychain
+      security list-keychains -d user -s login.keychain Developer.keychain

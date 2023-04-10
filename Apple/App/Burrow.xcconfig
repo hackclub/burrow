@@ -1,0 +1,17 @@
+#include "../Configuration/App.xcconfig"
+
+PRODUCT_NAME = Burrow
+PRODUCT_BUNDLE_IDENTIFIER = $(APP_BUNDLE_IDENTIFIER)
+
+INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphone*] = YES
+INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphone*] = YES
+INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphone*] = YES
+INFOPLIST_KEY_UIStatusBarStyle[sdk=iphone*] = UIStatusBarStyleDefault
+INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad[sdk=iphone*] = UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone[sdk=iphone*] = UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+TARGETED_DEVICE_FAMILY[sdk=iphone*] = 1,2
+
+INFOPLIST_KEY_LSApplicationCategoryType[sdk=macos*] = public.app-category.utilities
+
+CODE_SIGN_ENTITLEMENTS = App/App-iOS.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=macos*] = App/App-macOS.entitlements

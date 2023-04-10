@@ -1,0 +1,37 @@
+name: Test Without Building
+inputs:
+  scheme:
+    description: Scheme
+    required: true
+  destination:
+    description: Destination
+    required: true
+  test-plan:
+    description: Test Plan
+    required: false
+  artifact-prefix:
+    description: The prefix for the filename of the uploaded xcresults file
+    required: true
+  check-name:
+    description: The check name
+    required: true
+runs:
+  using: composite
+  steps:
+  - shell: bash
+    id: vars
+    run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+  - shell: bash
+    working-directory: Apple
+    run: |
+      xcodebuild test-without-building \
+      -scheme '${{ inputs.scheme }}' \
+      -destination '${{ inputs.destination }}' \
+      ${{ inputs.test-plan && '-testPlan ' }}${{ inputs.test-plan }} \
+      -resultBundlePath "${{ inputs.artifact-prefix }}-${{ steps.vars.outputs.sha_short }}.xcresult"
+  - uses: kishikawakatsumi/xcresulttool@v1
+    if: always()
+    with:
+      path: Apple/${{ inputs.artifact-prefix }}-${{ steps.vars.outputs.sha_short }}.xcresult
+      title: ${{ inputs.check-name }}
+      show-passed-tests: false

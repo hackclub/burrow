@@ -1,0 +1,47 @@
+name: Notarize
+inputs:
+  app-store-key:
+    description: App Store key in PEM PKCS#8 format
+    required: true
+  app-store-key-id:
+    description: App Store key ID
+    required: true
+  app-store-key-issuer-id:
+    description: App Store key issuer ID
+    required: true
+  archive-path:
+    description: Xcode archive path
+    required: true
+  destination:
+    description: The Xcode export destination. This can either be "export" or "upload"
+    required: true
+  method:
+    description: The Xcode export method. This can be one of app-store, validation, ad-hoc, package, enterprise, development, developer-id, or mac-application.
+    required: true
+  export-path:
+    description: The path to export the archive to
+    required: true
+runs:
+  using: composite
+  steps:
+  - id: notarize
+    shell: bash
+    working-directory: Apple
+    run: |
+      echo "${{ inputs.app-store-key }}" > AuthKey_${{ inputs.app-store-key-id }}.p8
+
+      echo '{"destination":"${{ inputs.destination }}","method":"${{ inputs.method }}"}' \
+        | plutil -convert xml1 -o ExportOptions.plist -
+
+      xcodebuild \
+        -exportArchive \
+        -allowProvisioningUpdates \
+        -allowProvisioningDeviceRegistration \
+        -authenticationKeyID ${{ inputs.app-store-key-id }} \
+        -authenticationKeyIssuerID ${{ inputs.app-store-key-issuer-id }} \
+        -authenticationKeyPath "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8" \
+        -archivePath '${{ inputs.archive-path }}' \
+        -exportPath '${{ inputs.export-path }}' \
+        -exportOptionsPlist ExportOptions.plist
+
+      rm -rf AuthKey_${{ inputs.app-store-key-id }}.p8 ExportOptions.plist

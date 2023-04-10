@@ -1,0 +1,8 @@
+#include "../Configuration/Extension.xcconfig"
+
+PRODUCT_NAME = BurrowNetworkExtension
+PRODUCT_BUNDLE_IDENTIFIER = $(APP_BUNDLE_IDENTIFIER).network
+INFOPLIST_FILE = NetworkExtension/Info.plist
+
+CODE_SIGN_ENTITLEMENTS = NetworkExtension/NetworkExtension-iOS.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=macos*] = NetworkExtension/NetworkExtension-macOS.entitlements

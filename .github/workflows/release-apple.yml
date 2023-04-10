@@ -1,0 +1,65 @@
+name: Build Apple Release
+on:
+  release:
+    types:
+    - created
+jobs:
+  build:
+    name: Build ${{ matrix.configuration['platform'] }} Release
+    runs-on: macos-12
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+        - scheme: App (iOS)
+          destination: generic/platform=iOS
+          platform: iOS
+          method: ad-hoc
+          artifact-file: Apple/Release/Burrow.ipa
+        - scheme: App (macOS)
+          destination: generic/platform=macOS
+          platform: macOS
+          method: mac-application
+          artifact-file: Burrow.app.txz
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_14.2.app/Contents/Developer
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        ssh-key: ${{ secrets.DEPLOY_KEY }}
+        submodules: recursive
+    - name: Import Certificate
+      uses: ./.github/actions/import-cert
+      with:
+        certificate: ${{ secrets.DEVELOPER_CERT }}
+        password: ${{ secrets.DEVELOPER_CERT_PASSWORD }}
+    - name: Archive
+      uses: ./.github/actions/archive
+      with:
+        scheme: ${{ matrix.configuration['scheme'] }}
+        destination: ${{ matrix.configuration['destination'] }}
+        app-store-key: ${{ secrets.APPSTORE_KEY }}
+        app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+        app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
+        archive-path: Burrow.xcarchive
+    - name: Export Locally
+      uses: ./.github/actions/export
+      with:
+        method: ${{ matrix.configuration['method'] }}
+        destination: export
+        app-store-key: ${{ secrets.APPSTORE_KEY }}
+        app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+        app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
+        archive-path: Burrow.xcarchive
+        export-path: Release
+    - name: Compress
+      if: ${{ matrix.configuration['platform'] == 'macOS' }}
+      shell: bash
+      run: tar --options xz:compression-level=9 -C Apple/Release -cJf Burrow.app.txz ./
+    - name: Attach Artifact
+      uses: SierraSoftworks/gh-releases@v1.0.6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        overwrite: 'false'
+        files: ${{ matrix.configuration['artifact-file'] }}
