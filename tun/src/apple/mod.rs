@@ -38,7 +38,7 @@ impl TunInterface {
     }
 
     pub fn name(&self) -> Result<String> {
-        let mut buf = [0u8; libc::IFNAMSIZ];
+        let mut buf = [0i8; libc::IFNAMSIZ];
         let mut len = buf.len() as libc::socklen_t;
         syscall!(getsockopt(
             self.as_raw_fd(),

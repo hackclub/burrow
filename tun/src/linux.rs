@@ -15,13 +15,13 @@ impl TunInterface {
             .write(true)
             .open("/dev/net/tun")?;
 
-        let mut iff = libc::ifreq {
+        let iff = libc::ifreq {
             ifr_name: [0; libc::IFNAMSIZ],
             ifr_ifru: libc::__c_anonymous_ifr_ifru {
                 ifru_flags: (libc::IFF_TUN | libc::IFF_TUN_EXCL | libc::IFF_NO_PI) as i16,
             },
         };
-        unsafe { sys::tun_set_iff(file.as_raw_fd(), &mut iff)? };
+        unsafe { sys::tun_set_iff(file.as_raw_fd(), &iff)? };
 
         let inner = unsafe { socket2::Socket::from_raw_fd(file.into_raw_fd()) };
         Ok(TunInterface { inner })
@@ -50,7 +50,9 @@ mod sys {
     );
     ioctl_read_bad!(
         tun_get_iff,
-        request_code_read!(b'T', 210, size_of::<libc::c_int>()),
+        request_code_read!(b'T', 210, size_of::<libc::c_uint>()),
         libc::ifreq
     );
 }
+
+pub struct TunQueue;
