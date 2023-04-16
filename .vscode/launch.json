@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=burrow",
+                ],
+                "filter": {
+                    "name": "burrow",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+    ]
+}

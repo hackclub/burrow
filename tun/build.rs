@@ -46,7 +46,7 @@ async fn main() -> anyhow::Result<()> {
     bindings.write_to_file(out_dir.join("wintun.rs"))?;
 
     let mut library = Vec::new();
-    let platform = platforms::Platform::find(&env::var("TARGET")?).unwrap();
+    let platform = platforms::Platform::find(&std::env::var("TARGET")?).unwrap();
     let arch = match platform.target_arch {
         platforms::target::Arch::Arm => "arm",
         platforms::Arch::AArch64 => "arm64",
