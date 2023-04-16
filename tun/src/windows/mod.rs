@@ -2,6 +2,10 @@ use std::io::Result;
 use std::ptr;
 use widestring::{u16cstr, U16CString};
 
+mod queue;
+
+pub use queue::TunQueue;
+
 pub struct TunInterface {
     wintun: sys::wintun,
     handle: sys::WINTUN_ADAPTER_HANDLE,
