@@ -7,7 +7,7 @@
     "files.trimTrailingWhitespace": true,
     "editor.suggest.preview": true,
     "editor.acceptSuggestionOnEnter": "on",
-    "rust-analyzer.checkOnSave.command": "clippy",
+    "rust-analyzer.check.command": "clippy",
     "rust-analyzer.restartServerOnConfigChange": true,
     "rust-analyzer.cargo.features": "all",
     "[rust]": {

@@ -3,7 +3,11 @@ name = "tun-async"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = ["tokio"]
+tokio = ["dep:tokio"]
 
 [dependencies]
-tun = { version = "0.1", path = "../tun" }
+fehler = "1.0"
+tun = { path = "../tun" }
+tokio = { version = "1.0", features = ["net"], optional = true }

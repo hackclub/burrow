@@ -1,5 +1,6 @@
+use fehler::throws;
 use libc::{sockaddr_ctl, AF_SYSTEM, AF_SYS_CONTROL};
-use std::io::Result;
+use std::io::Error;
 use std::mem::size_of;
 use std::os::unix::io::AsRawFd;
 
@@ -7,11 +8,13 @@ use std::os::unix::io::AsRawFd;
 ///
 /// Pulled from XNU source: https://github.com/apple/darwin-xnu/blob/main/bsd/sys/kern_control.h
 pub trait SysControlSocket {
-    fn resolve(&self, name: &str, index: u32) -> Result<socket2::SockAddr>;
+    #[throws]
+    fn resolve(&self, name: &str, index: u32) -> socket2::SockAddr;
 }
 
 impl SysControlSocket for socket2::Socket {
-    fn resolve(&self, name: &str, index: u32) -> Result<socket2::SockAddr> {
+    #[throws]
+    fn resolve(&self, name: &str, index: u32) -> socket2::SockAddr {
         let mut info = sys::ctl_info {
             ctl_id: 0,
             ctl_name: [0; 96],
@@ -34,7 +37,7 @@ impl SysControlSocket for socket2::Socket {
             })
         }?;
 
-        Ok(addr)
+        addr
     }
 }
 
