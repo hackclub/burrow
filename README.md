@@ -33,3 +33,9 @@ Hack Club is a global community of high-school hackers from all around the world
 ## License 
 
 Burrow is open source and licensed under the [GNU General Public License v3.0](./LICENSE.md)
+
+## Contributors
+
+<a href="https://github.com/hackclub/burrow/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=hackclub/burrow" />
+</a>
