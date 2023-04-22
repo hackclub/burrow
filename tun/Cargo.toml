@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 libc = "0.2"
+fehler = "1.0"
 nix = { version = "0.25", features = ["ioctl"] }
 socket2 = "0.4"
 tokio = { version = "1.21", features = [] }
