@@ -1,7 +1,6 @@
 {
     "files.autoSave": "onFocusChange",
     "files.defaultLanguage": "rust",
-    "explorer.excludeGitIgnore": true,
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,
     "files.trimTrailingWhitespace": true,
