@@ -2,19 +2,17 @@ use std::{mem::MaybeUninit, net::Ipv4Addr};
 
 use tokio::io::Result;
 use tun::TunInterface;
-use tun_async::TunQueue;
+use tun::TunQueue;
 
 async fn try_main() -> Result<()> {
-    let iface = TunInterface::new()?;
-    iface.set_ipv4_addr(Ipv4Addr::new(10, 0, 0, 2))?;
-    println!("{:?}", iface.index()?);
-    println!("{:?}", iface.ipv4_addr()?);
+    let iface = tun::create_interface();
+    iface.set_ipv4(Ipv4Addr::new(10, 0, 0, 2))?;
 
-    let queue = TunQueue::from_queue(iface.into())?;
+    let queue = TunQueue::from(iface);
 
     loop {
         let mut buf = [MaybeUninit::<u8>::uninit(); 1500];
-        let len = queue.try_recv(&mut buf).await?;
+        let len = queue.recv(&mut buf)?;
         println!("Received {len} bytes");
     }
 }

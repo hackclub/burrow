@@ -8,11 +8,11 @@ mod imp;
 #[path = "linux/mod.rs"]
 mod imp;
 
-
-
-pub use imp::TunInterface;
-
+pub use crate::TunInterface;
+pub use imp::PlatformTun;
+use libc::IFNAMSIZ;
 pub use queue::TunQueue;
+use std::ffi::CString;
 
 pub fn ifname_to_string(buf: [libc::c_char; libc::IFNAMSIZ]) -> String {
     // TODO: Switch to `CStr::from_bytes_until_nul` when stabilized

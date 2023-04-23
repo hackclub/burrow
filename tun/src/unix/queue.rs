@@ -38,10 +38,10 @@ impl Write for TunQueue {
     }
 }
 
-impl From<TunInterface> for TunQueue {
-    fn from(interface: TunInterface) -> TunQueue {
+impl TunQueue {
+    pub fn from<T: TunInterface>(interface: T) -> TunQueue {
         TunQueue {
-            socket: interface.socket,
+            socket: interface.into_raw_socket(),
         }
     }
 }
@@ -52,8 +52,10 @@ impl AsRawFd for TunQueue {
     }
 }
 
-impl IntoRawFd for TunQueue {
-    fn into_raw_fd(self) -> RawFd {
-        self.socket.into_raw_fd()
-    }
-}
+//TODO: error[E0507]: cannot move out of `*self.socket` which is behind a mutable reference
+
+//impl IntoRawFd for TunQueue {
+//    fn into_raw_fd(self) -> RawFd {
+//        self.socket.into_raw_fd()
+//    }
+//}
