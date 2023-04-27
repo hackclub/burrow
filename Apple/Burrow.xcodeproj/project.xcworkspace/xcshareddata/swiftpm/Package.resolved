@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "fluid-menu-bar-extra",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/lfroms/fluid-menu-bar-extra.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "b8d41bc1c2609c3943c47d00fb539de38f90b817"
+      }
+    }
+  ],
+  "version" : 2
+}

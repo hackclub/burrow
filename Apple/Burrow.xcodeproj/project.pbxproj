@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		43E50D6D29FA050600BD2280 /* FluidMenuBarExtra in Frameworks */ = {isa = PBXBuildFile; productRef = 43E50D6C29FA050600BD2280 /* FluidMenuBarExtra */; };
 		D020F65829E4A697002790F6 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D020F65729E4A697002790F6 /* PacketTunnelProvider.swift */; };
 		D020F65D29E4A697002790F6 /* BurrowNetworkExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D020F65329E4A697002790F6 /* BurrowNetworkExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */; };
@@ -71,6 +72,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				43E50D6D29FA050600BD2280 /* FluidMenuBarExtra in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -168,6 +170,9 @@
 				D020F65C29E4A697002790F6 /* PBXTargetDependency */,
 			);
 			name = Burrow;
+			packageProductDependencies = (
+				43E50D6C29FA050600BD2280 /* FluidMenuBarExtra */,
+			);
 			productName = Burrow;
 			productReference = D05B9F7229E39EEC008CB1F9 /* Burrow.app */;
 			productType = "com.apple.product-type.application";
@@ -199,6 +204,9 @@
 				Base,
 			);
 			mainGroup = D05B9F6929E39EEC008CB1F9;
+			packageReferences = (
+				43E50D6B29FA050600BD2280 /* XCRemoteSwiftPackageReference "fluid-menu-bar-extra" */,
+			);
 			productRefGroup = D05B9F7329E39EEC008CB1F9 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -260,6 +268,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D020F66229E4A6E5002790F6 /* NetworkExtension.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = 2H4LMN3ZLG;
 			};
 			name = Debug;
 		};
@@ -267,6 +276,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D020F66229E4A6E5002790F6 /* NetworkExtension.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = 2H4LMN3ZLG;
 			};
 			name = Release;
 		};
@@ -288,6 +298,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D020F64929E4A34B002790F6 /* Burrow.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = 2H4LMN3ZLG;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 			};
 			name = Debug;
 		};
@@ -295,6 +307,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D020F64929E4A34B002790F6 /* Burrow.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = 2H4LMN3ZLG;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 			};
 			name = Release;
 		};
@@ -329,6 +343,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		43E50D6B29FA050600BD2280 /* XCRemoteSwiftPackageReference "fluid-menu-bar-extra" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/lfroms/fluid-menu-bar-extra.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		43E50D6C29FA050600BD2280 /* FluidMenuBarExtra */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 43E50D6B29FA050600BD2280 /* XCRemoteSwiftPackageReference "fluid-menu-bar-extra" */;
+			productName = FluidMenuBarExtra;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D05B9F6A29E39EEC008CB1F9 /* Project object */;
 }
