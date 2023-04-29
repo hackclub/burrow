@@ -76,6 +76,16 @@ impl TunInterface {
     }
 
     #[throws]
+    pub fn set_netmask(&self, addr: Ipv4Addr) {
+        let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
+
+        let mut iff = self.ifreq()?;
+        iff.ifr_ifru.ifru_netmask = unsafe { *addr.as_ptr() };
+
+        self.perform(|fd| unsafe { sys::if_set_netmask(fd, &iff) })?;
+    }
+
+    #[throws]
     pub fn ipv4_addr(&self) -> Ipv4Addr {
         let mut iff = self.ifreq()?;
         self.perform(|fd| unsafe { sys::if_get_addr(fd, &mut iff) })?;
@@ -93,6 +103,17 @@ impl TunInterface {
     }
 
     #[throws]
+    pub fn netmask(&self) -> Ipv4Addr {
+        let mut iff = self.ifreq()?;
+        self.perform(|fd| unsafe { sys::if_get_netmask(fd, &mut iff) })?;
+
+        let netmask =
+            unsafe { *(&iff.ifr_ifru.ifru_netmask as *const _ as *const sys::sockaddr_in) };
+
+        Ipv4Addr::from(u32::from_be(netmask.sin_addr.s_addr))
+    }
+
+    #[throws]
     fn perform<R>(&self, perform: impl FnOnce(RawFd) -> Result<R, nix::Error>) -> R {
         let socket = Socket::new(Domain::IPV4, Type::DGRAM, None)?;
         perform(socket.as_raw_fd())?
@@ -101,6 +122,7 @@ impl TunInterface {
 
 mod test {
     use super::TunInterface;
+    use std::net::Ipv4Addr;
 
     #[test]
     fn mtu() {
@@ -109,5 +131,16 @@ mod test {
         interf.set_mtu(500).unwrap();
 
         assert_eq!(interf.mtu().unwrap(), 500);
+    }
+
+    #[test]
+    fn netmask() {
+        let interf = TunInterface::new().unwrap();
+
+        let addr = Ipv4Addr::new(255, 0, 0, 0);
+
+        interf.set_netmask(addr);
+
+        assert_eq!(interf.netmask().unwrap(), addr);
     }
 }
