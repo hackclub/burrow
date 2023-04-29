@@ -137,10 +137,12 @@ mod test {
     fn netmask() {
         let interf = TunInterface::new().unwrap();
 
-        let addr = Ipv4Addr::new(255, 0, 0, 0);
+        let netmask = Ipv4Addr::new(255, 0, 0, 0);
+        let addr = Ipv4Addr::new(192, 168, 1, 1);
 
-        interf.set_netmask(addr);
+        interf.set_ipv4_addr(addr);
+        interf.set_netmask(netmask).unwrap();
 
-        assert_eq!(interf.netmask().unwrap(), addr);
+        assert_eq!(interf.netmask().unwrap(), netmask);
     }
 }
