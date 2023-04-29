@@ -2,6 +2,7 @@ use nix::{ioctl_read_bad, ioctl_write_ptr_bad, request_code_read, request_code_w
 use std::mem::size_of;
 
 pub use libc::ifreq;
+pub use libc::sockaddr;
 pub use libc::sockaddr_in;
 
 ioctl_write_ptr_bad!(
@@ -17,6 +18,8 @@ ioctl_read_bad!(
 ioctl_read_bad!(if_get_index, libc::SIOCGIFINDEX, libc::ifreq);
 ioctl_read_bad!(if_get_addr, libc::SIOCGIFADDR, libc::ifreq);
 ioctl_read_bad!(if_get_mtu, libc::SIOCGIFMTU, libc::ifreq);
+ioctl_read_bad!(if_get_netmask, libc::SIOCGIFNETMASK, libc::ifreq);
 
 ioctl_write_ptr_bad!(if_set_addr, libc::SIOCSIFADDR, libc::ifreq);
 ioctl_write_ptr_bad!(if_set_mtu, libc::SIOCSIFMTU, libc::ifreq);
+ioctl_write_ptr_bad!(if_set_netmask, libc::SIOCSIFNETMASK, libc::ifreq);
