@@ -6,24 +6,32 @@
 //
 
 import SwiftUI
-import FluidMenuBarExtra
+import NetworkExtension
 
 @main
 struct burrowBarApp: App {
+    #if os(macOS)
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
+    #endif
 
     var body: some Scene {
-        Settings {
-            Text("Burrow")
+        WindowGroup {
+            PermissionView()
         }
     }
 }
-class AppDelegate: NSObject, NSApplicationDelegate {
-    private var menuBarExtra: FluidMenuBarExtra?
+
+struct PermissionView: View {
+    @ObservedObject
+    var configuration = NetworkConfiguration()
     
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        self.menuBarExtra = FluidMenuBarExtra(title: "Burrow", systemImage: "network.badge.shield.half.filled") {
-            ContentView()
+    
+    var body: some View {
+        VStack {
+            Text(verbatim: "Status is \(configuration.status)")
+        }
+        .onAppear {
+            configuration.update()
         }
     }
 }

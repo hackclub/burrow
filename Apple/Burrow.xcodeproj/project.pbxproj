@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		43E50D6D29FA050600BD2280 /* FluidMenuBarExtra in Frameworks */ = {isa = PBXBuildFile; productRef = 43E50D6C29FA050600BD2280 /* FluidMenuBarExtra */; };
+		43E50D6D29FA050600BD2280 /* FluidMenuBarExtra in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = 43E50D6C29FA050600BD2280 /* FluidMenuBarExtra */; };
+		43EBDB2B29FD7557005D8CFF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EBDB2A29FD754A005D8CFF /* AppDelegate.swift */; };
+		43EBDB2D29FD759E005D8CFF /* NetworkConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EBDB2C29FD759E005D8CFF /* NetworkConfiguration.swift */; };
 		D020F65829E4A697002790F6 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D020F65729E4A697002790F6 /* PacketTunnelProvider.swift */; };
 		D020F65D29E4A697002790F6 /* BurrowNetworkExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D020F65329E4A697002790F6 /* BurrowNetworkExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */; };
@@ -40,6 +42,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		43EBDB2A29FD754A005D8CFF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		43EBDB2C29FD759E005D8CFF /* NetworkConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkConfiguration.swift; sourceTree = "<group>"; };
 		D020F63D29E4A1FF002790F6 /* Identity.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Identity.xcconfig; sourceTree = "<group>"; };
 		D020F64029E4A1FF002790F6 /* Compiler.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Compiler.xcconfig; sourceTree = "<group>"; };
 		D020F64229E4A1FF002790F6 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -126,7 +130,9 @@
 			isa = PBXGroup;
 			children = (
 				D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */,
+				43EBDB2A29FD754A005D8CFF /* AppDelegate.swift */,
 				D05B9F7729E39EEC008CB1F9 /* ContentView.swift */,
+				43EBDB2C29FD759E005D8CFF /* NetworkConfiguration.swift */,
 				D05B9F7929E39EED008CB1F9 /* Assets.xcassets */,
 				D020F66829E4AA74002790F6 /* App-iOS.entitlements */,
 				D020F66929E4AA74002790F6 /* App-macOS.entitlements */,
@@ -248,8 +254,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				43EBDB2B29FD7557005D8CFF /* AppDelegate.swift in Sources */,
 				D05B9F7829E39EEC008CB1F9 /* ContentView.swift in Sources */,
 				D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */,
+				43EBDB2D29FD759E005D8CFF /* NetworkConfiguration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
