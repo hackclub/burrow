@@ -98,3 +98,16 @@ impl TunInterface {
         perform(socket.as_raw_fd())?
     }
 }
+
+mod test {
+    use super::TunInterface;
+
+    #[test]
+    fn mtu() {
+        let interf = TunInterface::new().unwrap();
+
+        interf.set_mtu(500).unwrap();
+
+        assert_eq!(interf.mtu().unwrap(), 500);
+    }
+}
