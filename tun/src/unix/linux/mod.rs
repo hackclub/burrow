@@ -69,11 +69,27 @@ impl TunInterface {
     }
 
     #[throws]
+    pub fn set_mtu(&self, mtu: i32) {
+        let mut iff = self.ifreq()?;
+        iff.ifr_ifru.ifru_mtu = mtu;
+        self.perform(|fd| unsafe { sys::if_set_mtu(fd, &iff) })?;
+    }
+
+    #[throws]
     pub fn ipv4_addr(&self) -> Ipv4Addr {
         let mut iff = self.ifreq()?;
         self.perform(|fd| unsafe { sys::if_get_addr(fd, &mut iff) })?;
         let addr = unsafe { *(&iff.ifr_ifru.ifru_addr as *const _ as *const sys::sockaddr_in) };
         Ipv4Addr::from(u32::from_be(addr.sin_addr.s_addr))
+    }
+
+    #[throws]
+    pub fn mtu(&self) -> i32 {
+        let mut iff = self.ifreq()?;
+        self.perform(|fd| unsafe { sys::if_get_mtu(fd, &mut iff) })?;
+        let mtu = unsafe { iff.ifr_ifru.ifru_mtu };
+
+        mtu
     }
 
     #[throws]
