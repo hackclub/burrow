@@ -1,7 +1,7 @@
 use tokio::io::Result;
 use tun::TunInterface;
 
-async fn lol() -> Result<()> {
+async fn try_main() -> Result<()> {
     let iface = TunInterface::new()?;
     println!("{:?}", iface.name());
 
@@ -10,5 +10,5 @@ async fn lol() -> Result<()> {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    lol().await.unwrap();
+    try_main().await.unwrap();
 }

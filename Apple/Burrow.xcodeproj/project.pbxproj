@@ -12,6 +12,7 @@
 		D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */; };
 		D05B9F7829E39EEC008CB1F9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7729E39EEC008CB1F9 /* ContentView.swift */; };
 		D05B9F7A29E39EED008CB1F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D05B9F7929E39EED008CB1F9 /* Assets.xcassets */; };
+		D0B98FC529FDA49E004E7149 /* libburrow.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0B98FC429FDA476004E7149 /* libburrow.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,8 @@
 		D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowApp.swift; sourceTree = "<group>"; };
 		D05B9F7729E39EEC008CB1F9 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		D05B9F7929E39EED008CB1F9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D0B98FBF29FD8072004E7149 /* build-rust.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-rust.sh"; sourceTree = "<group>"; };
+		D0B98FC429FDA476004E7149 /* libburrow.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libburrow.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,6 +67,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D0B98FC529FDA49E004E7149 /* libburrow.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,6 +88,7 @@
 				D020F64A29E4A452002790F6 /* App.xcconfig */,
 				D020F66329E4A703002790F6 /* Extension.xcconfig */,
 				D020F64029E4A1FF002790F6 /* Compiler.xcconfig */,
+				D0B98FBF29FD8072004E7149 /* build-rust.sh */,
 				D020F64229E4A1FF002790F6 /* Info.plist */,
 			);
 			path = Configuration;
@@ -108,6 +113,7 @@
 				D020F65629E4A697002790F6 /* NetworkExtension */,
 				D020F63C29E4A1FF002790F6 /* Configuration */,
 				D05B9F7329E39EEC008CB1F9 /* Products */,
+				D0B98FC129FDA45D004E7149 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -133,6 +139,14 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		D0B98FC129FDA45D004E7149 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D0B98FC429FDA476004E7149 /* libburrow.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -140,6 +154,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D020F65E29E4A697002790F6 /* Build configuration list for PBXNativeTarget "NetworkExtension" */;
 			buildPhases = (
+				D0B98FC029FD809A004E7149 /* Compile Rust */,
 				D020F64F29E4A697002790F6 /* Sources */,
 				D020F65029E4A697002790F6 /* Frameworks */,
 				D020F65129E4A697002790F6 /* Resources */,
@@ -226,6 +241,30 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		D0B98FC029FD809A004E7149 /* Compile Rust */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Compile Rust";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/libburrow.a",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PROJECT_DIR}/Configuration/build-rust.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		D020F64F29E4A697002790F6 /* Sources */ = {
