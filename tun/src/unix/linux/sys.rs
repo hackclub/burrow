@@ -16,4 +16,7 @@ ioctl_read_bad!(
 );
 ioctl_read_bad!(if_get_index, libc::SIOCGIFINDEX, libc::ifreq);
 ioctl_read_bad!(if_get_addr, libc::SIOCGIFADDR, libc::ifreq);
+ioctl_read_bad!(if_get_mtu, libc::SIOCGIFMTU, libc::ifreq);
+
 ioctl_write_ptr_bad!(if_set_addr, libc::SIOCSIFADDR, libc::ifreq);
+ioctl_write_ptr_bad!(if_set_mtu, libc::SIOCSIFMTU, libc::ifreq);
