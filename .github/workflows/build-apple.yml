@@ -18,14 +18,22 @@ jobs:
           destination: generic/platform=iOS
           platform: iOS
           sdk-name: iphoneos
+          rust-targets:
+          - aarch64-apple-ios
         - scheme: Burrow
           destination: platform=iOS Simulator,OS=16.2,name=iPhone 14 Pro
           platform: iOS Simulator
           sdk-name: iphonesimulator
+          rust-targets:
+          - aarch64-apple-ios-sim
+          - x86_64-apple-ios
         - scheme: Burrow
           destination: platform=macOS
           platform: macOS
           sdk-name: macos
+          rust-targets:
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
     env:
       DEVELOPER_DIR: /Applications/Xcode_14.2.app/Contents/Developer
     steps:
@@ -39,6 +47,11 @@ jobs:
       with:
         certificate: ${{ secrets.DEVELOPER_CERT }}
         password: ${{ secrets.DEVELOPER_CERT_PASSWORD }}
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: stable
+        targets: ${{ join(matrix.rust-targets, ', ') }}
     - name: Build
       id: build
       uses: ./.github/actions/build-for-testing
