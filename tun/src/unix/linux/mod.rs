@@ -134,15 +134,16 @@ mod test {
     }
 
     #[test]
+    #[throws]
     fn netmask() {
-        let interf = TunInterface::new().unwrap();
+        let interf = TunInterface::new()?;
 
         let netmask = Ipv4Addr::new(255, 0, 0, 0);
         let addr = Ipv4Addr::new(192, 168, 1, 1);
 
-        interf.set_ipv4_addr(addr);
-        interf.set_netmask(netmask).unwrap();
+        interf.set_ipv4_addr(addr)?;
+        interf.set_netmask(netmask)?;
 
-        assert_eq!(interf.netmask().unwrap(), netmask);
+        assert_eq!(interf.netmask()?, netmask);
     }
 }
