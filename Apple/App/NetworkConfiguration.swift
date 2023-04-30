@@ -3,25 +3,12 @@ import NetworkExtension
 
 @MainActor
 class NetworkConfiguration: ObservableObject {
-    enum Status: CustomStringConvertible {
-        case unknown
-        case blank
-        case valid
-        case error
-        
-        var description: String {
-            switch self {
-            case .unknown:
-                return "Unknown"
-            case .blank:
-                return "Blank"
-            case .valid:
-                return "Valid"
-            default:
-                return "Default"
-            }
-        }
+    func connectToBurrow() {
+        objectWillChange.send()
+        model.connectToBurrow()
     }
+    
+    @Published var model = Model()
     
     @Published
     var status: Status = .unknown
@@ -30,6 +17,25 @@ class NetworkConfiguration: ObservableObject {
         update()
         
 
+    }
+    
+    func connectToNetwork() {
+        print(self.status)
+        self.status = .loading
+        print(self.status)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            let random = Int.random(in: 0...1)
+            if random == 0 {
+                self.status = .valid
+                print(self.status)
+
+            } else {
+                self.status = .error
+                print(self.status)
+
+            }
+        }
     }
     
     func update() {

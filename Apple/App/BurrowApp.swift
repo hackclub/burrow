@@ -30,8 +30,5 @@ struct PermissionView: View {
         VStack {
             Text(verbatim: "Status is \(configuration.status)")
         }
-        .onAppear {
-            configuration.update()
-        }
     }
 }
