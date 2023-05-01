@@ -69,6 +69,17 @@ impl TunInterface {
     }
 
     #[throws]
+    pub fn set_iface_up(&self) {
+        std::process::Command::new("ip")
+            .arg("link")
+            .arg("set")
+            .arg("dev")
+            .arg(&self.name().unwrap())
+            .arg("up")
+            .output()?;
+    }
+
+    #[throws]
     pub fn set_mtu(&self, mtu: i32) {
         let mut iff = self.ifreq()?;
         iff.ifr_ifru.ifru_mtu = mtu;

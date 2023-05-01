@@ -1,11 +1,11 @@
 use fehler::throws;
 use libc::c_char;
+use std::io::Error;
 use std::net::Ipv4Addr;
 use std::os::unix::io::{AsRawFd, IntoRawFd, RawFd};
-use std::io::Error;
 
-mod sys;
 mod kern_control;
+mod sys;
 
 pub use super::queue::TunQueue;
 
@@ -59,6 +59,11 @@ impl TunInterface {
 
     #[throws]
     pub fn ipv4_addr(&self) -> Ipv4Addr {
+        todo!()
+    }
+
+    #[throws]
+    pub fn set_iface_up(&self) {
         todo!()
     }
 }
