@@ -6,7 +6,7 @@ mod imp;
 #[path = "unix/mod.rs"]
 pub(crate) mod imp;
 
-pub use imp::ensure_root;
+pub use imp::{ensure_root, reroute};
 
 pub fn log<T: std::fmt::Display>(t: T) {
     #[cfg(debug_assertions)]

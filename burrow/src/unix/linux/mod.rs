@@ -1,4 +1,4 @@
-use burrow::log;
+use crate::log;
 use rtnetlink::{new_connection, Error};
 use std::net::Ipv4Addr;
 use tun::TunInterface;
