@@ -158,8 +158,7 @@ impl TunInterface {
 
         netlink_connection_handle.abort();
 
-        #[allow(clippy::empty_loop)]
-        loop {}
+        futures::future::pending::<()>().await;
     }
 
     #[throws]

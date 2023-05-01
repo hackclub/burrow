@@ -1384,6 +1384,7 @@ dependencies = [
  "anyhow",
  "bindgen",
  "fehler",
+ "futures",
  "hex-literal",
  "libc",
  "libloading",
