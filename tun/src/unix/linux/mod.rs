@@ -68,17 +68,6 @@ impl TunInterface {
     }
 
     #[throws]
-    pub fn set_iface_up(&self) {
-        std::process::Command::new("ip")
-            .arg("link")
-            .arg("set")
-            .arg("dev")
-            .arg(&self.name().unwrap())
-            .arg("up")
-            .output()?;
-    }
-
-    #[throws]
     pub fn set_mtu(&self, mtu: i32) {
         let mut iff = self.ifreq()?;
         iff.ifr_ifru.ifru_mtu = mtu;
@@ -129,7 +118,8 @@ impl TunInterface {
         let (connection, handle, _) = new_connection().expect("a new netlink connection");
         let netlink_connection_handle = tokio::task::spawn(connection);
 
-        self.set_iface_up().expect("an active interface");
+        let index = self.index().expect("a valid interface index");
+        _ = handle.link().set(index as u32).up().execute().await;
         // log(format!("Interface {name} is up"));
 
         self.set_ipv4_addr(interface_addr)
