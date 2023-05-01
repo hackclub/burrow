@@ -1390,6 +1390,7 @@ dependencies = [
  "nix 0.25.0",
  "platforms",
  "reqwest",
+ "rtnetlink",
  "sha2",
  "socket2",
  "tokio",

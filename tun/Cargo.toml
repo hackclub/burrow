@@ -9,6 +9,7 @@ fehler = "1.0"
 nix = { version = "0.25", features = ["ioctl"] }
 socket2 = "0.4"
 tokio = { version = "1.21", features = [] }
+rtnetlink = "0.12.0"
 
 [target.'cfg(windows)'.dependencies]
 libloading = "0.7"

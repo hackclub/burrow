@@ -28,6 +28,11 @@ impl TunInterface {
     pub fn name(&self) -> String {
         self.name.clone()
     }
+
+    #[throws]
+    pub async fn reroute(&mut self, interface_addr: Ipv4Addr, dest: Ipv4Addr, gateway: Ipv4Addr) {
+        todo!()
+    }
 }
 
 impl Drop for TunInterface {

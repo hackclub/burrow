@@ -1,5 +1,6 @@
+use super::{ifname_to_string, string_to_ifname};
 use fehler::throws;
-
+use rtnetlink::new_connection;
 use socket2::{Domain, SockAddr, Socket, Type};
 use std::fs::OpenOptions;
 use std::io::Error;
@@ -7,8 +8,6 @@ use std::mem;
 use std::net::{Ipv4Addr, SocketAddrV4};
 use std::os::fd::RawFd;
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd};
-
-use super::{ifname_to_string, string_to_ifname};
 
 mod sys;
 
@@ -122,6 +121,45 @@ impl TunInterface {
             unsafe { *(&iff.ifr_ifru.ifru_netmask as *const _ as *const sys::sockaddr_in) };
 
         Ipv4Addr::from(u32::from_be(netmask.sin_addr.s_addr))
+    }
+
+    #[throws]
+    pub async fn reroute(&mut self, interface_addr: Ipv4Addr, dest: Ipv4Addr, gateway: Ipv4Addr) {
+        let name = self.name().expect("a valid interface name");
+        let (connection, handle, _) = new_connection().expect("a new netlink connection");
+        let netlink_connection_handle = tokio::task::spawn(connection);
+
+        self.set_iface_up().expect("an active interface");
+        // log(format!("Interface {name} is up"));
+
+        self.set_ipv4_addr(interface_addr)
+            .expect("to set the interface's IPv4 address");
+        // log("Interface IPv4 address set");
+
+        _ = handle.link().get().match_name(name).execute();
+        // log("Interface link retrieved");
+
+        let _route_result = handle
+            .route()
+            .add()
+            .v4()
+            .destination_prefix(dest, 0)
+            .gateway(gateway)
+            .execute()
+            .await;
+
+        // if let Err(Error::NetlinkError(err)) = &route_result {
+        //     if err.code == -19 {
+        //         panic!("the route already exists");
+        //     }
+        // } else {
+        //     log("Route added successfully!");
+        // }
+
+        netlink_connection_handle.abort();
+
+        #[allow(clippy::empty_loop)]
+        loop {}
     }
 
     #[throws]

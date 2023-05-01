@@ -66,6 +66,11 @@ impl TunInterface {
     pub fn set_iface_up(&self) {
         todo!()
     }
+
+    #[throws]
+    pub async fn reroute(&mut self, interface_addr: Ipv4Addr, dest: Ipv4Addr, gateway: Ipv4Addr) {
+        todo!()
+    }
 }
 
 impl AsRawFd for TunInterface {
