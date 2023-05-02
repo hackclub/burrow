@@ -7,7 +7,8 @@ edition = "2021"
 crate-type = ["lib", "staticlib"]
 
 [dependencies]
-caps = { version = "0.5.5", optional = true }
-nix = { version = "0.26.2", optional = true }
 tokio = { version = "1.21", features = ["rt", "macros"] }
 tun = { version = "0.1", path = "../tun" }
+
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.26.2" }
