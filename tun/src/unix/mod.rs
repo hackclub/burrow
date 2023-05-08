@@ -1,3 +1,5 @@
+use std::os::fd::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
+
 mod queue;
 
 #[cfg(target_vendor = "apple")]
@@ -11,6 +13,25 @@ mod imp;
 pub use imp::TunInterface;
 pub use queue::TunQueue;
 
+impl AsRawFd for TunInterface {
+    fn as_raw_fd(&self) -> RawFd {
+        self.socket.as_raw_fd()
+    }
+}
+
+impl FromRawFd for TunInterface {
+    unsafe fn from_raw_fd(fd: RawFd) -> TunInterface {
+        TunInterface {
+            socket: socket2::Socket::from_raw_fd(fd),
+        }
+    }
+}
+
+impl IntoRawFd for TunInterface {
+    fn into_raw_fd(self) -> RawFd {
+        self.socket.into_raw_fd()
+    }
+}
 pub fn ifname_to_string(buf: [libc::c_char; libc::IFNAMSIZ]) -> String {
     // TODO: Switch to `CStr::from_bytes_until_nul` when stabilized
     unsafe {
