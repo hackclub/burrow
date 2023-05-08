@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D05B9F7129E39EEC008CB1F9"
                BuildableName = "Burrow.app"
-               BlueprintName = "Burrow"
+               BlueprintName = "App"
                ReferencedContainer = "container:Burrow.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,7 +45,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D05B9F7129E39EEC008CB1F9"
             BuildableName = "Burrow.app"
-            BlueprintName = "Burrow"
+            BlueprintName = "App"
             ReferencedContainer = "container:Burrow.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -62,7 +62,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D05B9F7129E39EEC008CB1F9"
             BuildableName = "Burrow.app"
-            BlueprintName = "Burrow"
+            BlueprintName = "App"
             ReferencedContainer = "container:Burrow.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

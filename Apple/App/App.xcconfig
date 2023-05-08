@@ -2,6 +2,7 @@
 
 PRODUCT_NAME = Burrow
 PRODUCT_BUNDLE_IDENTIFIER = $(APP_BUNDLE_IDENTIFIER)
+PRODUCT_MODULE_NAME = BurrowApp
 
 INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphone*] = YES
 INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphone*] = YES
@@ -11,7 +12,7 @@ INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad[sdk=iphone*] = UIInterfaceOr
 INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone[sdk=iphone*] = UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
 TARGETED_DEVICE_FAMILY[sdk=iphone*] = 1,2
 
-INFOPLIST_KEY_LSApplicationCategoryType[sdk=macos*] = public.app-category.utilities
+INFOPLIST_KEY_LSApplicationCategoryType[sdk=macosx*] = public.app-category.utilities
 
 CODE_SIGN_ENTITLEMENTS = App/App-iOS.entitlements
-CODE_SIGN_ENTITLEMENTS[sdk=macos*] = App/App-macOS.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=macosx*] = App/App-macOS.entitlements

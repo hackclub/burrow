@@ -9,7 +9,7 @@ fi
 
 set -e
 
-cd -- "$(dirname -- "${BASH_SOURCE[0]}")"/../../burrow
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")"/../../../burrow
 
 RUST_TARGETS=()
 

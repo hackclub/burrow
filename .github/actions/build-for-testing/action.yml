@@ -30,6 +30,7 @@ runs:
         -authenticationKeyIssuerID ${{ inputs.app-store-key-issuer-id }} \
         -authenticationKeyPath "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8" \
         -onlyUsePackageVersionsFromResolvedFile \
+        -skipPackagePluginValidation \
         -scheme '${{ inputs.scheme }}' \
         -destination '${{ inputs.destination }}' \
         -resultBundlePath BuildResults.xcresult
