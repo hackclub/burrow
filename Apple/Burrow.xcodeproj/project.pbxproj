@@ -10,8 +10,11 @@
 		D020F65829E4A697002790F6 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D020F65729E4A697002790F6 /* PacketTunnelProvider.swift */; };
 		D020F65D29E4A697002790F6 /* BurrowNetworkExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D020F65329E4A697002790F6 /* BurrowNetworkExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */; };
-		D05B9F7829E39EEC008CB1F9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7729E39EEC008CB1F9 /* ContentView.swift */; };
+		D05B9F7829E39EEC008CB1F9 /* TunnelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7729E39EEC008CB1F9 /* TunnelView.swift */; };
 		D05B9F7A29E39EED008CB1F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D05B9F7929E39EED008CB1F9 /* Assets.xcassets */; };
+		D0BCC5FD2A086D4700AD070D /* NetworkExtension+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */; };
+		D0BCC5FF2A086E1C00AD070D /* Status.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BCC5FE2A086E1C00AD070D /* Status.swift */; };
+		D0BCC6082A0981FE00AD070D /* Tunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B98FC629FDC5B5004E7149 /* Tunnel.swift */; };
 		D0BCC6092A09A03E00AD070D /* libburrow.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0BCC6032A09535900AD070D /* libburrow.a */; };
 		D0BCC60A2A09A0B800AD070D /* build-rust.sh in Resources */ = {isa = PBXBuildFile; fileRef = D0B98FBF29FD8072004E7149 /* build-rust.sh */; };
 /* End PBXBuildFile section */
@@ -57,11 +60,13 @@
 		D020F66929E4AA74002790F6 /* App-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "App-macOS.entitlements"; sourceTree = "<group>"; };
 		D05B9F7229E39EEC008CB1F9 /* Burrow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Burrow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowApp.swift; sourceTree = "<group>"; };
-		D05B9F7729E39EEC008CB1F9 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		D05B9F7729E39EEC008CB1F9 /* TunnelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelView.swift; sourceTree = "<group>"; };
 		D05B9F7929E39EED008CB1F9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D0B98FBF29FD8072004E7149 /* build-rust.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-rust.sh"; sourceTree = "<group>"; };
+		D0B98FC629FDC5B5004E7149 /* Tunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tunnel.swift; sourceTree = "<group>"; };
 		D0B98FD829FDDB6F004E7149 /* libburrow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libburrow.h; sourceTree = "<group>"; };
 		D0B98FDC29FDDDCF004E7149 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
+		D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NetworkExtension+Async.swift"; sourceTree = "<group>"; };
 		D0BCC5FE2A086E1C00AD070D /* Status.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Status.swift; sourceTree = "<group>"; };
 		D0BCC6032A09535900AD070D /* libburrow.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libburrow.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -288,8 +293,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D05B9F7829E39EEC008CB1F9 /* ContentView.swift in Sources */,
+				D0BCC6082A0981FE00AD070D /* Tunnel.swift in Sources */,
+				D05B9F7829E39EEC008CB1F9 /* TunnelView.swift in Sources */,
+				D0BCC5FF2A086E1C00AD070D /* Status.swift in Sources */,
 				D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */,
+				D0BCC5FD2A086D4700AD070D /* NetworkExtension+Async.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
