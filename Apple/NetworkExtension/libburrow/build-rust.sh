@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This is a build script. It is run by Xcode as a build step.
+# The type of build is described in various environment variables set by Xcode.
+
 export PATH="${PATH}:${HOME}/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:/etc/profiles/per-user/${USER}/bin"
 
 if ! [[ -x "$(command -v cargo)" ]]; then
@@ -9,10 +12,12 @@ fi
 
 set -e
 
+# Change directories relative to the location of this script
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"/../../../burrow
 
 RUST_TARGETS=()
 
+# Match the PLATFORM_NAME (iphoneos) and ARCHS (arm64) to a set of RUST_TARGETS (aarch64-apple-ios)
 IFS=' ' read -a BURROW_ARCHS <<< "${ARCHS[@]}"
 for ARCH in "${BURROW_ARCHS[@]}"; do
     case $PLATFORM_NAME in
@@ -40,6 +45,7 @@ for ARCH in "${BURROW_ARCHS[@]}"; do
     esac
 done
 
+# Pass all RUST_TARGETS in a single invocation
 CARGO_ARGS=()
 for TARGET in "${RUST_TARGETS[@]}"; do
     CARGO_ARGS+=("--target")
@@ -48,6 +54,7 @@ done
 
 CARGO_ARGS+=("--lib")
 
+# Pass the configuration (Debug or Release) through to cargo
 if [[ $SWIFT_ACTIVE_COMPILATION_CONDITIONS == *DEBUG* ]]; then
     CARGO_DIR="debug"
 else
@@ -61,9 +68,13 @@ else
     CARGO_PATH="$(dirname $(readlink -f $(which cargo))):/usr/bin"
 fi
 
+# Run cargo without the various environment variables set by Xcode.
+# Those variables can confuse cargo and the build scripts it runs.
 env -i PATH="$CARGO_PATH" cargo build "${CARGO_ARGS[@]}"
 
 mkdir -p "${BUILT_PRODUCTS_DIR}"
+
+# Use `lipo` to merge the architectures together into BUILT_PRODUCTS_DIR
 /usr/bin/xcrun --sdk $PLATFORM_NAME lipo \
     -create $(printf "${PROJECT_DIR}/../target/%q/${CARGO_DIR}/libburrow.a " "${RUST_TARGETS[@]}") \
     -output "${BUILT_PRODUCTS_DIR}/libburrow.a"
