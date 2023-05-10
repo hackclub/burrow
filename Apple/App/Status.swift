@@ -26,7 +26,7 @@ extension Tunnel {
                 return "Disabled"
             case .connecting:
                 return "Connecting"
-            case .connected(_):
+            case .connected:
                 return "Connected"
             case .disconnecting:
                 return "Disconnecting"
@@ -40,4 +40,3 @@ extension Tunnel {
         }
     }
 }
-

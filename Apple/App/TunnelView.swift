@@ -1,15 +1,13 @@
 import SwiftUI
 
 struct TunnelView: View {
-
-    @ObservedObject
-    var tunnel: Tunnel
+    @ObservedObject var tunnel: Tunnel
 
     var body: some View {
         VStack {
             Text(verbatim: tunnel.status.description)
             switch tunnel.status {
-            case .connected(_):
+            case .connected:
                 Button("Disconnect", action: stop)
             case .permissionRequired:
                 Button("Allow", action: configure)
