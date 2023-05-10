@@ -18,7 +18,27 @@ inputs:
 runs:
   using: composite
   steps:
-  - shell: bash
+  - name: Resolve Swift Packages
+    shell: bash
+    working-directory: Apple
+    run: |
+      xcodebuild -resolvePackageDependencies \
+        -scheme '${{ inputs.scheme }}' \
+        -destination '${{ inputs.destination }}' \
+        -onlyUsePackageVersionsFromResolvedFile \
+        -clonedSourcePackagesDirPath SourcePackages \
+        -packageCachePath $PWD/PackageCache
+  - name: Cache Swift Packages
+    uses: actions/cache@v3
+    with:
+      path: |
+        Apple/PackageCache
+        Apple/SourcePackages
+      key: ${{ runner.os }}-${{ inputs.scheme }}-${{ hashFiles('**/Package.resolved') }}
+      restore-keys: |
+        ${{ runner.os }}-${{ inputs.scheme }}-
+  - name: Build
+    shell: bash
     working-directory: Apple
     run: |
       echo "${{ inputs.app-store-key }}" > AuthKey_${{ inputs.app-store-key-id }}.p8
@@ -30,6 +50,8 @@ runs:
         -authenticationKeyIssuerID ${{ inputs.app-store-key-issuer-id }} \
         -authenticationKeyPath "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8" \
         -onlyUsePackageVersionsFromResolvedFile \
+        -clonedSourcePackagesDirPath SourcePackages \
+        -packageCachePath $PWD/PackageCache \
         -skipPackagePluginValidation \
         -scheme '${{ inputs.scheme }}' \
         -destination '${{ inputs.destination }}' \
