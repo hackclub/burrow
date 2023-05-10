@@ -1,6 +1,6 @@
+import Combine
 import NetworkExtension
 import SwiftUI
-import Combine
 
 @MainActor
 class Tunnel: ObservableObject {
@@ -61,10 +61,6 @@ class Tunnel: ObservableObject {
         tasks = [statusTask, configurationTask]
     }
 
-    deinit {
-        tasks.forEach { $0.cancel() }
-    }
-
     func update() async {
         do {
             managers = try await NETunnelProviderManager.managers
@@ -96,7 +92,7 @@ class Tunnel: ObservableObject {
             let proto = NETunnelProviderProtocol()
             proto.providerBundleIdentifier = bundleIdentifier
             manager.protocolConfiguration = proto
-            
+
             configure(manager, proto)
             try await manager.save()
         }
@@ -111,10 +107,14 @@ class Tunnel: ObservableObject {
         guard let manager = managers?.first else { return }
         manager.connection.stopVPNTunnel()
     }
+
+    deinit {
+        tasks.forEach { $0.cancel() }
+    }
 }
 
-private extension NEVPNConnection {
-     var tunnelStatus: Tunnel.Status {
+extension NEVPNConnection {
+    var tunnelStatus: Tunnel.Status {
         switch status {
         case .connected:
             return .connected(connectedDate!)
