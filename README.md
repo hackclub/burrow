@@ -4,6 +4,24 @@
 
 Burrow ia a best-in-class tool for burrowing through firewalls. It is built by teenagers at [Hack Club](https://hackclub.com/).
 
-At its core, `burrow` is a command line utility written in Rust that can open virtual interfaces and direct traffic through them.
+It works through the app that allows for a quick and easy setup to open virtual interfaces and direct traffic through them. You can also use burrow directly from the command line. 
 
-You can use it directly from the command line, or you can use it wrapped inside of an app. Currently, there are apps for iOS and macOS that you can use to start the tunnel.
+## Contributing
+
+Burrow is fully open source, you can fork the repo and start contributing easily. For more information and in-depth discussions, visit the `#burrow` channel on the [Hack Club Slack](https://hackclub.com/slack/), here you can ask for help and talk with other people interested in burrow! 
+
+The project structure is divided in the following folders: 
+
+[] To do, add folder directories
+
+## Installation 
+
+To start burrowing, download the latest release build in the release section. 
+
+## Hack Club
+
+Hack Club is a global community of high-school hackers from all around the world! Start your hack club by visiting the [Hack Club Page](https://hackclub.com/)
+
+## License 
+
+Burrow is open source and licensed under the [GNU General Public License v3.0](./LICENSE.md)
