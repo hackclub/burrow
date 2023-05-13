@@ -1,15 +1,16 @@
 use fehler::throws;
 use libc::c_char;
-use std::io::Error;
-use std::net::Ipv4Addr;
-use std::os::fd::AsRawFd;
+use socket2::{Domain, SockAddr, Socket, Type};
+use std::net::{Ipv4Addr, SocketAddrV4};
+use std::os::fd::{AsRawFd, RawFd};
+use std::{io::Error, mem};
 
 mod kern_control;
 mod sys;
 
 pub use super::queue::TunQueue;
 
-use super::ifname_to_string;
+use super::{ifname_to_string, string_to_ifname};
 use kern_control::SysControlSocket;
 
 #[derive(Debug)]
@@ -53,12 +54,33 @@ impl TunInterface {
     }
 
     #[throws]
-    pub fn set_ipv4_addr(&self, _addr: Ipv4Addr) {
-        todo!()
+    fn ifreq(&self) -> sys::ifreq {
+        let mut iff: sys::ifreq = unsafe { mem::zeroed() };
+        iff.ifr_name = string_to_ifname(&self.name()?);
+        iff
+    }
+
+    #[throws]
+    pub fn set_ipv4_addr(&self, addr: Ipv4Addr) {
+        let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
+
+        let mut iff = self.ifreq()?;
+        iff.ifr_ifru.ifru_addr = unsafe { *addr.as_ptr() };
+
+        self.perform(|fd| unsafe { sys::if_set_addr(fd, &iff) })?;
     }
 
     #[throws]
     pub fn ipv4_addr(&self) -> Ipv4Addr {
-        todo!()
+        let mut iff = self.ifreq()?;
+        self.perform(|fd| unsafe { sys::if_get_addr(fd, &mut iff) })?;
+        let addr = unsafe { *(&iff.ifr_ifru.ifru_addr as *const _ as *const sys::sockaddr_in) };
+        Ipv4Addr::from(u32::from_be(addr.sin_addr.s_addr))
+    }
+
+    #[throws]
+    fn perform<R>(&self, perform: impl FnOnce(RawFd) -> Result<R, nix::Error>) -> R {
+        let socket = Socket::new(Domain::IPV4, Type::DGRAM, None)?;
+        perform(socket.as_raw_fd())?
     }
 }
