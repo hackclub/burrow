@@ -5,7 +5,10 @@ pub use libc::{
     c_void, sockaddr_ctl, sockaddr_in, socklen_t, AF_SYSTEM, AF_SYS_CONTROL, IFNAMSIZ,
     SYSPROTO_CONTROL,
 };
-use nix::{ioctl_read_bad, ioctl_readwrite, ioctl_write_ptr_bad, request_code_write};
+use nix::{
+    ioctl_read_bad, ioctl_readwrite, ioctl_write_ptr_bad, request_code_readwrite,
+    request_code_write,
+};
 
 pub const UTUN_CONTROL_NAME: &str = "com.apple.net.utun_control";
 pub const UTUN_OPT_IFNAME: libc::c_int = 2;
@@ -40,6 +43,7 @@ pub union ifr_ifru {
     pub ifru_addr: sockaddr,
     pub ifru_dstaddr: sockaddr,
     pub ifru_broadaddr: sockaddr,
+    pub ifru_netmask: sockaddr,
     pub ifru_flags: c_short,
     pub ifru_metric: c_int,
     pub ifru_mtu: c_int,
@@ -62,6 +66,10 @@ pub struct ifreq {
 }
 
 pub const SIOCSIFADDR: c_ulong = request_code_write!(b'i', 12, mem::size_of::<ifreq>());
+pub const SIOCGIFMTU: c_ulong = request_code_readwrite!(b'i', 51, mem::size_of::<ifreq>());
+pub const SIOCSIFMTU: c_ulong = request_code_write!(b'i', 52, mem::size_of::<ifreq>());
+pub const SIOCGIFNETMASK: c_ulong = request_code_readwrite!(b'i', 37, mem::size_of::<ifreq>());
+pub const SIOCSIFNETMASK: c_ulong = request_code_write!(b'i', 22, mem::size_of::<ifreq>());
 
 #[macro_export]
 macro_rules! syscall {
@@ -77,4 +85,8 @@ pub use syscall;
 
 ioctl_readwrite!(resolve_ctl_info, b'N', 3, ctl_info);
 ioctl_read_bad!(if_get_addr, libc::SIOCGIFADDR, ifreq);
+ioctl_read_bad!(if_get_mtu, SIOCGIFMTU, ifreq);
+ioctl_read_bad!(if_get_netmask, SIOCGIFNETMASK, ifreq);
 ioctl_write_ptr_bad!(if_set_addr, SIOCSIFADDR, ifreq);
+ioctl_write_ptr_bad!(if_set_mtu, SIOCSIFMTU, ifreq);
+ioctl_write_ptr_bad!(if_set_netmask, SIOCSIFNETMASK, ifreq);
