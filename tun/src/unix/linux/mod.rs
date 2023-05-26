@@ -120,6 +120,7 @@ impl TunInterface {
     }
 }
 
+#[cfg(test)]
 mod test {
     use super::TunInterface;
     use std::net::Ipv4Addr;
