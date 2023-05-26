@@ -4,21 +4,18 @@ import SwiftUI
 @main
 @MainActor
 struct BurrowApp: App {
-    //To connect to the App Delegate
+    // To connect to the App Delegate
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
-
-
     var body: some Scene {
         WindowGroup {
-            TunnelView()
-        }
+            OnboardingView()
+        }.windowStyle(.hiddenTitleBar)
+            
     }
 }
 
-
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
-
     static let tunnel = Tunnel { manager, proto in
         proto.serverAddress = "hackclub.com"
         manager.localizedDescription = "Burrow"
@@ -41,13 +38,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             menuButton.action = #selector(menuButtonToggle)
         }
     }
-    @objc func menuButtonToggle() {
-
-
+    @objc func
+    menuButtonToggle() {
         if let menuButton = statusItem?.button {
-
             self.popOver.show(relativeTo: menuButton.bounds, of: menuButton, preferredEdge: NSRectEdge.minY)
         }
     }
 }
-
