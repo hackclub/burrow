@@ -1,7 +1,8 @@
-use std::io::Result;
+use fehler::throws;
+use std::io::Error;
 use std::ptr;
 use widestring::{u16cstr, U16CString};
-
+use windows::Win32::Foundation::GetLastError;
 mod queue;
 
 pub use queue::TunQueue;
@@ -13,16 +14,20 @@ pub struct TunInterface {
 }
 
 impl TunInterface {
-    pub fn new() -> Result<TunInterface> {
-        let name = U16CString::from(u16cstr!("ConradNet"));
+    #[throws]
+    pub fn new() -> TunInterface {
+        let name = U16CString::from(u16cstr!("Burrow"));
         let wintun = sys::wintun::default();
         let handle =
             unsafe { wintun.WintunCreateAdapter(name.as_ptr(), name.as_ptr(), ptr::null()) };
-        Ok(TunInterface {
+        if handle.is_null() {
+            unsafe { GetLastError() }.ok()?
+        }
+        TunInterface {
             wintun,
             handle,
-            name: String::from("ConradNet"),
-        })
+            name: String::from("Burrow"),
+        }
     }
 
     pub fn name(&self) -> String {
