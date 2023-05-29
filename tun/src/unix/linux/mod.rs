@@ -2,7 +2,7 @@ use fehler::throws;
 
 use socket2::{Domain, SockAddr, Socket, Type};
 use std::fs::OpenOptions;
-use std::io::Error;
+use std::io::{Error, Write};
 use std::mem;
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddrV4, SocketAddrV6};
 use std::os::fd::RawFd;
@@ -137,6 +137,17 @@ impl TunInterface {
     fn perform6<R>(&self, perform: impl FnOnce(RawFd) -> Result<R, nix::Error>) -> R {
         let socket = Socket::new(Domain::IPV6, Type::DGRAM, None)?;
         perform(socket.as_raw_fd())?
+    }
+}
+
+impl Write for TunInterface {
+    #[throws]
+    fn write(&mut self, buf: &[u8]) -> usize {
+        self.socket.send(buf)?
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
     }
 }
 

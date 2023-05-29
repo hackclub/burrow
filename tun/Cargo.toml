@@ -9,6 +9,7 @@ fehler = "1.0"
 nix = { version = "0.26", features = ["ioctl"] }
 socket2 = "0.4"
 tokio = { version = "1.28", features = [] }
+byteorder = "1.4"
 
 [target.'cfg(windows)'.dependencies]
 libloading = "0.7"
