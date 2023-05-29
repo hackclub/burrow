@@ -7,10 +7,11 @@ async fn main() -> anyhow::Result<()> {
         .await?
         .bytes()
         .await?;
-    assert_content_hash(
-        &buf,
-        hex_literal::hex!("07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51"),
-    );
+
+    ssri::IntegrityChecker::new("sha256-B8JWGF1u42UuCfpVwLZz4mJLVl4CxLkJHHnKfS8k71E=".parse()?)
+        .chain(&buf)
+        .result()?;
+
     let mut archive = zip::ZipArchive::new(Cursor::new(buf))?;
 
     let out_dir = std::path::PathBuf::from(std::env::var("OUT_DIR")?);
@@ -46,13 +47,14 @@ async fn main() -> anyhow::Result<()> {
     bindings.write_to_file(out_dir.join("wintun.rs"))?;
 
     let mut library = Vec::new();
-    let platform = platforms::Platform::find(&std::env::var("TARGET")?).unwrap();
-    let arch = match platform.target_arch {
-        platforms::target::Arch::Arm => "arm",
-        platforms::Arch::AArch64 => "arm64",
-        platforms::Arch::X86 => "x86",
-        platforms::Arch::X86_64 => "amd64",
-        arch => panic!("{} is not a supported architecture", arch),
+    let target = std::env::var("TARGET")?;
+    let arch = match target.split("-").next() {
+        Some("i686") => "x86",
+        Some("x86_64") => "amd64",
+        Some("aarch64") => "arm64",
+        Some("thumbv7a") => "arm",
+        Some(a) => panic!("{} is not a supported architecture", a),
+        None => unreachable!(),
     };
     archive
         .by_name(&format!("wintun/bin/{}/wintun.dll", arch))?
@@ -67,13 +69,4 @@ async fn main() -> anyhow::Result<()> {
 #[cfg(not(windows))]
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-}
-
-#[cfg(windows)]
-fn assert_content_hash(content: &[u8], hash: [u8; 32]) {
-    use sha2::digest::Update;
-    use sha2::Digest;
-
-    let computed = sha2::Sha256::new().chain(content).finalize();
-    assert_eq!(computed.as_slice(), &hash[..]);
 }
