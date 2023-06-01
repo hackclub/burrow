@@ -8,40 +8,43 @@
 
 import SwiftUI
 
-func isFirstTime() -> Bool {
-    // TODO REMOVE
-    // DEBUG ONLY
-    UserDefaults.standard.set(false, forKey: "launchedBefore")
-    // REMOVE
-    let launchedBefore = UserDefaults.standard.bool(forKey: "launchedBefore")
-    if launchedBefore {
-        print("Not first launch.")
-    } else {
-        print("First launch, setting UserDefault.")
-        UserDefaults.standard.set(true, forKey: "launchedBefore")
-    }
-    return !launchedBefore
+//Sets burrow visited status
+func setVisited() {
+    UserDefaults.standard.set(true, forKey: "launchedBefore")
+    NSApp.windows.first?.close()
 }
 
+@available(macOS 13.0, *)
 struct OnboardingView: View {
     var body: some View {
-        if isFirstTime() {
-            HStack(alignment: .center) {
-                Text("Built by and for hacker")
-                Divider()
-                    .frame(height: 350.0)
-                // Must develop this part, almost ready
-                VStack(alignment: .center) {
-                    Text("Welcome to burrow")
-                    Spacer()
-                        .frame(height: /*@START_MENU_TOKEN@*/20.0/*@END_MENU_TOKEN@*/)
-                    Text("This is a high-end VPN service")
-                }
-            }.padding(20)
-        } else {
-            VStack(alignment: .leading) {
-                Text("Waaa")
-            }.padding(20)
+        ZStack(alignment: .center) {
+            Image("OnboardingBackground")
+                .resizable(resizingMode: .stretch)
+                .aspectRatio(contentMode: .fit)
+                .scaledToFill()
+            Color.black
+                .opacity(0.6)
+                .cornerRadius(15)
+                .blur(radius: 0.2)
+                .edgesIgnoringSafeArea(.all)
+                .frame(width: 450, height: 300)
+            VStack(alignment: .center) {
+                Text("Welcome to burrow").font(.system(size: 24, weight: .bold, design: .rounded))
+                Spacer().frame(height: /*@START_MENU_TOKEN@*/20.0/*@END_MENU_TOKEN@*/)
+                Text("It is a best-in-class tool for burrowing through firewalls.").font(.system(size: 14))
+                Spacer().frame(height: 10.0)
+                Text("Built by teenagers at HackClub").font(.system(size: 14))
+                Button(action: setVisited, label: {
+                    Text("Start burrowing")
+                        .font(
+                            .system(
+                                size : 14,
+                                weight: .regular,
+                                design: .rounded))
+                        .padding(.all, 30.0)
+                        .foregroundColor(.white)
+                }).buttonBorderShape(.roundedRectangle).buttonStyle(.borderless)
+            }.padding(20.0)
         }
     }
 }
