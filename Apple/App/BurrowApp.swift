@@ -1,16 +1,17 @@
 import NetworkExtension
 import SwiftUI
 
+@available(macOS 13.0, *)
 @main
 @MainActor
 struct BurrowApp: App {
     // To connect to the App Delegate
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @NSApplicationDelegateAdaptor(AppDelegate.self)
+    var delegate
     var body: some Scene {
         WindowGroup {
-            OnboardingView()
-        }.windowStyle(.hiddenTitleBar)
-            
+            OnboardingView().frame(width: 1000, height: 600.0).scaledToFill().fixedSize()
+        }.windowStyle(.hiddenTitleBar).windowResizability(.contentSize)
     }
 }
 
@@ -20,10 +21,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         proto.serverAddress = "hackclub.com"
         manager.localizedDescription = "Burrow"
     }
-
+    // Verifies app status
+    func isFirstTime() -> Bool {
+        let launchedBefore = UserDefaults.standard.bool(forKey: "launchedBefore")
+        if launchedBefore {
+            print("Not first launch.")
+        } else {
+            print("First launch, setting UserDefault.")
+            setVisited()
+        }
+        return !launchedBefore
+    }
+    
     var statusItem: NSStatusItem?
     var popOver = NSPopover()
     func applicationDidFinishLaunching(_ notification: Notification) {
+        //Closes main window if it is not the first time
+        if !isFirstTime(){
+            if let window = NSApplication.shared.windows.first {
+                window.close()
+            }
+        }
+        
         let menuView = MenuView(tunnel: AppDelegate.tunnel)
         // Creating apopOver
         popOver.behavior = .transient
