@@ -21,7 +21,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         proto.serverAddress = "hackclub.com"
         manager.localizedDescription = "Burrow"
     }
-
     // Verifies app status
     func checkFirstTime() {
         UserDefaults.standard.set(false, forKey: "launchedBefore")
@@ -40,7 +39,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         
         checkFirstTime()
-        
         let menuView = MenuView(tunnel: AppDelegate.tunnel)
         // Creating apopOver
         popOver.behavior = .transient
