@@ -18,6 +18,7 @@ func closeApp() {
     NSApp.windows.first?.close()
 }
 
+@available(macOS 13.0, *)
 struct OnboardingView: View {
     var body: some View {
         ZStack(alignment: .center) {

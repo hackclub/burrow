@@ -1,11 +1,13 @@
 import NetworkExtension
 import SwiftUI
 
+@available(macOS 13.0, *)
 @main
 @MainActor
 struct BurrowApp: App {
     // To connect to the App Delegate
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @NSApplicationDelegateAdaptor(AppDelegate.self)
+    var delegate
     var body: some Scene {
         WindowGroup(id: "onboarding", content: {
             OnboardingView().frame(width: 1000, height: 600.0).scaledToFill().fixedSize()
@@ -35,7 +37,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var popOver = NSPopover()
     func applicationDidFinishLaunching(_ notification: Notification) {
-        
         checkFirstTime()
         let menuView = MenuView(tunnel: AppDelegate.tunnel)
         // Creating apopOver
