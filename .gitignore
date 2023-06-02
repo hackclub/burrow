@@ -3,3 +3,6 @@ xcuserdata
 
 # Rust
 target/
+
+# DS Store
+**/.DS_Store
