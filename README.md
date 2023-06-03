@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/github/license/hackclub/burrow) ![Apple Build Status](https://img.shields.io/github/actions/workflow/status/hackclub/burrow/build-apple.yml?branch=main&label=macos%2C%20ios&logo=Apple) ![Crate Build Status](https://img.shields.io/github/actions/workflow/status/hackclub/burrow/build-rust.yml?branch=main&label=crate&logo=Rust)
 
-Burrow is a best-in-class tool for burrowing through firewalls. It is built by teenagers at [Hack Club](https://hackclub.com/).
+Burrow is an open source tool for burrowing through firewalls. It is built by teenagers at [Hack Club](https://hackclub.com/).
 
 It works through the app that allows for a quick and easy setup to open virtual interfaces and direct traffic through them. You can also use burrow directly from the command line. 
 
