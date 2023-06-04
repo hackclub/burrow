@@ -4,7 +4,7 @@
 
 Burrow is an open source tool for burrowing through firewalls, built by teenagers at [Hack Club](https://hackclub.com/).
 
-It works through the app that allows for a quick and easy setup to open virtual interfaces and direct traffic through them. You can also use burrow directly from the command line. 
+`burrow` provides a simple command-line tool to open virtual interfaces and direct traffic through them
 
 ## Contributing
 
