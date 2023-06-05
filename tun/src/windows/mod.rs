@@ -8,7 +8,6 @@ mod queue;
 pub use queue::TunQueue;
 
 pub struct TunInterface {
-    wintun: sys::wintun,
     handle: sys::WINTUN_ADAPTER_HANDLE,
     name: String,
 }
@@ -17,14 +16,12 @@ impl TunInterface {
     #[throws]
     pub fn new() -> TunInterface {
         let name = U16CString::from(u16cstr!("Burrow"));
-        let wintun = sys::wintun::default();
         let handle =
-            unsafe { wintun.WintunCreateAdapter(name.as_ptr(), name.as_ptr(), ptr::null()) };
+            unsafe { sys::WINTUN.WintunCreateAdapter(name.as_ptr(), name.as_ptr(), ptr::null()) };
         if handle.is_null() {
             unsafe { GetLastError() }.ok()?
         }
         TunInterface {
-            wintun,
             handle,
             name: String::from("Burrow"),
         }
@@ -37,17 +34,25 @@ impl TunInterface {
 
 impl Drop for TunInterface {
     fn drop(&mut self) {
-        unsafe { self.wintun.WintunCloseAdapter(self.handle) }
+        unsafe { sys::WINTUN.WintunCloseAdapter(self.handle) }
     }
 }
 
 pub(crate) mod sys {
-    #![allow(dead_code, non_camel_case_types, non_snake_case)]
+    #![allow(clippy::all, dead_code, non_camel_case_types, non_snake_case)]
     include!(concat!(env!("OUT_DIR"), "/wintun.rs"));
 
-    impl Default for wintun {
-        fn default() -> Self {
-            unsafe { wintun::new(format!("{}/wintun.dll", env!("OUT_DIR"))).unwrap() }
-        }
+    const WINTUN_BINARY: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/wintun.dll"));
+
+    lazy_static::lazy_static! {
+        pub static ref WINTUN: wintun = {
+            use std::io::Write;
+
+            let mut temp_file = tempfile::NamedTempFile::new().unwrap();
+            temp_file.write_all(&WINTUN_BINARY).unwrap();
+            let (_, path) = temp_file.keep().unwrap();
+
+            unsafe { wintun::new(&path) }.unwrap()
+        };
     }
 }
