@@ -19,6 +19,6 @@ async fn try_main() -> Result<()> {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let cli = Cli::parse();
+    let _cli = Cli::parse();
     try_main().await.unwrap();
 }
