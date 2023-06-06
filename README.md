@@ -8,12 +8,11 @@ Burrow is an open source tool for burrowing through firewalls, built by teenager
 
 ## Contributing
 
-Burrow is fully open source, you can fork the repo and start contributing easily. For more information and in-depth discussions, visit the `#burrow` channel on the [Hack Club Slack](https://hackclub.com/slack/), here you can ask for help and talk with other people interested in burrow! 
+Burrow is fully open source, you can fork the repo and start contributing easily. For more information and in-depth discussions, visit the `#burrow` channel on the [Hack Club Slack](https://hackclub.com/slack/), here you can ask for help and talk with other people interested in burrow! For more information on how to contribute, please see [CONTRIBUTING.md]
 
 The project structure is divided in the following folders: 
 
 [] To do, add folder directories
-
 ## Installation 
 
 To start burrowing, download the latest release build in the release section. 
