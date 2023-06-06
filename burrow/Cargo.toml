@@ -9,4 +9,4 @@ crate-type = ["lib", "staticlib"]
 [dependencies]
 tokio = { version = "1.21", features = ["rt", "macros"] }
 tun = { version = "0.1", path = "../tun" }
-clap = "4.3.2"
+clap = { version = "4.3.2", features = ["derive"] }
