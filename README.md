@@ -12,7 +12,16 @@ Burrow is fully open source, you can fork the repo and start contributing easily
 
 The project structure is divided in the following folders: 
 
-[] To do, add folder directories
+```
+Apple/ # Xcode project for burrow on macOS and iOS
+burrow/ # Higher-level API library for tun and tun-async
+tun/ # Low-level interface to OS networking
+    src/
+        unix/ # macOS and Linux code
+        windows/ # Windows networking code
+tun-async/ # Async interface to tun
+```
+
 ## Installation 
 
 To start burrowing, download the latest release build in the release section. 
