@@ -1,7 +1,7 @@
 name: Rust Build
 on:
   push:
-    branches:  
+    branches:
     - main
   pull_request:
     branches:
@@ -48,7 +48,9 @@ jobs:
     - name: Install Packages
       if: matrix.os == 'ubuntu-latest'
       shell: bash
-      run: sudo apt-get install -y ${{ join(matrix.packages, ' ') }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ${{ join(matrix.packages, ' ') }}
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:

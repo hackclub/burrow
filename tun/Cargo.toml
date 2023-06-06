@@ -6,20 +6,22 @@ edition = "2021"
 [dependencies]
 libc = "0.2"
 fehler = "1.0"
-nix = { version = "0.25", features = ["ioctl"] }
+nix = { version = "0.26", features = ["ioctl"] }
 socket2 = "0.4"
-tokio = { version = "1.21", features = [] }
+tokio = { version = "1.28", features = [] }
+byteorder = "1.4"
 
 [target.'cfg(windows)'.dependencies]
+lazy_static = "1.4"
 libloading = "0.7"
+tempfile = "3.5"
 widestring = "1.0"
+windows = { version = "0.48", features = ["Win32_Foundation", "Win32_NetworkManagement_IpHelper"] }
 
 [target.'cfg(windows)'.build-dependencies]
 anyhow = "1.0"
-bindgen = "0.61"
-hex-literal = "0.3"
-platforms = "3.0"
+bindgen = "0.65"
 reqwest = { version = "0.11", features = ["native-tls"] }
-sha2 = "0.10"
-tokio = { version = "1.21", features = ["rt"] }
+ssri = { version = "9.0", default-features = false }
+tokio = { version = "1.28", features = ["rt"] }
 zip = { version = "0.6", features = ["deflate"] }
