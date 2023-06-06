@@ -4,7 +4,7 @@ use socket2::{Domain, SockAddr, Socket, Type};
 use std::fs::OpenOptions;
 use std::io::{Error, Write};
 use std::mem;
-use std::net::{Ipv4Addr, Ipv6Addr, SocketAddrV4, SocketAddrV6};
+use std::net::{Ipv4Addr, Ipv6Addr, SocketAddrV4};
 use std::os::fd::RawFd;
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd};
 
