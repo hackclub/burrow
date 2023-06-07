@@ -25,7 +25,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // Verifies app status
     func checkFirstTime() {
-        UserDefaults.standard.set(false, forKey: "launchedBefore")
         let launchedBefore = UserDefaults.standard.bool(forKey: "launchedBefore")
         if launchedBefore {
             print("Not first launch.")
