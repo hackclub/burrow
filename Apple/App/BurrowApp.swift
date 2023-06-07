@@ -9,39 +9,38 @@ struct BurrowApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self)
     var delegate
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: "onboarding", content: {
             OnboardingView().frame(width: 1000, height: 600.0).scaledToFill().fixedSize()
-        }.windowStyle(.hiddenTitleBar).windowResizability(.contentSize)
+        }).windowStyle(.hiddenTitleBar).windowResizability(.contentSize)
     }
 }
 
+@available(macOS 13.0, *)
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     static let tunnel = Tunnel { manager, proto in
         proto.serverAddress = "hackclub.com"
         manager.localizedDescription = "Burrow"
     }
+
     // Verifies app status
-    func isFirstTime() -> Bool {
+    func checkFirstTime() {
+        UserDefaults.standard.set(false, forKey: "launchedBefore")
         let launchedBefore = UserDefaults.standard.bool(forKey: "launchedBefore")
         if launchedBefore {
             print("Not first launch.")
+            closeApp()
         } else {
             print("First launch, setting UserDefault.")
             setVisited()
         }
-        return !launchedBefore
     }
     
     var statusItem: NSStatusItem?
     var popOver = NSPopover()
     func applicationDidFinishLaunching(_ notification: Notification) {
-        //Closes main window if it is not the first time
-        if !isFirstTime(){
-            if let window = NSApplication.shared.windows.first {
-                window.close()
-            }
-        }
+        
+        checkFirstTime()
         
         let menuView = MenuView(tunnel: AppDelegate.tunnel)
         // Creating apopOver

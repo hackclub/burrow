@@ -11,6 +11,10 @@ import SwiftUI
 //Sets burrow visited status
 func setVisited() {
     UserDefaults.standard.set(true, forKey: "launchedBefore")
+}
+
+func closeApp() {
+    setVisited()
     NSApp.windows.first?.close()
 }
 
@@ -34,7 +38,7 @@ struct OnboardingView: View {
                 Text("It is a best-in-class tool for burrowing through firewalls.").font(.system(size: 14))
                 Spacer().frame(height: 10.0)
                 Text("Built by teenagers at HackClub").font(.system(size: 14))
-                Button(action: setVisited, label: {
+                Button(action: closeApp, label: {
                     Text("Start burrowing")
                         .font(
                             .system(
