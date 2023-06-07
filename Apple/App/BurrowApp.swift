@@ -15,12 +15,14 @@ struct BurrowApp: App {
     }
 }
 
+@available(macOS 13.0, *)
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     static let tunnel = Tunnel { manager, proto in
         proto.serverAddress = "hackclub.com"
         manager.localizedDescription = "Burrow"
     }
+
     // Verifies app status
     func checkFirstTime() {
         UserDefaults.standard.set(false, forKey: "launchedBefore")
