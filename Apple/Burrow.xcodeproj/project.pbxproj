@@ -377,6 +377,10 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D020F64929E4A34B002790F6 /* App.xcconfig */;
 			buildSettings = {
+				INFOPLIST_KEY_CFBundleDisplayName = Burrow;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2023 Hack Club";
 			};
 			name = Debug;
 		};
@@ -384,6 +388,10 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D020F64929E4A34B002790F6 /* App.xcconfig */;
 			buildSettings = {
+				INFOPLIST_KEY_CFBundleDisplayName = Burrow;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2023 Hack Club";
 			};
 			name = Release;
 		};
