@@ -1,0 +1,4 @@
+module libburrow {
+    header "libburrow.h"
+    export *
+}
