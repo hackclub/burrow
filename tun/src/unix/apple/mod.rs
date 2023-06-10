@@ -6,7 +6,7 @@ use std::io::{IoSlice, Write};
 use std::net::{Ipv4Addr, SocketAddrV4};
 use std::os::fd::{AsRawFd, RawFd};
 use std::{
-    io::{Error, Read},
+    io::{Error},
     mem,
 };
 
