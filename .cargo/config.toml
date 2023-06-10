@@ -1,2 +1,6 @@
 [target.'cfg(unix)']
 runner = "sudo -E"
+
+[alias] # command aliases
+rr = "run --release"
+bb = "build --release"
