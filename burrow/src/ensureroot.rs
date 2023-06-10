@@ -18,7 +18,7 @@ pub fn ensure_root() {
 }
 
 // Check for root user on macOS
-#[cfg(target_os = "macos")]
+#[cfg(target_vendor = "apple")]
 pub fn ensure_root() {
     use nix::unistd::Uid;
 
