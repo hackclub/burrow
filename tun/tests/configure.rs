@@ -1,7 +1,7 @@
 use fehler::throws;
-use tun::TunInterface;
 use std::io::Error;
-use std::net::Ipv4Addr;
+use std::net::{Ipv4Addr, Ipv6Addr};
+use tun::TunInterface;
 
 #[test]
 #[throws]
@@ -19,4 +19,16 @@ fn test_set_get_ipv4() {
     let result = tun.ipv4_addr()?;
 
     assert_eq!(addr, result);
+}
+
+#[test]
+#[throws]
+fn test_set_get_ipv6() {
+    let tun = TunInterface::new()?;
+
+    let addr = Ipv6Addr::new(1, 1, 1, 1, 1, 1, 1, 1);
+    tun.set_ipv6_addr(addr)?;
+
+    // let result = tun.ipv6_addr()?;
+    // assert_eq!(addr, result);
 }

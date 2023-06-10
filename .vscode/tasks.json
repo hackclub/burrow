@@ -3,7 +3,7 @@
 	"tasks": [
 		{
 			"type": "cargo",
-			"command": "check",
+			"command": "clippy",
 			"problemMatcher": [
 				"$rustc"
 			],
@@ -11,7 +11,13 @@
 				"kind": "build",
 				"isDefault": true
 			},
-			"label": "Check"
-		}
+			"label": "rust: cargo clippy",
+			"args": [
+				"--workspace",
+				"--all-targets",
+				"--all-features",
+				"--all"
+			]
+		},
 	]
 }

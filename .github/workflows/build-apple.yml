@@ -14,20 +14,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - scheme: Burrow
+        - scheme: App
           destination: generic/platform=iOS
           platform: iOS
           sdk-name: iphoneos
           rust-targets:
           - aarch64-apple-ios
-        - scheme: Burrow
+        - scheme: App
           destination: platform=iOS Simulator,OS=16.2,name=iPhone 14 Pro
           platform: iOS Simulator
           sdk-name: iphonesimulator
           rust-targets:
           - aarch64-apple-ios-sim
           - x86_64-apple-ios
-        - scheme: Burrow
+        - scheme: App
           destination: platform=macOS
           platform: macOS
           sdk-name: macos

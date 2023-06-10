@@ -1,15 +1,21 @@
+use byteorder::{ByteOrder, NetworkEndian};
 use fehler::throws;
-use libc::c_char;
-use std::net::Ipv4Addr;
-use std::os::unix::io::{AsRawFd, IntoRawFd, RawFd};
-use std::io::Error;
+use libc::{c_char, iovec, writev, AF_INET, AF_INET6};
+use socket2::{Domain, SockAddr, Socket, Type};
+use std::io::{IoSlice, Write};
+use std::net::{Ipv4Addr, SocketAddrV4};
+use std::os::fd::{AsRawFd, RawFd};
+use std::{
+    io::{Error, Read},
+    mem,
+};
 
-mod sys;
 mod kern_control;
+mod sys;
 
 pub use super::queue::TunQueue;
 
-use super::ifname_to_string;
+use super::{ifname_to_string, string_to_ifname};
 use kern_control::SysControlSocket;
 
 #[derive(Debug)]
@@ -53,24 +59,129 @@ impl TunInterface {
     }
 
     #[throws]
-    pub fn set_ipv4_addr(&self, _addr: Ipv4Addr) {
-        todo!()
+    fn ifreq(&self) -> sys::ifreq {
+        let mut iff: sys::ifreq = unsafe { mem::zeroed() };
+        iff.ifr_name = string_to_ifname(&self.name()?);
+        iff
+    }
+
+    #[throws]
+    pub fn set_ipv4_addr(&self, addr: Ipv4Addr) {
+        let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
+
+        let mut iff = self.ifreq()?;
+        iff.ifr_ifru.ifru_addr = unsafe { *addr.as_ptr() };
+
+        self.perform(|fd| unsafe { sys::if_set_addr(fd, &iff) })?;
     }
 
     #[throws]
     pub fn ipv4_addr(&self) -> Ipv4Addr {
-        todo!()
+        let mut iff = self.ifreq()?;
+        self.perform(|fd| unsafe { sys::if_get_addr(fd, &mut iff) })?;
+        let addr = unsafe { *(&iff.ifr_ifru.ifru_addr as *const _ as *const sys::sockaddr_in) };
+        Ipv4Addr::from(u32::from_be(addr.sin_addr.s_addr))
+    }
+
+    #[throws]
+    fn perform<R>(&self, perform: impl FnOnce(RawFd) -> Result<R, nix::Error>) -> R {
+        let socket = Socket::new(Domain::IPV4, Type::DGRAM, None)?;
+        perform(socket.as_raw_fd())?
+    }
+
+    #[throws]
+    pub fn mtu(&self) -> i32 {
+        let mut iff = self.ifreq()?;
+        self.perform(|fd| unsafe { sys::if_get_mtu(fd, &mut iff) })?;
+        let mtu = unsafe { iff.ifr_ifru.ifru_mtu };
+
+        mtu
+    }
+
+    #[throws]
+    pub fn set_mtu(&self, mtu: i32) {
+        let mut iff = self.ifreq()?;
+        iff.ifr_ifru.ifru_mtu = mtu;
+        self.perform(|fd| unsafe { sys::if_set_mtu(fd, &iff) })?;
+    }
+
+    #[throws]
+    pub fn netmask(&self) -> Ipv4Addr {
+        let mut iff = self.ifreq()?;
+        self.perform(|fd| unsafe { sys::if_get_netmask(fd, &mut iff) })?;
+
+        let netmask =
+            unsafe { *(&iff.ifr_ifru.ifru_netmask as *const _ as *const sys::sockaddr_in) };
+
+        Ipv4Addr::from(u32::from_be(netmask.sin_addr.s_addr))
+    }
+
+    #[throws]
+    pub fn set_netmask(&self, addr: Ipv4Addr) {
+        let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
+
+        let mut iff = self.ifreq()?;
+        iff.ifr_ifru.ifru_netmask = unsafe { *addr.as_ptr() };
+
+        self.perform(|fd| unsafe { sys::if_set_netmask(fd, &iff) })?;
     }
 }
 
-impl AsRawFd for TunInterface {
-    fn as_raw_fd(&self) -> RawFd {
-        self.socket.as_raw_fd()
+impl Write for TunInterface {
+    #[throws]
+    fn write(&mut self, buf: &[u8]) -> usize {
+        use std::io::ErrorKind;
+        let proto = match buf[0] >> 4 {
+            6 => Ok(AF_INET6),
+            4 => Ok(AF_INET),
+            _ => Err(Error::new(ErrorKind::InvalidInput, "Invalid IP version")),
+        }?;
+        let mut pbuf = [0; 4];
+        NetworkEndian::write_i32(&mut pbuf, proto);
+
+        let bufs = [IoSlice::new(&pbuf), IoSlice::new(buf)];
+        let bytes_written: isize = unsafe {
+            writev(
+                self.as_raw_fd(),
+                bufs.as_ptr() as *const iovec,
+                bufs.len() as i32,
+            )
+        };
+        bytes_written
+            .try_into()
+            .map_err(|_| Error::new(ErrorKind::Other, "Conversion error"))?
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
     }
 }
 
-impl IntoRawFd for TunInterface {
-    fn into_raw_fd(self) -> RawFd {
-        self.socket.into_raw_fd()
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::net::Ipv4Addr;
+
+    #[test]
+    fn mtu() {
+        let interf = TunInterface::new().unwrap();
+
+        interf.set_mtu(500).unwrap();
+
+        assert_eq!(interf.mtu().unwrap(), 500);
+    }
+
+    #[test]
+    #[throws]
+    fn netmask() {
+        let interf = TunInterface::new()?;
+
+        let netmask = Ipv4Addr::new(255, 0, 0, 0);
+        let addr = Ipv4Addr::new(192, 168, 1, 1);
+
+        interf.set_ipv4_addr(addr)?;
+        interf.set_netmask(netmask)?;
+
+        assert_eq!(interf.netmask()?, netmask);
     }
 }
