@@ -71,7 +71,7 @@ mod test {
 
     use super::*;
     use std::io::Write;
-    use std::io::{self, BufRead};
+    
     use std::net::Ipv4Addr;
 
     #[throws]

@@ -28,6 +28,8 @@ enum Commands {
 struct StartArgs {}
 
 async fn try_main() -> Result<()> {
+    burrow::ensureroot::ensure_root();
+
     let iface = TunInterface::new()?;
     println!("{:?}", iface.name());
 
@@ -36,6 +38,8 @@ async fn try_main() -> Result<()> {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
+    println!("Platform: {}", std::env::consts::OS);
+
     let cli = Cli::parse();
     match &cli.command {
         Commands::Start(..) => {

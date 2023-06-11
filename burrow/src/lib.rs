@@ -1,3 +1,1 @@
-pub fn hello_world() {
-    println!("Hello, world!");
-}
+pub mod ensureroot;
