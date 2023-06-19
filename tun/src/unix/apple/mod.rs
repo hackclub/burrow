@@ -2,13 +2,10 @@ use byteorder::{ByteOrder, NetworkEndian};
 use fehler::throws;
 use libc::{c_char, iovec, writev, AF_INET, AF_INET6};
 use socket2::{Domain, SockAddr, Socket, Type};
-use std::io::{IoSlice, Write};
+use std::io::IoSlice;
 use std::net::{Ipv4Addr, SocketAddrV4};
 use std::os::fd::{AsRawFd, RawFd};
-use std::{
-    io::{Error},
-    mem,
-};
+use std::{io::Error, mem};
 
 mod kern_control;
 mod sys;
@@ -130,11 +127,9 @@ impl TunInterface {
 
         self.perform(|fd| unsafe { sys::if_set_netmask(fd, &iff) })?;
     }
-}
 
-impl Write for TunInterface {
     #[throws]
-    fn write(&mut self, buf: &[u8]) -> usize {
+    pub fn send(&self, buf: &[u8]) -> usize {
         use std::io::ErrorKind;
         let proto = match buf[0] >> 4 {
             6 => Ok(AF_INET6),
@@ -155,10 +150,6 @@ impl Write for TunInterface {
         bytes_written
             .try_into()
             .map_err(|_| Error::new(ErrorKind::Other, "Conversion error"))?
-    }
-
-    fn flush(&mut self) -> std::io::Result<()> {
-        Ok(())
     }
 }
 

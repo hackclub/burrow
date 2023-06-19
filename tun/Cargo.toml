@@ -12,6 +12,14 @@ tokio = { version = "1.28", features = [] }
 byteorder = "1.4"
 log = "0.4"
 
+futures = { version = "0.3.28", optional = true }
+
+[features]
+tokio = ["tokio/net", "dep:futures"]
+
+[target.'cfg(feature = "tokio")'.dev-dependencies]
+tokio = { features = ["rt", "macros"] }
+
 [target.'cfg(windows)'.dependencies]
 lazy_static = "1.4"
 libloading = "0.7"

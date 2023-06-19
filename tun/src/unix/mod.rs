@@ -40,13 +40,8 @@ impl IntoRawFd for TunInterface {
 }
 
 impl TunInterface {
-    // #[throws]
-    // pub fn write(&self, buf: &[u8]) -> usize {
-    //     self.socket.send(buf)?
-    // }
-
     #[throws]
-    pub fn read(&mut self, buf: &mut [u8]) -> usize {
+    pub fn recv(&mut self, buf: &mut [u8]) -> usize {
         self.socket.read(buf)?
     }
 }
@@ -72,7 +67,6 @@ pub fn string_to_ifname(name: &str) -> [libc::c_char; libc::IFNAMSIZ] {
 mod test {
 
     use super::*;
-    use std::io::Write;
 
     use std::net::Ipv4Addr;
 
@@ -88,7 +82,7 @@ mod test {
         println!("tun ip: {:?}", tun.ipv4_addr()?);
         println!("Waiting for a packet...");
         let buf = &mut [0u8; 1500];
-        let res = tun.read(buf);
+        let res = tun.recv(buf);
         println!("Received!");
         assert!(res.is_ok());
     }
@@ -96,10 +90,10 @@ mod test {
     #[test]
     #[throws]
     fn write_packets() {
-        let mut tun = TunInterface::new()?;
+        let tun = TunInterface::new()?;
         let mut buf = [0u8; 1500];
         buf[0] = 6 << 4;
-        let bytes_written = tun.write(&buf)?;
+        let bytes_written = tun.send(&buf)?;
         assert_eq!(bytes_written, 1504);
     }
 }

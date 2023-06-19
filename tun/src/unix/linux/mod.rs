@@ -166,16 +166,10 @@ impl TunInterface {
         let socket = Socket::new(Domain::IPV6, Type::DGRAM, None)?;
         perform(socket.as_raw_fd())?
     }
-}
 
-impl Write for TunInterface {
     #[throws]
-    fn write(&mut self, buf: &[u8]) -> usize {
+    pub fn send(&self, buf: &[u8]) -> usize {
         self.socket.send(buf)?
-    }
-
-    fn flush(&mut self) -> std::io::Result<()> {
-        Ok(())
     }
 }
 

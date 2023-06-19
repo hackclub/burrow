@@ -1,6 +1,6 @@
 use fehler::throws;
 use std::io::Error;
-use std::net::{Ipv4Addr, Ipv6Addr};
+use std::net::{Ipv4Addr};
 use tun::TunInterface;
 
 #[test]
@@ -23,6 +23,7 @@ fn test_set_get_ipv4() {
 
 #[test]
 #[throws]
+#[cfg(target_os = "linux")]
 fn test_set_get_ipv6() {
     let tun = TunInterface::new()?;
 
