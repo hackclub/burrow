@@ -2,7 +2,6 @@ import Foundation
 import NetworkExtension
 
 extension Tunnel {
-    
     enum Status: CustomStringConvertible, Equatable, Hashable {
         case unknown
         case permissionRequired

@@ -8,10 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		43AA26D82A10004900F14CE6 /* MenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AA26D72A10004900F14CE6 /* MenuView.swift */; };
+		91D80FC72A20615500952E28 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91D80FC62A20615500952E28 /* OnboardingView.swift */; };
 		D020F65829E4A697002790F6 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D020F65729E4A697002790F6 /* PacketTunnelProvider.swift */; };
 		D020F65D29E4A697002790F6 /* BurrowNetworkExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D020F65329E4A697002790F6 /* BurrowNetworkExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */; };
-		D05B9F7829E39EEC008CB1F9 /* TunnelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7729E39EEC008CB1F9 /* TunnelView.swift */; };
 		D05B9F7A29E39EED008CB1F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D05B9F7929E39EED008CB1F9 /* Assets.xcassets */; };
 		D0BCC5FD2A086D4700AD070D /* NetworkExtension+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */; };
 		D0BCC5FF2A086E1C00AD070D /* Status.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BCC5FE2A086E1C00AD070D /* Status.swift */; };
@@ -46,6 +46,7 @@
 
 /* Begin PBXFileReference section */
 		43AA26D72A10004900F14CE6 /* MenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuView.swift; sourceTree = "<group>"; };
+		91D80FC62A20615500952E28 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		D020F63D29E4A1FF002790F6 /* Identity.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Identity.xcconfig; sourceTree = "<group>"; };
 		D020F64029E4A1FF002790F6 /* Compiler.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Compiler.xcconfig; sourceTree = "<group>"; };
 		D020F64229E4A1FF002790F6 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -62,7 +63,6 @@
 		D020F66929E4AA74002790F6 /* App-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "App-macOS.entitlements"; sourceTree = "<group>"; };
 		D05B9F7229E39EEC008CB1F9 /* Burrow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Burrow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowApp.swift; sourceTree = "<group>"; };
-		D05B9F7729E39EEC008CB1F9 /* TunnelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelView.swift; sourceTree = "<group>"; };
 		D05B9F7929E39EED008CB1F9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D0B98FBF29FD8072004E7149 /* build-rust.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-rust.sh"; sourceTree = "<group>"; };
 		D0B98FC629FDC5B5004E7149 /* Tunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tunnel.swift; sourceTree = "<group>"; };
@@ -96,6 +96,7 @@
 			isa = PBXGroup;
 			children = (
 				43AA26D72A10004900F14CE6 /* MenuView.swift */,
+				91D80FC62A20615500952E28 /* OnboardingView.swift */,
 			);
 			path = Menu;
 			sourceTree = "<group>";
@@ -149,7 +150,6 @@
 			children = (
 				43AA26D62A0FFFD000F14CE6 /* Menu */,
 				D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */,
-				D05B9F7729E39EEC008CB1F9 /* TunnelView.swift */,
 				D0B98FC629FDC5B5004E7149 /* Tunnel.swift */,
 				D0BCC5FE2A086E1C00AD070D /* Status.swift */,
 				D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */,
@@ -311,10 +311,10 @@
 			files = (
 				D0BCC6082A0981FE00AD070D /* Tunnel.swift in Sources */,
 				43AA26D82A10004900F14CE6 /* MenuView.swift in Sources */,
-				D05B9F7829E39EEC008CB1F9 /* TunnelView.swift in Sources */,
 				D0BCC5FF2A086E1C00AD070D /* Status.swift in Sources */,
 				D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */,
 				D0BCC5FD2A086D4700AD070D /* NetworkExtension+Async.swift in Sources */,
+				91D80FC72A20615500952E28 /* OnboardingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -377,6 +377,10 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D020F64929E4A34B002790F6 /* App.xcconfig */;
 			buildSettings = {
+				INFOPLIST_KEY_CFBundleDisplayName = Burrow;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2023 Hack Club";
 			};
 			name = Debug;
 		};
@@ -384,6 +388,10 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D020F64929E4A34B002790F6 /* App.xcconfig */;
 			buildSettings = {
+				INFOPLIST_KEY_CFBundleDisplayName = Burrow;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2023 Hack Club";
 			};
 			name = Release;
 		};

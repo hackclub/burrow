@@ -12,7 +12,6 @@ struct MenuView: View {
     @ObservedObject var tunnel: Tunnel
 
     private func start() {
-        
         do {
             try tunnel.start()
         } catch {
