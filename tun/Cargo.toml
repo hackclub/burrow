@@ -10,13 +10,17 @@ nix = { version = "0.26", features = ["ioctl"] }
 socket2 = "0.4"
 tokio = { version = "1.28", features = [] }
 byteorder = "1.4"
+log = "0.4"
 
 [target.'cfg(windows)'.dependencies]
 lazy_static = "1.4"
 libloading = "0.7"
 tempfile = "3.5"
 widestring = "1.0"
-windows = { version = "0.48", features = ["Win32_Foundation", "Win32_NetworkManagement_IpHelper"] }
+windows = { version = "0.48", features = [
+    "Win32_Foundation",
+    "Win32_NetworkManagement_IpHelper",
+] }
 
 [target.'cfg(windows)'.build-dependencies]
 anyhow = "1.0"

@@ -4,9 +4,11 @@ use socket2::{Domain, SockAddr, Socket, Type};
 use std::fs::OpenOptions;
 use std::io::{Error, Write};
 use std::mem;
-use std::net::{Ipv4Addr, Ipv6Addr, SocketAddrV4, SocketAddrV6};
+use std::net::{Ipv4Addr, Ipv6Addr, SocketAddrV4};
 use std::os::fd::RawFd;
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd};
+
+use log::info;
 
 use libc::in6_ifreq;
 
@@ -73,23 +75,7 @@ impl TunInterface {
         let mut iff = self.ifreq()?;
         iff.ifr_ifru.ifru_addr = unsafe { *addr.as_ptr() };
         self.perform(|fd| unsafe { sys::if_set_addr(fd, &iff) })?;
-    }
-
-    #[throws]
-    pub fn set_mtu(&self, mtu: i32) {
-        let mut iff = self.ifreq()?;
-        iff.ifr_ifru.ifru_mtu = mtu;
-        self.perform(|fd| unsafe { sys::if_set_mtu(fd, &iff) })?;
-    }
-
-    #[throws]
-    pub fn set_netmask(&self, addr: Ipv4Addr) {
-        let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
-
-        let mut iff = self.ifreq()?;
-        iff.ifr_ifru.ifru_netmask = unsafe { *addr.as_ptr() };
-
-        self.perform(|fd| unsafe { sys::if_set_netmask(fd, &iff) })?;
+        info!("ipv4_addr_set: {:?} (fd: {:?})", addr, self.as_raw_fd())
     }
 
     #[throws]
@@ -105,6 +91,15 @@ impl TunInterface {
         let mut iff = self.in6_ifreq()?;
         iff.ifr6_addr.s6_addr = addr.octets();
         self.perform6(|fd| unsafe { sys::if_set_addr6(fd, &iff) })?;
+        info!("ipv6_addr_set: {:?} (fd: {:?})", addr, self.as_raw_fd())
+    }
+
+    #[throws]
+    pub fn set_mtu(&self, mtu: i32) {
+        let mut iff = self.ifreq()?;
+        iff.ifr_ifru.ifru_mtu = mtu;
+        self.perform(|fd| unsafe { sys::if_set_mtu(fd, &iff) })?;
+        info!("mtu_set: {:?} (fd: {:?})", mtu, self.as_raw_fd())
     }
 
     #[throws]
@@ -114,6 +109,22 @@ impl TunInterface {
         let mtu = unsafe { iff.ifr_ifru.ifru_mtu };
 
         mtu
+    }
+
+    #[throws]
+    pub fn set_netmask(&self, addr: Ipv4Addr) {
+        let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
+
+        let mut iff = self.ifreq()?;
+        iff.ifr_ifru.ifru_netmask = unsafe { *addr.as_ptr() };
+
+        self.perform(|fd| unsafe { sys::if_set_netmask(fd, &iff) })?;
+
+        info!(
+            "netmask_set: {:?} (fd: {:?})",
+            unsafe { iff.ifr_ifru.ifru_netmask },
+            self.as_raw_fd()
+        )
     }
 
     #[throws]
