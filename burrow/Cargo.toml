@@ -10,6 +10,8 @@ crate-type = ["lib", "staticlib"]
 tokio = { version = "1.21", features = ["rt", "macros"] }
 tun = { version = "0.1", path = "../tun" }
 clap = { version = "4.3.2", features = ["derive"] }
+env_logger = "0.10"
+log = "0.4"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 caps = "0.5.5"

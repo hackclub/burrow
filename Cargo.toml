@@ -1,6 +1,2 @@
 [workspace]
-members = [
-    "burrow",
-    "tun-async",
-    "tun"
-]
+members = ["burrow", "tun-async", "tun"]
