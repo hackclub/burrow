@@ -1,5 +1,5 @@
 [general]
-ignore=body-changed-file-mention
+ignore=body-changed-file-mention,body-is-missing
 ignore-merge-commits=false
 ignore-fixup-commits=false
 ignore-squash-commits=false
