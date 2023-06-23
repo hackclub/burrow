@@ -7,63 +7,55 @@
 
 import SwiftUI
 
-struct MenuView: View {
-    @State private var isToggled = false
+struct MenuItemToggleView: View {
     @ObservedObject var tunnel: Tunnel
 
-    private func start() {
-        
-        do {
-            try tunnel.start()
-        } catch {
-            print(error)
-        }
-    }
-
-    private func stop() {
-        tunnel.stop()
-    }
-
-    private func configure() {
-        Task { try await tunnel.configure() }
-    }
-
     var body: some View {
-        VStack {
-            HStack {
-                Text("Burrow")
-                    .fontWeight(.bold)
+        HStack {
+            Text("Burrow")
+                .font(.headline)
+            Spacer()
+            Toggle("Burrow", isOn: tunnel.isOn)
+                .labelsHidden()
+                .disabled(tunnel.isDisabled)
+                .toggleStyle(.switch)
+        }
+        .padding(.horizontal, 4)
+        .padding(10)
+        .frame(minWidth: 300, minHeight: 32, maxHeight: 32)
+        .task { await tunnel.update() }
+    }
+}
 
-                Spacer()
-                Toggle("", isOn: $isToggled)
-                    .toggleStyle(SwitchToggleStyle(tint: .blue))
-                    .onChange(of: isToggled) { value in
-                        if value {
-                            start()
-                        } else {
-                            stop()
-                        }
-                        print("Toggle value: \(value)")
-                    }
+extension Tunnel {
+    var isDisabled: Bool {
+        switch self.status {
+        case .disconnected, .permissionRequired, .connected:
+            return false
+        case .unknown, .disabled, .connecting, .reasserting, .disconnecting, .invalid, .configurationReadWriteFailed:
+            return true
+        }
+    }
+
+    var isOn: Binding<Bool> {
+        Binding {
+            switch self.status {
+            case .unknown, .disabled, .disconnecting, .disconnected, .invalid, .permissionRequired, .configurationReadWriteFailed:
+                return false
+            case .connecting, .reasserting, .connected:
+                return true
             }
-            Divider()
-            switch tunnel.status {
-            case .permissionRequired:
-                VStack(alignment: .leading) {
-                    Text("Burrow requires additional permissions to function optimally on your machine. Please grant the necessary permissions to ensure smooth operation.")
-                        .font(.caption)
-                        .truncationMode(.tail)
-
-                    Button("Grant Permissions", action: configure)
-                }
+        } set: { newValue in
+            switch (self.status, newValue) {
+            case (.permissionRequired, true):
+                Task { try await self.configure() }
+            case (.disconnected, true):
+                try? self.start()
+            case (.connected, false):
+                self.stop()
             default:
-
-                Text("Burrow is equipped with the necessary permissions to operate seamlessly on your device.")
-                .font(.caption)
+                return
             }
         }
-        .frame(width: 250)
-        .padding(16)
-        .task { await tunnel.update() }
     }
 }
