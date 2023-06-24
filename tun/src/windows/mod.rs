@@ -5,6 +5,8 @@ use widestring::{u16cstr, U16CString};
 use windows::Win32::Foundation::GetLastError;
 mod queue;
 
+use super::TunInterfaceOptions;
+
 pub use queue::TunQueue;
 
 pub struct TunInterface {
@@ -15,7 +17,14 @@ pub struct TunInterface {
 impl TunInterface {
     #[throws]
     pub fn new() -> TunInterface {
-        let name = U16CString::from(u16cstr!("Burrow"));
+        Self::new_with_options(TunInterfaceOptions::new())?
+    }
+
+    #[throws]
+    pub(crate) fn new_with_options(options: TunInterfaceOptions) -> TunInterface {
+        let name_owned = options.name.unwrap_or("Burrow".to_owned());
+        let name = U16CString::from_str(&name_owned).unwrap();
+
         let handle =
             unsafe { sys::WINTUN.WintunCreateAdapter(name.as_ptr(), name.as_ptr(), ptr::null()) };
         if handle.is_null() {
@@ -23,7 +32,7 @@ impl TunInterface {
         }
         TunInterface {
             handle,
-            name: String::from("Burrow"),
+            name: name_owned,
         }
     }
 

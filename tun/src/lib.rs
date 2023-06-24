@@ -6,4 +6,7 @@ mod imp;
 #[path = "unix/mod.rs"]
 pub(crate) mod imp;
 
+mod options;
+
 pub use imp::{TunInterface, TunQueue};
+pub use options::TunInterfaceOptions;

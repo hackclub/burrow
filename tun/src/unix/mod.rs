@@ -3,6 +3,8 @@ use std::{
     os::fd::{AsRawFd, FromRawFd, IntoRawFd, RawFd},
 };
 
+use super::TunInterfaceOptions;
+
 mod queue;
 
 #[cfg(target_vendor = "apple")]
@@ -71,7 +73,7 @@ mod test {
 
     use super::*;
     use std::io::Write;
-    
+
     use std::net::Ipv4Addr;
 
     #[throws]
