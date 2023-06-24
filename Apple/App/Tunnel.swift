@@ -92,7 +92,7 @@ class Tunnel: ObservableObject {
             let proto = NETunnelProviderProtocol()
             proto.providerBundleIdentifier = bundleIdentifier
             configure(manager, proto)
-            
+
             manager.protocolConfiguration = proto
             try await manager.save()
         }

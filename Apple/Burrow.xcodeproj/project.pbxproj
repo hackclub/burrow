@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		43AA26D82A10004900F14CE6 /* MenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AA26D72A10004900F14CE6 /* MenuView.swift */; };
 		D020F65829E4A697002790F6 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D020F65729E4A697002790F6 /* PacketTunnelProvider.swift */; };
 		D020F65D29E4A697002790F6 /* BurrowNetworkExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D020F65329E4A697002790F6 /* BurrowNetworkExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */; };
@@ -44,6 +45,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		43AA26D72A10004900F14CE6 /* MenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuView.swift; sourceTree = "<group>"; };
 		D020F63D29E4A1FF002790F6 /* Identity.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Identity.xcconfig; sourceTree = "<group>"; };
 		D020F64029E4A1FF002790F6 /* Compiler.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Compiler.xcconfig; sourceTree = "<group>"; };
 		D020F64229E4A1FF002790F6 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -90,6 +92,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		43AA26D62A0FFFD000F14CE6 /* Menu */ = {
+			isa = PBXGroup;
+			children = (
+				43AA26D72A10004900F14CE6 /* MenuView.swift */,
+			);
+			path = Menu;
+			sourceTree = "<group>";
+		};
 		D020F63C29E4A1FF002790F6 /* Configuration */ = {
 			isa = PBXGroup;
 			children = (
@@ -137,6 +147,7 @@
 		D05B9F7429E39EEC008CB1F9 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				43AA26D62A0FFFD000F14CE6 /* Menu */,
 				D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */,
 				D05B9F7729E39EEC008CB1F9 /* TunnelView.swift */,
 				D0B98FC629FDC5B5004E7149 /* Tunnel.swift */,
@@ -299,6 +310,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D0BCC6082A0981FE00AD070D /* Tunnel.swift in Sources */,
+				43AA26D82A10004900F14CE6 /* MenuView.swift in Sources */,
 				D05B9F7829E39EEC008CB1F9 /* TunnelView.swift in Sources */,
 				D0BCC5FF2A086E1C00AD070D /* Status.swift in Sources */,
 				D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */,
