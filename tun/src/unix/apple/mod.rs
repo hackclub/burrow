@@ -15,7 +15,7 @@ mod sys;
 
 pub use super::queue::TunQueue;
 
-use super::{ifname_to_string, string_to_ifname};
+use super::{ifname_to_string, string_to_ifname, TunInterfaceOptions};
 use kern_control::SysControlSocket;
 
 #[derive(Debug)]
@@ -26,6 +26,11 @@ pub struct TunInterface {
 impl TunInterface {
     #[throws]
     pub fn new() -> TunInterface {
+        Self::new_with_options(TunInterfaceOptions::new())?
+    }
+
+    #[throws]
+    pub fn new_with_options(_: TunInterfaceOptions) -> TunInterface {
         TunInterface::connect(0)?
     }
 

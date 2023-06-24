@@ -12,7 +12,7 @@ use log::info;
 
 use libc::in6_ifreq;
 
-use super::{ifname_to_string, string_to_ifname};
+use super::{ifname_to_string, string_to_ifname, TunInterfaceOptions};
 
 mod sys;
 
@@ -24,16 +24,33 @@ pub struct TunInterface {
 impl TunInterface {
     #[throws]
     pub fn new() -> TunInterface {
+        Self::new_with_options(TunInterfaceOptions::new())?
+    }
+
+    #[throws]
+    pub(crate) fn new_with_options(options: TunInterfaceOptions) -> TunInterface {
         let file = OpenOptions::new()
             .read(true)
             .write(true)
             .open("/dev/net/tun")?;
 
+        let mut flags = libc::IFF_TUN as i16;
+
+        if options.no_pi.is_some() {
+            flags |= libc::IFF_NO_PI as i16;
+        }
+        if options.tun_excl.is_some() {
+            flags |= libc::IFF_TUN_EXCL as i16;
+        }
+
+        let name = options
+            .name
+            .map(|name| string_to_ifname(&name))
+            .unwrap_or([0; libc::IFNAMSIZ]);
+
         let iff = libc::ifreq {
-            ifr_name: [0; libc::IFNAMSIZ],
-            ifr_ifru: libc::__c_anonymous_ifr_ifru {
-                ifru_flags: (libc::IFF_TUN | libc::IFF_TUN_EXCL | libc::IFF_NO_PI) as i16,
-            },
+            ifr_name: name,
+            ifr_ifru: libc::__c_anonymous_ifr_ifru { ifru_flags: flags },
         };
         unsafe { sys::tun_set_iff(file.as_raw_fd(), &iff)? };
 
