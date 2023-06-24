@@ -1,7 +1,7 @@
 use fehler::throws;
 use std::io::Error;
 use std::ptr;
-use widestring::{u16cstr, U16CString};
+use widestring::U16CString;
 use windows::Win32::Foundation::GetLastError;
 mod queue;
 
