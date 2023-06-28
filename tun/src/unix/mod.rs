@@ -3,7 +3,7 @@ use std::{
     os::fd::{AsRawFd, FromRawFd, IntoRawFd, RawFd},
 };
 
-use super::TunInterfaceOptions;
+use super::TunOptions;
 
 mod queue;
 

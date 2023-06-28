@@ -5,7 +5,7 @@ use widestring::U16CString;
 use windows::Win32::Foundation::GetLastError;
 mod queue;
 
-use super::TunInterfaceOptions;
+use super::TunOptions;
 
 pub use queue::TunQueue;
 
@@ -17,11 +17,11 @@ pub struct TunInterface {
 impl TunInterface {
     #[throws]
     pub fn new() -> TunInterface {
-        Self::new_with_options(TunInterfaceOptions::new())?
+        Self::new_with_options(TunOptions::new())?
     }
 
     #[throws]
-    pub(crate) fn new_with_options(options: TunInterfaceOptions) -> TunInterface {
+    pub(crate) fn new_with_options(options: TunOptions) -> TunInterface {
         let name_owned = options.name.unwrap_or("Burrow".to_owned());
         let name = U16CString::from_str(&name_owned).unwrap();
 

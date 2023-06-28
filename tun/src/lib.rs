@@ -9,4 +9,4 @@ pub(crate) mod imp;
 mod options;
 
 pub use imp::{TunInterface, TunQueue};
-pub use options::TunInterfaceOptions;
+pub use options::TunOptions;

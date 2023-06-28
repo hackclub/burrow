@@ -10,7 +10,7 @@ use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd};
 
 use libc::in6_ifreq;
 
-use super::{ifname_to_string, string_to_ifname, TunInterfaceOptions};
+use super::{ifname_to_string, string_to_ifname, TunOptions};
 
 mod sys;
 
@@ -22,11 +22,11 @@ pub struct TunInterface {
 impl TunInterface {
     #[throws]
     pub fn new() -> TunInterface {
-        Self::new_with_options(TunInterfaceOptions::new())?
+        Self::new_with_options(TunOptions::new())?
     }
 
     #[throws]
-    pub(crate) fn new_with_options(options: TunInterfaceOptions) -> TunInterface {
+    pub(crate) fn new_with_options(options: TunOptions) -> TunInterface {
         let file = OpenOptions::new()
             .read(true)
             .write(true)
