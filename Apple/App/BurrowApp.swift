@@ -1,4 +1,3 @@
-import NetworkExtension
 import SwiftUI
 
 @main
@@ -9,9 +8,14 @@ struct BurrowApp: App {
         manager.localizedDescription = "Burrow"
     }
 
+    #if os(macOS)
+    @NSApplicationDelegateAdaptor(AppDelegate.self)
+    var delegate
+    #endif
+
     var body: some Scene {
         WindowGroup {
-            TunnelView(tunnel: Self.tunnel)
+            TunnelView()
         }
     }
 }
