@@ -4,7 +4,7 @@ use std::io::Error;
 use super::TunInterface;
 
 #[derive(Default)]
-pub struct TunInterfaceOptions {
+pub struct TunOptions {
     /// (Windows + Linux) Name the tun interface.
     pub(crate) name: Option<String>,
     /// (Linux) Don't include packet information.
@@ -13,7 +13,7 @@ pub struct TunInterfaceOptions {
     pub(crate) tun_excl: Option<()>,
 }
 
-impl TunInterfaceOptions {
+impl TunOptions {
     pub fn new() -> Self {
         Self::default()
     }
