@@ -60,3 +60,6 @@ jobs:
     - name: Build
       shell: bash
       run: cargo build --verbose --workspace --all-features --target ${{ join(matrix.targets, ' --target ') }}
+    - name: Post-Build Tests
+      shell: bash
+      run: cargo test
