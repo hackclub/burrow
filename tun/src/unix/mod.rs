@@ -62,38 +62,3 @@ pub fn string_to_ifname(name: &str) -> [libc::c_char; libc::IFNAMSIZ] {
     buf[..len].copy_from_slice(unsafe { &*(name.as_bytes() as *const _ as *const [libc::c_char]) });
     buf
 }
-
-#[cfg(test)]
-mod test {
-
-    use super::*;
-
-    use std::net::Ipv4Addr;
-
-    #[throws]
-    #[test]
-    fn tst_read() {
-        // This test is interactive, you need to send a packet to any server through 192.168.1.10
-        // EG. `sudo route add 8.8.8.8 192.168.1.10`,
-        //`dig @8.8.8.8 hackclub.com`
-        let mut tun = TunInterface::new()?;
-        println!("tun name: {:?}", tun.name()?);
-        tun.set_ipv4_addr(Ipv4Addr::from([192, 168, 1, 10]))?;
-        println!("tun ip: {:?}", tun.ipv4_addr()?);
-        println!("Waiting for a packet...");
-        let buf = &mut [0u8; 1500];
-        let res = tun.recv(buf);
-        println!("Received!");
-        assert!(res.is_ok());
-    }
-
-    #[test]
-    #[throws]
-    fn write_packets() {
-        let tun = TunInterface::new()?;
-        let mut buf = [0u8; 1500];
-        buf[0] = 6 << 4;
-        let bytes_written = tun.send(&buf)?;
-        assert_eq!(bytes_written, 1504);
-    }
-}

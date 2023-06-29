@@ -11,6 +11,7 @@ fn test_create() {
 
 #[test]
 #[throws]
+#[cfg(not(target_os = "windows"))]
 fn test_set_get_ipv4() {
     let tun = TunInterface::new()?;
 
@@ -23,7 +24,7 @@ fn test_set_get_ipv4() {
 
 #[test]
 #[throws]
-#[cfg(target_os = "linux")]
+#[cfg(not(any(target_os = "windows", target_vendor = "apple")))]
 fn test_set_get_ipv6() {
     let tun = TunInterface::new()?;
 
@@ -32,4 +33,30 @@ fn test_set_get_ipv6() {
 
     // let result = tun.ipv6_addr()?;
     // assert_eq!(addr, result);
+}
+
+#[test]
+#[throws]
+#[cfg(not(target_os = "windows"))]
+fn test_set_get_mtu() {
+    let interf = TunInterface::new()?;
+
+    interf.set_mtu(500)?;
+
+    assert_eq!(interf.mtu().unwrap(), 500);
+}
+
+#[test]
+#[throws]
+#[cfg(not(target_os = "windows"))]
+fn test_set_get_netmask() {
+    let interf = TunInterface::new()?;
+
+    let netmask = Ipv4Addr::new(255, 0, 0, 0);
+    let addr = Ipv4Addr::new(192, 168, 1, 1);
+
+    interf.set_ipv4_addr(addr)?;
+    interf.set_netmask(netmask)?;
+
+    assert_eq!(interf.netmask()?, netmask);
 }
