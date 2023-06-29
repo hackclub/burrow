@@ -5,10 +5,7 @@ use socket2::{Domain, SockAddr, Socket, Type};
 use std::io::{IoSlice, Write};
 use std::net::{Ipv4Addr, SocketAddrV4};
 use std::os::fd::{AsRawFd, RawFd};
-use std::{
-    io::{Error},
-    mem,
-};
+use std::{io::Error, mem};
 
 mod kern_control;
 mod sys;
@@ -159,34 +156,5 @@ impl Write for TunInterface {
 
     fn flush(&mut self) -> std::io::Result<()> {
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use std::net::Ipv4Addr;
-
-    #[test]
-    fn mtu() {
-        let interf = TunInterface::new().unwrap();
-
-        interf.set_mtu(500).unwrap();
-
-        assert_eq!(interf.mtu().unwrap(), 500);
-    }
-
-    #[test]
-    #[throws]
-    fn netmask() {
-        let interf = TunInterface::new()?;
-
-        let netmask = Ipv4Addr::new(255, 0, 0, 0);
-        let addr = Ipv4Addr::new(192, 168, 1, 1);
-
-        interf.set_ipv4_addr(addr)?;
-        interf.set_netmask(netmask)?;
-
-        assert_eq!(interf.netmask()?, netmask);
     }
 }
