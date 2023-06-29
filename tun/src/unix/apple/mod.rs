@@ -1,6 +1,7 @@
 use byteorder::{ByteOrder, NetworkEndian};
 use fehler::throws;
 use libc::{c_char, iovec, writev, AF_INET, AF_INET6};
+use log::info;
 use socket2::{Domain, SockAddr, Socket, Type};
 use std::io::IoSlice;
 use std::net::{Ipv4Addr, SocketAddrV4};
@@ -70,11 +71,10 @@ impl TunInterface {
     #[throws]
     pub fn set_ipv4_addr(&self, addr: Ipv4Addr) {
         let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
-
         let mut iff = self.ifreq()?;
         iff.ifr_ifru.ifru_addr = unsafe { *addr.as_ptr() };
-
         self.perform(|fd| unsafe { sys::if_set_addr(fd, &iff) })?;
+        info!("ipv4_addr_set: {:?} (fd: {:?})", addr, self.as_raw_fd())
     }
 
     #[throws]
@@ -105,6 +105,7 @@ impl TunInterface {
         let mut iff = self.ifreq()?;
         iff.ifr_ifru.ifru_mtu = mtu;
         self.perform(|fd| unsafe { sys::if_set_mtu(fd, &iff) })?;
+        info!("mtu_set: {:?} (fd: {:?})", mtu, self.as_raw_fd())
     }
 
     #[throws]
@@ -121,11 +122,14 @@ impl TunInterface {
     #[throws]
     pub fn set_netmask(&self, addr: Ipv4Addr) {
         let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
-
         let mut iff = self.ifreq()?;
         iff.ifr_ifru.ifru_netmask = unsafe { *addr.as_ptr() };
-
         self.perform(|fd| unsafe { sys::if_set_netmask(fd, &iff) })?;
+        info!(
+            "netmask_set: {:?} (fd: {:?})",
+            unsafe { iff.ifr_ifru.ifru_netmask },
+            self.as_raw_fd()
+        )
     }
 
     #[throws]
