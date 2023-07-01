@@ -1,0 +1,13 @@
+[package]
+name = "burrow-gtk"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+gettext-rs = { version = "0.7", features = ["gettext-system"] }
+gtk = { version = "0.6", package = "gtk4" }
+
+[dependencies.adw]
+package = "libadwaita"
+version = "0.3"
+features = ["v1_2"]
