@@ -6,7 +6,7 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
-    #[template(resource = "/com/hackclub/Burrow/window.ui")]
+    #[template(resource = "/com/hackclub/burrow/window.ui")]
     pub struct BurrowGtkWindow {
         // Template widgets
         #[template_child]

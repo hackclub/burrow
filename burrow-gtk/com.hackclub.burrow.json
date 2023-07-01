@@ -1,5 +1,5 @@
 {
-    "app-id" : "com.hackclub.Burrow",
+    "app-id" : "com.hackclub.burrow",
     "runtime" : "org.gnome.Platform",
     "runtime-version" : "44",
     "sdk" : "org.gnome.Sdk",

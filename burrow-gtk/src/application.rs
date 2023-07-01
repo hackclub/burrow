@@ -79,8 +79,8 @@ impl BurrowGtkApplication {
         let window = self.active_window().unwrap();
         let about = adw::AboutWindow::builder()
             .transient_for(&window)
-            .application_name("burrow-gtk")
-            .application_icon("com.hackclub.Burrow")
+            .application_name("Burrow")
+            .application_icon("com.hackclub.burrow")
             .developer_name("Hack Club")
             .version(VERSION)
             .developers(vec!["Hack Club"])
