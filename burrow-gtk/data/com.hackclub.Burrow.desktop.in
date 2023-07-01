@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=burrow-gtk
+Exec=burrow-gtk
+Icon=com.hackclub.Burrow
+Terminal=false
+Type=Application
+Categories=GTK;Network
+StartupNotify=true
