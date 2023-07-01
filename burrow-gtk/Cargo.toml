@@ -3,11 +3,10 @@ name = "burrow-gtk"
 version = "0.1.0"
 edition = "2021"
 
-[dependencies]
-gettext-rs = { version = "0.7", features = ["gettext-system"] }
-gtk = { version = "0.6", package = "gtk4" }
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies.adw]
-package = "libadwaita"
-version = "0.3"
-features = ["v1_2"]
+[dependencies]
+relm4 = { version = "0.6.2", features = ["libadwaita"] }
+relm4-components = "0.6.2"
+relm4-icons = { version = "0.6.0", features = ["plus"] }
+burrow = { version = "*", path = "../burrow/" }

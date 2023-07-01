@@ -1,35 +1,87 @@
-mod application;
-mod config;
-mod window;
+use adw::prelude::*;
+use burrow::{DaemonClient, DaemonCommand, DaemonStartOptions};
+use gtk::Align;
+use relm4::{
+    component::{AsyncComponent, AsyncComponentParts, AsyncComponentSender},
+    prelude::*,
+};
 
-use self::application::BurrowGtkApplication;
-use self::window::BurrowGtkWindow;
+struct App {}
 
-use config::{GETTEXT_PACKAGE, LOCALEDIR, PKGDATADIR};
-use gettextrs::{bind_textdomain_codeset, bindtextdomain, textdomain};
-use gtk::{gio, glib};
-use gtk::prelude::*;
+#[derive(Debug)]
+enum Msg {
+    Start,
+    Stop,
+}
 
-fn main() -> glib::ExitCode {
-    // Set up gettext translations
-    bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR).expect("Unable to bind the text domain");
-    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8")
-        .expect("Unable to set the text domain encoding");
-    textdomain(GETTEXT_PACKAGE).expect("Unable to switch to the text domain");
+#[relm4::component(async)]
+impl AsyncComponent for App {
+    type Init = ();
+    type Input = Msg;
+    type Output = ();
+    type CommandOutput = ();
 
-    // Load resources
-    let resources = gio::Resource::load(PKGDATADIR.to_owned() + "/burrow-gtk.gresource")
-        .expect("Could not load resources");
-    gio::resources_register(&resources);
+    view! {
+        adw::Window {
+            set_title: Some("Simple app"),
+            set_default_size: (640, 480),
 
-    // Create a new GtkApplication. The application manages our main loop,
-    // application windows, integration with the window manager/compositor, and
-    // desktop features such as file opening and single-instance applications.
-    let app = BurrowGtkApplication::new("com.hackclub.Burrow", &gio::ApplicationFlags::empty());
+            gtk::Box {
+                set_orientation: gtk::Orientation::Vertical,
+                set_spacing: 5,
+                set_margin_all: 5,
+                set_valign: Align::Center,
 
-    // Run the application. This function will block until the application
-    // exits. Upon return, we have our exit code to return to the shell. (This
-    // is the code you see when you do `echo $?` after running a command in a
-    // terminal.
-    app.run()
+                gtk::Label {
+                    set_label: "Burrow GTK Switch",
+                },
+
+                gtk::Switch {
+                    set_halign: Align::Center,
+                    set_hexpand: false,
+                    set_vexpand: false,
+                    connect_active_notify => move |switch|
+                        sender.input(if switch.is_active() { Msg::Start } else { Msg::Stop })
+                },
+            }
+        }
+    }
+
+    async fn init(
+        _: Self::Init,
+        root: Self::Root,
+        sender: AsyncComponentSender<Self>,
+    ) -> AsyncComponentParts<Self> {
+        let model = App {};
+
+        let widgets = view_output!();
+
+        AsyncComponentParts { model, widgets }
+    }
+
+    async fn update(
+        &mut self,
+        msg: Self::Input,
+        _sender: AsyncComponentSender<Self>,
+        _root: &Self::Root,
+    ) {
+        match msg {
+            Msg::Start => {
+                let mut client = DaemonClient::new().await.unwrap();
+                client
+                    .send_command(DaemonCommand::Start(DaemonStartOptions::default()))
+                    .await
+                    .unwrap();
+            }
+            Msg::Stop => {
+                let mut client = DaemonClient::new().await.unwrap();
+                client.send_command(DaemonCommand::Stop).await.unwrap();
+            }
+        }
+    }
+}
+
+fn main() {
+    let app = RelmApp::new("com.hackclub.burrow");
+    app.run_async::<App>(());
 }

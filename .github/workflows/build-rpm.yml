@@ -7,13 +7,14 @@ on:
     - "*"
 jobs:
   build:
+    name: Build RPM
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - uses: Swatinem/rust-cache@v2
-    - name: Install
+    - name: Install RPM
       run: cargo install cargo-generate-rpm
-    - name: Build
+    - name: Build RPM
       run: |
         cargo build --release
         strip -s target/release/burrow

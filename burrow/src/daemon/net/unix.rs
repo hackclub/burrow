@@ -1,15 +1,20 @@
 use super::*;
-use std::{ascii, io, os::fd::{FromRawFd, RawFd}, os::unix::net::UnixListener as StdUnixListener, path::Path};
-use std::hash::Hash;
-use std::path::PathBuf;
 use anyhow::anyhow;
 use log::log;
-use tracing::info;
+use std::hash::Hash;
+use std::path::PathBuf;
+use std::{
+    ascii, io,
+    os::fd::{FromRawFd, RawFd},
+    os::unix::net::UnixListener as StdUnixListener,
+    path::Path,
+};
 use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     net::{UnixListener, UnixStream},
 };
 use tracing::debug;
+use tracing::info;
 
 #[cfg(not(target_vendor = "apple"))]
 const UNIX_SOCKET_PATH: &str = "/run/burrow.sock";
@@ -18,16 +23,18 @@ const UNIX_SOCKET_PATH: &str = "/run/burrow.sock";
 const UNIX_SOCKET_PATH: &str = "burrow.sock";
 
 #[cfg(target_os = "macos")]
-fn fetch_socket_path() -> Option<PathBuf>{
+fn fetch_socket_path() -> Option<PathBuf> {
     let tries = vec![
         "burrow.sock".to_string(),
-        format!("{}/Library/Containers/com.hackclub.burrow.network/Data/burrow.sock",
-                std::env::var("HOME").unwrap_or_default())
-                .to_string(),
+        format!(
+            "{}/Library/Containers/com.hackclub.burrow.network/Data/burrow.sock",
+            std::env::var("HOME").unwrap_or_default()
+        )
+        .to_string(),
     ];
-    for path in tries{
+    for path in tries {
         let path = PathBuf::from(path);
-        if path.exists(){
+        if path.exists() {
             return Some(path);
         }
     }
@@ -35,11 +42,14 @@ fn fetch_socket_path() -> Option<PathBuf>{
 }
 
 #[cfg(not(target_os = "macos"))]
-fn fetch_socket_path() -> Option<PathBuf>{
+fn fetch_socket_path() -> Option<PathBuf> {
     Some(Path::new(UNIX_SOCKET_PATH).to_path_buf())
 }
 
-pub async fn listen(cmd_tx: async_channel::Sender<DaemonCommand>, rsp_rx: async_channel::Receiver<DaemonResponse>) -> Result<()> {
+pub async fn listen(
+    cmd_tx: async_channel::Sender<DaemonCommand>,
+    rsp_rx: async_channel::Receiver<DaemonResponse>,
+) -> Result<()> {
     listen_with_optional_fd(cmd_tx, rsp_rx, None).await
 }
 
@@ -61,14 +71,12 @@ pub(crate) async fn listen_with_optional_fd(
         listener
     } else {
         //  Won't help all that much, if we use the async version of fs.
-        if let Some(par) = path.parent(){
-            std::fs::create_dir_all(
-                par
-            )?;
+        if let Some(par) = path.parent() {
+            std::fs::create_dir_all(par)?;
         }
-        match std::fs::remove_file(path){
-            Err(e) if e.kind()==io::ErrorKind::NotFound => {Ok(())}
-            stuff => stuff
+        match std::fs::remove_file(path) {
+            Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(()),
+            stuff => stuff,
         }?;
         info!("Relative path: {}", path.to_string_lossy());
         UnixListener::bind(path)?
@@ -89,7 +97,7 @@ pub(crate) async fn listen_with_optional_fd(
             while let Ok(Some(line)) = lines.next_line().await {
                 info!("Got line: {}", line);
                 debug!("Line raw data: {:?}", line.as_bytes());
-                let mut res : DaemonResponse = DaemonResponseData::None.into();
+                let mut res: DaemonResponse = DaemonResponseData::None.into();
                 let req = match serde_json::from_str::<DaemonRequest>(&line) {
                     Ok(req) => Some(req),
                     Err(e) => {
@@ -99,7 +107,6 @@ pub(crate) async fn listen_with_optional_fd(
                 };
                 let mut res = serde_json::to_string(&res).unwrap();
                 res.push('\n');
-
 
                 if let Some(req) = req {
                     cmd_tx.send(req.command).await.unwrap();
@@ -114,14 +121,14 @@ pub(crate) async fn listen_with_optional_fd(
     }
 }
 
+#[derive(Debug)]
 pub struct DaemonClient {
     connection: UnixStream,
 }
 
 impl DaemonClient {
     pub async fn new() -> Result<Self> {
-        let path = fetch_socket_path()
-            .ok_or(anyhow!("Failed to find socket path"))?;
+        let path = fetch_socket_path().ok_or(anyhow!("Failed to find socket path"))?;
         // debug!("found path: {:?}", path);
         let connection = UnixStream::connect(path).await?;
         debug!("connected to socket");
