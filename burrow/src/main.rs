@@ -8,6 +8,10 @@ use tokio::io::Result;
 use burrow::retrieve;
 use tun::TunInterface;
 
+mod daemon;
+
+use daemon::{DaemonClient, DaemonCommand, DaemonStartOptions};
+
 #[derive(Parser)]
 #[command(name = "Burrow")]
 #[command(author = "Hack Club <team@hackclub.com>")]
@@ -30,6 +34,10 @@ enum Commands {
     Start(StartArgs),
     /// Retrieve the file descriptor of the tun interface
     Retrieve(RetrieveArgs),
+    /// Stop Burrow daemon
+    Stop,
+    /// Start Burrow daemon
+    Daemon(DaemonArgs),
 }
 
 #[derive(Args)]
@@ -38,14 +46,15 @@ struct StartArgs {}
 #[derive(Args)]
 struct RetrieveArgs {}
 
+#[derive(Args)]
+struct DaemonArgs {}
+
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 async fn try_start() -> Result<()> {
-    burrow::ensureroot::ensure_root();
-    let iface = TunInterface::new()?;
-    println!("{:?}", iface.name());
-    let iface2 = retrieve();
-    println!("{}", iface2);
-    Ok(())
+    let mut client = DaemonClient::new().await?;
+    client
+        .send_command(DaemonCommand::Start(DaemonStartOptions::default()))
+        .await
 }
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
@@ -56,6 +65,13 @@ async fn try_retrieve() -> Result<()> {
     Ok(())
 }
 
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+async fn try_stop() -> Result<()> {
+    let mut client = DaemonClient::new().await?;
+    client.send_command(DaemonCommand::Stop).await?;
+    Ok(())
+}
+
 #[cfg(not(any(target_os = "linux", target_vendor = "apple")))]
 async fn try_start() -> Result<()> {
     Ok(())
@@ -63,11 +79,16 @@ async fn try_start() -> Result<()> {
 
 #[cfg(not(any(target_os = "linux", target_vendor = "apple")))]
 async fn try_retrieve() -> Result<()> {
+    Ok(())
+}
+
+#[cfg(not(any(target_os = "linux", target_vendor = "apple")))]
+async fn try_stop() -> Result<()> {
     Ok(())
 }
 
 #[tokio::main(flavor = "current_thread")]
-async fn main() {
+async fn main() -> Result<()> {
     println!("Platform: {}", std::env::consts::OS);
 
     let cli = Cli::parse();
@@ -80,5 +101,11 @@ async fn main() {
             try_retrieve().await.unwrap();
             println!("FINISHED");
         }
+        Commands::Stop => {
+            try_stop().await.unwrap();
+        }
+        Commands::Daemon(_) => daemon::daemon_main().await?,
     }
+
+    Ok(())
 }
