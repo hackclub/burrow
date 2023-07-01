@@ -1,4 +1,4 @@
-application_id = 'com.hackclub.Burrow'
+application_id = 'com.hackclub.burrow'
 
 scalable_dir = join_paths('hicolor', 'scalable', 'apps')
 install_data(

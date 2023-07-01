@@ -1,2 +1,3 @@
 [workspace]
 members = ["burrow", "tun"]
+exclude = ["burrow-gtk"]

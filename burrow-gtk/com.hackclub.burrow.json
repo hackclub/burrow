@@ -1,7 +1,7 @@
 {
-    "app-id" : "com.hackclub.Burrow",
+    "app-id" : "com.hackclub.burrow",
     "runtime" : "org.gnome.Platform",
-    "runtime-version" : "44",
+    "runtime-version" : "45",
     "sdk" : "org.gnome.Sdk",
     "sdk-extensions" : [
         "org.freedesktop.Sdk.Extension.rust-stable"
@@ -39,11 +39,16 @@
         {
             "name" : "burrow-gtk",
             "builddir" : true,
-            "buildsystem" : "meson",
+            "subdir" : "burrow-gtk",
+            "buildsystem" : "simple",
+            "build-commands": [
+                "cargo build --release",
+                "install -Dm755 -t /app/bin target/release/burrow-gtk"
+            ],
             "sources" : [
-                {
-                    "type" : "git",
-                    "url" : "file:///var/home/reesericci/Code"
+                {                
+                    "type": "dir",
+                    "path": "../"
                 }
             ]
         }
