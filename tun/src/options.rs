@@ -3,7 +3,8 @@ use std::io::Error;
 
 use super::TunInterface;
 
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TunOptions {
     /// (Windows + Linux) Name the tun interface.
     pub(crate) name: Option<String>,

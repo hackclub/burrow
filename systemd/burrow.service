@@ -1,0 +1,9 @@
+[Unit]
+Description=Burrow
+After=burrow.socket
+
+[Service]
+ExecStart=/usr/local/bin/burrow daemon
+
+[Install]
+WantedBy=multi-user.target

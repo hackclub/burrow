@@ -1,0 +1,8 @@
+[Unit]
+Description=Burrow Socket
+
+[Socket]
+ListenStream=/run/burrow.sock
+
+[Install]
+WantedBy=sockets.target
