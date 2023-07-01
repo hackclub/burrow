@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+	<id>com.hackclub.Burrow.desktop</id>
+	<project_license>GPL-3.0-or-later</project_license>
+	<description>
+	  <p>No description</p>
+	</description>
+</component>
