@@ -14,7 +14,9 @@ use tun::TunInterface;
 // TODO Separate start and retrieve functions
 
 mod daemon;
-pub use daemon::{DaemonCommand, DaemonResponseData, DaemonStartOptions, DaemonResponse, ServerInfo};
+pub use daemon::{
+    DaemonClient, DaemonCommand, DaemonResponse, DaemonResponseData, DaemonStartOptions, ServerInfo,
+};
 
 #[cfg(target_vendor = "apple")]
 mod apple;
