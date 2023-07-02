@@ -1,6 +1,6 @@
 desktop_file = i18n.merge_file(
-        input: 'com.hackclub.Burrow.desktop.in',
-       output: 'com.hackclub.Burrow.desktop',
+        input: 'com.hackclub.burrow.desktop.in',
+       output: 'com.hackclub.burrow.desktop',
          type: 'desktop',
        po_dir: '../po',
       install: true,
@@ -13,8 +13,8 @@ if desktop_utils.found()
 endif
 
 appstream_file = i18n.merge_file(
-        input: 'com.hackclub.Burrow.appdata.xml.in',
-       output: 'com.hackclub.Burrow.appdata.xml',
+        input: 'com.hackclub.burrow.appdata.xml.in',
+       output: 'com.hackclub.burrow.appdata.xml',
        po_dir: '../po',
       install: true,
   install_dir: join_paths(get_option('datadir'), 'appdata')
