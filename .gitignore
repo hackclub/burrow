@@ -3,3 +3,7 @@ xcuserdata
 
 # Rust
 target/
+
+# GTK
+blueprint-compiler/
+.flatpak-builder/
