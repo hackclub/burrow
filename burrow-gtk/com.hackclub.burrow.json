@@ -55,7 +55,7 @@
             "sources" : [
                 {
                     "type" : "git",
-                    "branch" : "burrow-gtk-patch-1",
+                    "branch" : "main",
                     "url" : "https://github.com/hackclub/burrow.git"
                 }
             ]
