@@ -11,3 +11,5 @@ gtk = { version = "0.6", package = "gtk4" }
 package = "libadwaita"
 version = "0.3"
 features = ["v1_2"]
+
+[workspace]
