@@ -104,6 +104,28 @@ impl TunInterface {
     }
 
     #[throws]
+    pub fn set_broadcast_addr(&self, addr: Ipv4Addr) {
+        let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
+        let mut iff = self.ifreq()?;
+        iff.ifr_ifru.ifru_broadaddr = unsafe { *addr.as_ptr() };
+        self.perform(|fd| unsafe { sys::if_set_brdaddr(fd, &iff) })?;
+        info!(
+            "broadcast_addr_set: {:?} (fd: {:?})",
+            addr,
+            self.as_raw_fd()
+        )
+    }
+
+    #[throws]
+    pub fn broadcast_addr(&self) -> Ipv4Addr {
+        let mut iff = self.ifreq()?;
+        self.perform(|fd| unsafe { sys::if_get_brdaddr(fd, &mut iff) })?;
+        let addr =
+            unsafe { *(&iff.ifr_ifru.ifru_broadaddr as *const _ as *const sys::sockaddr_in) };
+        Ipv4Addr::from(u32::from_be(addr.sin_addr.s_addr))
+    }
+
+    #[throws]
     pub fn set_ipv6_addr(&self, addr: Ipv6Addr) {
         let mut iff = self.in6_ifreq()?;
         iff.ifr6_addr.s6_addr = addr.octets();
