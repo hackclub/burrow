@@ -28,7 +28,7 @@ To start burrowing, download the latest release build in the release section.
 
 ## Hack Club
 
-Hack Club is a global community of high-school hackers from all around the world! Start your hack club by visiting the [Hack Club Page](https://hackclub.com/)
+Hack Club is a global community of high-school hackers from all around the world! Start your own Hack Club, attend an upcoming hackathon or join our online community at [hackclub.com](https://hackclub.com/).
 
 ## License 
 
