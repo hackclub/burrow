@@ -169,15 +169,19 @@ impl TunInterface {
     }
 
     #[throws]
-    #[instrument]
     fn perform<R>(&self, perform: impl FnOnce(RawFd) -> Result<R, nix::Error>) -> R {
+        let span = tracing::info_span!("perform");
+        let _enter = span.enter();
+
         let socket = Socket::new(Domain::IPV4, Type::DGRAM, None)?;
         perform(socket.as_raw_fd())?
     }
 
     #[throws]
-    #[instrument]
     fn perform6<R>(&self, perform: impl FnOnce(RawFd) -> Result<R, nix::Error>) -> R {
+        let span = tracing::info_span!("perform");
+        let _enter = span.enter();
+
         let socket = Socket::new(Domain::IPV6, Type::DGRAM, None)?;
         perform(socket.as_raw_fd())?
     }
