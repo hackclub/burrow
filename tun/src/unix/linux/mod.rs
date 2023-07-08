@@ -8,8 +8,7 @@ use std::net::{Ipv4Addr, Ipv6Addr, SocketAddrV4};
 use std::os::fd::RawFd;
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd};
 
-use log::info;
-use tracing::instrument;
+use tracing::{info, instrument};
 
 use libc::in6_ifreq;
 
