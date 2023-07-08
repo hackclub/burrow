@@ -34,7 +34,7 @@ async fn try_main() -> Result<()> {
     burrow::ensureroot::ensure_root();
 
     let iface = TunInterface::new()?;
-    println!("{:?}", iface.name());
+    tracing::info!(interface_name = ?iface.name());
 
     Ok(())
 }
@@ -46,7 +46,7 @@ async fn main() {
     let logger = tracing_subscriber::registry().with(init_logger_layer());
     tracing::subscriber::set_global_default(logger).expect("Logger shouldn't be set already");
 
-    println!("Platform: {}", std::env::consts::OS);
+    tracing::info!(platform = std::env::consts::OS);
 
     let cli = Cli::parse();
     match &cli.command {
