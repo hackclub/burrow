@@ -1,7 +1,7 @@
 use byteorder::{ByteOrder, NetworkEndian};
 use fehler::throws;
 use libc::{c_char, iovec, writev, AF_INET, AF_INET6};
-use log::info;
+use tracing::info;
 use socket2::{Domain, SockAddr, Socket, Type};
 use std::io::IoSlice;
 use std::net::{Ipv4Addr, SocketAddrV4};
@@ -94,8 +94,10 @@ impl TunInterface {
     }
 
     #[throws]
-    #[instrument]
     fn perform<R>(&self, perform: impl FnOnce(RawFd) -> Result<R, nix::Error>) -> R {
+        let span = tracing::info_span!("perform", fd = self.as_raw_fd());
+        let _enter = span.enter();
+
         let socket = Socket::new(Domain::IPV4, Type::DGRAM, None)?;
         perform(socket.as_raw_fd())?
     }
