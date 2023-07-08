@@ -1,5 +1,6 @@
 use clap::{Args, Parser, Subcommand};
 use tokio::io::Result;
+use tracing_log::LogTracer;
 use tun::TunInterface;
 
 #[derive(Parser)]
@@ -38,6 +39,7 @@ async fn try_main() -> Result<()> {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
+    LogTracer::init().expect("first thing in main - a logger shouldn't have been set yet");
     println!("Platform: {}", std::env::consts::OS);
 
     let cli = Cli::parse();
