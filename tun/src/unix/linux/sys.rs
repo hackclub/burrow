@@ -18,10 +18,12 @@ ioctl_read_bad!(
 );
 ioctl_read_bad!(if_get_index, libc::SIOCGIFINDEX, libc::ifreq);
 ioctl_read_bad!(if_get_addr, libc::SIOCGIFADDR, libc::ifreq);
+ioctl_read_bad!(if_get_brdaddr, libc::SIOCGIFBRDADDR, libc::ifreq);
 ioctl_read_bad!(if_get_mtu, libc::SIOCGIFMTU, libc::ifreq);
 ioctl_read_bad!(if_get_netmask, libc::SIOCGIFNETMASK, libc::ifreq);
 
 ioctl_write_ptr_bad!(if_set_addr, libc::SIOCSIFADDR, libc::ifreq);
 ioctl_write_ptr_bad!(if_set_addr6, libc::SIOCSIFADDR, libc::in6_ifreq);
+ioctl_write_ptr_bad!(if_set_brdaddr, libc::SIOCSIFBRDADDR, libc::ifreq);
 ioctl_write_ptr_bad!(if_set_mtu, libc::SIOCSIFMTU, libc::ifreq);
 ioctl_write_ptr_bad!(if_set_netmask, libc::SIOCSIFNETMASK, libc::ifreq);

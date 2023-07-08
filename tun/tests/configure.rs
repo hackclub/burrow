@@ -1,12 +1,24 @@
 use fehler::throws;
 use std::io::Error;
-use std::net::{Ipv4Addr};
+use std::net::Ipv4Addr;
 use tun::TunInterface;
 
 #[test]
 #[throws]
 fn test_create() {
     TunInterface::new()?;
+}
+
+#[test]
+#[throws]
+fn test_set_get_broadcast_addr() {
+    let tun = TunInterface::new()?;
+
+    let addr = Ipv4Addr::new(255, 255, 255, 255);
+    tun.set_broadcast_addr(addr)?;
+    let result = tun.broadcast_addr()?;
+
+    assert_eq!(addr, result);
 }
 
 #[test]
