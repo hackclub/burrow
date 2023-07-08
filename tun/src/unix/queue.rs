@@ -5,15 +5,18 @@ use std::{
     mem::MaybeUninit,
     os::unix::io::{AsRawFd, IntoRawFd, RawFd},
 };
+use tracing::instrument;
 
 use crate::TunInterface;
 
+#[derive(Debug)]
 pub struct TunQueue {
     socket: socket2::Socket,
 }
 
 impl TunQueue {
     #[throws]
+    #[instrument]
     pub fn recv(&self, buf: &mut [MaybeUninit<u8>]) -> usize {
         self.socket.recv(buf)?
     }

@@ -9,6 +9,7 @@ use std::os::fd::RawFd;
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd};
 
 use log::info;
+use tracing::instrument;
 
 use libc::in6_ifreq;
 
@@ -23,11 +24,13 @@ pub struct TunInterface {
 
 impl TunInterface {
     #[throws]
+    #[instrument]
     pub fn new() -> TunInterface {
         Self::new_with_options(TunOptions::new())?
     }
 
     #[throws]
+    #[instrument]
     pub(crate) fn new_with_options(options: TunOptions) -> TunInterface {
         let file = OpenOptions::new()
             .read(true)
@@ -59,6 +62,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn name(&self) -> String {
         let mut iff = unsafe { mem::zeroed() };
         unsafe { sys::tun_get_iff(self.socket.as_raw_fd(), &mut iff)? };
@@ -66,6 +70,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     fn ifreq(&self) -> sys::ifreq {
         let mut iff: sys::ifreq = unsafe { mem::zeroed() };
         iff.ifr_name = string_to_ifname(&self.name()?);
@@ -73,6 +78,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     fn in6_ifreq(&self) -> in6_ifreq {
         let mut iff: in6_ifreq = unsafe { mem::zeroed() };
         iff.ifr6_ifindex = self.index()?;
@@ -80,6 +86,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn index(&self) -> i32 {
         let mut iff = self.ifreq()?;
         self.perform(|fd| unsafe { sys::if_get_index(fd, &mut iff) })?;
@@ -87,6 +94,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn set_ipv4_addr(&self, addr: Ipv4Addr) {
         let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
         let mut iff = self.ifreq()?;
@@ -96,6 +104,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn ipv4_addr(&self) -> Ipv4Addr {
         let mut iff = self.ifreq()?;
         self.perform(|fd| unsafe { sys::if_get_addr(fd, &mut iff) })?;
@@ -104,6 +113,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn set_ipv6_addr(&self, addr: Ipv6Addr) {
         let mut iff = self.in6_ifreq()?;
         iff.ifr6_addr.s6_addr = addr.octets();
@@ -112,6 +122,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn set_mtu(&self, mtu: i32) {
         let mut iff = self.ifreq()?;
         iff.ifr_ifru.ifru_mtu = mtu;
@@ -120,6 +131,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn mtu(&self) -> i32 {
         let mut iff = self.ifreq()?;
         self.perform(|fd| unsafe { sys::if_get_mtu(fd, &mut iff) })?;
@@ -129,6 +141,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn set_netmask(&self, addr: Ipv4Addr) {
         let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
 
@@ -145,6 +158,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn netmask(&self) -> Ipv4Addr {
         let mut iff = self.ifreq()?;
         self.perform(|fd| unsafe { sys::if_get_netmask(fd, &mut iff) })?;
@@ -156,18 +170,21 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     fn perform<R>(&self, perform: impl FnOnce(RawFd) -> Result<R, nix::Error>) -> R {
         let socket = Socket::new(Domain::IPV4, Type::DGRAM, None)?;
         perform(socket.as_raw_fd())?
     }
 
     #[throws]
+    #[instrument]
     fn perform6<R>(&self, perform: impl FnOnce(RawFd) -> Result<R, nix::Error>) -> R {
         let socket = Socket::new(Domain::IPV6, Type::DGRAM, None)?;
         perform(socket.as_raw_fd())?
     }
 
     #[throws]
+    #[instrument]
     pub fn send(&self, buf: &[u8]) -> usize {
         self.socket.send(buf)?
     }
