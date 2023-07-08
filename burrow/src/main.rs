@@ -46,7 +46,7 @@ async fn main() {
     let logger = init_logger_layer().with_subscriber(FmtSubscriber::new());
     tracing::subscriber::set_global_default(logger).expect("Logger shouldn't be set already");
 
-    tracing::info!(platform = std::env::consts::OS);
+    println!("Platform: {}", std::env::consts::OS);
 
     let cli = Cli::parse();
     match &cli.command {
