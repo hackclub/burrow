@@ -143,7 +143,6 @@ version = "0.1.0"
 dependencies = [
  "caps",
  "clap",
- "log",
  "nix",
  "tokio",
  "tracing-log",
