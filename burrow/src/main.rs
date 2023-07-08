@@ -1,6 +1,8 @@
 use clap::{Args, Parser, Subcommand};
 use tokio::io::Result;
 use tracing_log::LogTracer;
+use tracing_oslog::OsLogger;
+use tracing_subscriber::prelude::*;
 use tun::TunInterface;
 
 #[derive(Parser)]
@@ -40,6 +42,10 @@ async fn try_main() -> Result<()> {
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     LogTracer::init().expect("first thing in main - a logger shouldn't have been set yet");
+
+    let logger = tracing_subscriber::registry().with(init_logger_layer());
+    tracing::subscriber::set_global_default(logger).expect("Logger shouldn't be set already");
+
     println!("Platform: {}", std::env::consts::OS);
 
     let cli = Cli::parse();
@@ -48,4 +54,14 @@ async fn main() {
             try_main().await.unwrap();
         }
     }
+}
+
+#[cfg(target_os = "linux")]
+fn init_logger_layer() ->  tracing_journald::Layer {
+    tracing_journald::layer().expect("Couldn't open journald socket - are you using systemd?").with_syslog_identifier("burrow".to_string())
+}
+
+#[cfg(target_os="macos")]
+fn init_logger_layer() -> _ {
+    OsLogger::new("com.hackclub.burrow", "default")
 }
