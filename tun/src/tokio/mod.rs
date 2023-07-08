@@ -2,6 +2,7 @@ use std::io;
 use tokio::io::unix::AsyncFd;
 use tracing::instrument;
 
+#[derive(Debug)]
 pub struct TunInterface {
     inner: AsyncFd<crate::TunInterface>,
 }
