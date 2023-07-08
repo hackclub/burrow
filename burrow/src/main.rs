@@ -3,6 +3,7 @@ use tokio::io::Result;
 use tracing_log::LogTracer;
 use tracing_oslog::OsLogger;
 use tracing_subscriber::{FmtSubscriber, prelude::*};
+use tracing::instrument;
 use tun::TunInterface;
 
 #[derive(Parser)]
@@ -30,6 +31,7 @@ enum Commands {
 #[derive(Args)]
 struct StartArgs {}
 
+#[instrument]
 async fn try_main() -> Result<()> {
     burrow::ensureroot::ensure_root();
 
