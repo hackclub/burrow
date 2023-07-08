@@ -2,7 +2,7 @@ use clap::{Args, Parser, Subcommand};
 use tokio::io::Result;
 use tracing_log::LogTracer;
 use tracing_oslog::OsLogger;
-use tracing_subscriber::prelude::*;
+use tracing_subscriber::{FmtSubscriber, prelude::*};
 use tun::TunInterface;
 
 #[derive(Parser)]
@@ -43,7 +43,7 @@ async fn try_main() -> Result<()> {
 async fn main() {
     LogTracer::init().expect("first thing in main - a logger shouldn't have been set yet");
 
-    let logger = tracing_subscriber::registry().with(init_logger_layer());
+    let logger = init_logger_layer().with_subscriber(FmtSubscriber::new());
     tracing::subscriber::set_global_default(logger).expect("Logger shouldn't be set already");
 
     tracing::info!(platform = std::env::consts::OS);
