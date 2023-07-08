@@ -3,7 +3,7 @@ use std::io::Error;
 
 use super::TunInterface;
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct TunOptions {
     /// (Windows + Linux) Name the tun interface.
     pub(crate) name: Option<String>,
