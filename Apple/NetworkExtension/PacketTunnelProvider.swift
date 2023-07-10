@@ -1,7 +1,13 @@
 import NetworkExtension
+import libburrow
+import OSLog
+
 
 class PacketTunnelProvider: NEPacketTunnelProvider {
+    let logger = Logger(subsystem: "com.hackclub.burrow", category: "General")
     override func startTunnel(options: [String: NSObject]?, completionHandler: @escaping (Error?) -> Void) {
+        let fd = libburrow.start()
+        logger.info("fd: \(fd)")
         completionHandler(nil)
     }
 

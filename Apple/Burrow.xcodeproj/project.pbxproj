@@ -373,6 +373,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D020F64929E4A34B002790F6 /* App.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = P6PV2R9443;
 			};
 			name = Debug;
 		};
@@ -380,6 +381,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D020F64929E4A34B002790F6 /* App.xcconfig */;
 			buildSettings = {
+				DEVELOPMENT_TEAM = P6PV2R9443;
 			};
 			name = Release;
 		};

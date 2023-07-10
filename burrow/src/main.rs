@@ -1,3 +1,6 @@
+use std::mem;
+use std::os::fd::FromRawFd;
+
 use clap::{Args, Parser, Subcommand};
 use tokio::io::Result;
 use tun::TunInterface;
@@ -33,6 +36,22 @@ async fn try_main() -> Result<()> {
     let iface = TunInterface::new()?;
     println!("{:?}", iface.name());
 
+    let iface2 = (1..100)
+        .filter_map(|i| {
+            let iface = unsafe { TunInterface::from_raw_fd(i) };
+            match iface.name() {
+                Ok(_name) => Some(iface),
+                Err(_) => {
+                    mem::forget(iface);
+                    None
+                }
+            }
+        })
+        .next()
+        .unwrap();
+    println!("I am printing..");
+    println!("{:?}", iface2.name());
+
     Ok(())
 }
 
@@ -44,6 +63,7 @@ async fn main() {
     match &cli.command {
         Commands::Start(..) => {
             try_main().await.unwrap();
+            println!("FINISHED");
         }
     }
 }
