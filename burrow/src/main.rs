@@ -63,7 +63,7 @@ fn init_logger_layer() ->  tracing_journald::Layer {
     tracing_journald::layer().expect("Couldn't open journald socket - are you using systemd?").with_syslog_identifier("burrow".to_string())
 }
 
-#[cfg(target_os="macos")]
+#[cfg(target_vendor = "apple")]
 fn init_logger_layer() -> _ {
     OsLogger::new("com.hackclub.burrow", "default")
 }
