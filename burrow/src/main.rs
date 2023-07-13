@@ -60,7 +60,7 @@ async fn main() -> anyhow::Result<()> {
 
 #[cfg(target_os = "linux")]
 fn system_log() ->  tracing_journald::Layer {
-    tracing_journald::layer().expect("Couldn't open journald socket - are you using systemd?").with_syslog_identifier("burrow".to_string())
+    tracing_journald::layer().expect("Couldn't open journald socket - are you using systemd?").with_syslog_identifier("com.hackclub.burrow".to_string())
 }
 
 #[cfg(target_vendor = "apple")]
