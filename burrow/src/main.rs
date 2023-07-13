@@ -37,7 +37,7 @@ async fn try_main() -> anyhow::Result<()> {
     burrow::ensureroot::ensure_root();
 
     let logger = system_log()?.with_subscriber(FmtSubscriber::new());
-    tracing::subscriber::set_global_default(logger).expect("Logger shouldn't be set already");
+    tracing::subscriber::set_global_default(logger).context("Logger shouldn't be set already")?;
 
     let iface = TunInterface::new()?;
     tracing::info!(interface_name = ?iface.name());
