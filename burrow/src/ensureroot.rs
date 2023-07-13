@@ -1,5 +1,8 @@
+use tracing::instrument;
+
 // Check capabilities on Linux
 #[cfg(target_os = "linux")]
+#[instrument]
 pub fn ensure_root() {
     use caps::{has_cap, CapSet, Capability};
 
@@ -19,6 +22,7 @@ pub fn ensure_root() {
 
 // Check for root user on macOS
 #[cfg(target_vendor = "apple")]
+#[instrument]
 pub fn ensure_root() {
     use nix::unistd::Uid;
 
@@ -30,6 +34,7 @@ pub fn ensure_root() {
 }
 
 #[cfg(target_family = "windows")]
+#[instrument]
 pub fn ensure_root() {
     todo!()
 }
