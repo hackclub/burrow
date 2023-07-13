@@ -43,7 +43,7 @@ async fn try_main() -> Result<()> {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    LogTracer::init().expect("first thing in main - a logger shouldn't have been set yet");
+    LogTracer::init().context("Failed to initialize LogTracer")?;
 
     let logger = init_logger_layer().with_subscriber(FmtSubscriber::new());
     tracing::subscriber::set_global_default(logger).expect("Logger shouldn't be set already");
