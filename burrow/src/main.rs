@@ -36,6 +36,9 @@ async fn try_main() -> anyhow::Result<()> {
     LogTracer::init().context("Failed to initialize LogTracer")?;
     burrow::ensureroot::ensure_root();
 
+    let logger = init_logger_layer().with_subscriber(FmtSubscriber::new());
+    tracing::subscriber::set_global_default(logger).expect("Logger shouldn't be set already");
+
     let iface = TunInterface::new()?;
     tracing::info!(interface_name = ?iface.name());
 
@@ -44,10 +47,6 @@ async fn try_main() -> anyhow::Result<()> {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-
-    let logger = init_logger_layer().with_subscriber(FmtSubscriber::new());
-    tracing::subscriber::set_global_default(logger).expect("Logger shouldn't be set already");
-
     println!("Platform: {}", std::env::consts::OS);
 
     let cli = Cli::parse();
