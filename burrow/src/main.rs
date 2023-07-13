@@ -40,7 +40,7 @@ async fn try_main() -> anyhow::Result<()> {
     let maybe_layer = system_log()?;
     if let Some(layer) = maybe_layer {
         let logger = layer.with_subscriber(FmtSubscriber::new());
-        tracing::subscriber::set_global_default(logger).context("Logger shouldn't be set already")?;
+        tracing::subscriber::set_global_default(logger).context("Failed to set the global tracing subscriber")?;
     }
 
     let iface = TunInterface::new()?;
