@@ -1,5 +1,4 @@
 use clap::{Args, Parser, Subcommand};
-use tokio::io::Result;
 use tracing_log::LogTracer;
 use tracing_oslog::OsLogger;
 use tracing_subscriber::{FmtSubscriber, prelude::*};
