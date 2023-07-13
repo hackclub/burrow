@@ -5,6 +5,7 @@ use tracing_log::LogTracer;
 use tracing_oslog::OsLogger;
 use tracing_subscriber::{prelude::*, FmtSubscriber};
 use tun::TunInterface;
+use std::io;
 
 #[derive(Parser)]
 #[command(name = "Burrow")]
@@ -36,8 +37,11 @@ async fn try_main() -> anyhow::Result<()> {
     LogTracer::init().context("Failed to initialize LogTracer")?;
     burrow::ensureroot::ensure_root();
 
-    let logger = system_log()?.with_subscriber(FmtSubscriber::new());
-    tracing::subscriber::set_global_default(logger).context("Logger shouldn't be set already")?;
+    let maybe_layer = system_log()?;
+    if let Some(layer) = maybe_layer {
+        let logger = layer.with_subscriber(FmtSubscriber::new());
+        tracing::subscriber::set_global_default(logger).context("Logger shouldn't be set already")?;
+    }
 
     let iface = TunInterface::new()?;
     tracing::info!(interface_name = ?iface.name());
@@ -59,11 +63,18 @@ async fn main() -> anyhow::Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-fn system_log() -> anyhow::Result<tracing_journald::Layer> {
-    Ok(tracing_journald::layer()?.with_syslog_identifier("com.hackclub.burrow".to_string()))
+fn system_log() -> anyhow::Result<Option<tracing_journald::Layer>> {
+    let maybe_journald = tracing_journald::layer();//?.with_syslog_identifier("com.hackclub.burrow".to_string());
+    match maybe_journald {
+        Err(e) if e.kind() == io::ErrorKind::NotFound => {
+            tracing::trace!("journald not found");
+            Ok(None)
+        },
+        _ => Ok(Some(maybe_journald?))
+    }
 }
 
 #[cfg(target_vendor = "apple")]
-fn system_log() -> anyhow::Result<OsLogger> {
-    Ok(OsLogger::new("com.hackclub.burrow", "default"))
+fn system_log() -> anyhow::Result<Option<OsLogger>> {
+    Ok(Some(OsLogger::new("com.hackclub.burrow", "default")))
 }
