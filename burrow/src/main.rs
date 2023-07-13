@@ -5,6 +5,7 @@ use tracing_oslog::OsLogger;
 use tracing_subscriber::{FmtSubscriber, prelude::*};
 use tracing::instrument;
 use tun::TunInterface;
+use anyhow::Context;
 
 #[derive(Parser)]
 #[command(name = "Burrow")]
@@ -32,7 +33,8 @@ enum Commands {
 struct StartArgs {}
 
 #[instrument]
-async fn try_main() -> Result<()> {
+async fn try_main() -> anyhow::Result<()> {
+    LogTracer::init().context("Failed to initialize LogTracer")?;
     burrow::ensureroot::ensure_root();
 
     let iface = TunInterface::new()?;
@@ -43,7 +45,6 @@ async fn try_main() -> Result<()> {
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    LogTracer::init().context("Failed to initialize LogTracer")?;
 
     let logger = init_logger_layer().with_subscriber(FmtSubscriber::new());
     tracing::subscriber::set_global_default(logger).expect("Logger shouldn't be set already");
