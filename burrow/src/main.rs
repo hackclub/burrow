@@ -36,7 +36,7 @@ async fn try_main() -> anyhow::Result<()> {
     LogTracer::init().context("Failed to initialize LogTracer")?;
     burrow::ensureroot::ensure_root();
 
-    let logger = system_log().with_subscriber(FmtSubscriber::new());
+    let logger = system_log()?.with_subscriber(FmtSubscriber::new());
     tracing::subscriber::set_global_default(logger).expect("Logger shouldn't be set already");
 
     let iface = TunInterface::new()?;
@@ -59,13 +59,11 @@ async fn main() -> anyhow::Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-fn system_log() -> tracing_journald::Layer {
-    tracing_journald::layer()
-        .expect("Couldn't open journald socket - are you using systemd?")
-        .with_syslog_identifier("com.hackclub.burrow".to_string())
+fn system_log() -> anyhow::Result<tracing_journald::Layer> {
+    Ok(tracing_journald::layer()?.with_syslog_identifier("com.hackclub.burrow".to_string()))
 }
 
 #[cfg(target_vendor = "apple")]
-fn system_log() -> _ {
-    OsLogger::new("com.hackclub.burrow", "default")
+fn system_log() -> anyhow::Result<OsLogger> {
+    Ok(OsLogger::new("com.hackclub.burrow", "default"))
 }
