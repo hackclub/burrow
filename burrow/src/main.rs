@@ -1,10 +1,10 @@
+use anyhow::Context;
 use clap::{Args, Parser, Subcommand};
+use tracing::instrument;
 use tracing_log::LogTracer;
 use tracing_oslog::OsLogger;
-use tracing_subscriber::{FmtSubscriber, prelude::*};
-use tracing::instrument;
+use tracing_subscriber::{prelude::*, FmtSubscriber};
 use tun::TunInterface;
-use anyhow::Context;
 
 #[derive(Parser)]
 #[command(name = "Burrow")]
@@ -59,8 +59,10 @@ async fn main() -> anyhow::Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-fn system_log() ->  tracing_journald::Layer {
-    tracing_journald::layer().expect("Couldn't open journald socket - are you using systemd?").with_syslog_identifier("com.hackclub.burrow".to_string())
+fn system_log() -> tracing_journald::Layer {
+    tracing_journald::layer()
+        .expect("Couldn't open journald socket - are you using systemd?")
+        .with_syslog_identifier("com.hackclub.burrow".to_string())
 }
 
 #[cfg(target_vendor = "apple")]
