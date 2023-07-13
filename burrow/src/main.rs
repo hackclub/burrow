@@ -64,7 +64,7 @@ async fn main() -> anyhow::Result<()> {
 
 #[cfg(target_os = "linux")]
 fn system_log() -> anyhow::Result<Option<tracing_journald::Layer>> {
-    let maybe_journald = tracing_journald::layer();//?.with_syslog_identifier("com.hackclub.burrow".to_string());
+    let maybe_journald = tracing_journald::layer();
     match maybe_journald {
         Err(e) if e.kind() == io::ErrorKind::NotFound => {
             tracing::trace!("journald not found");
