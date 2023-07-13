@@ -1,6 +1,7 @@
 use anyhow::Context;
 use clap::{Args, Parser, Subcommand};
 use tracing::instrument;
+use tracing::Dispatch;
 use tracing_log::LogTracer;
 use tracing_oslog::OsLogger;
 use tracing_subscriber::{prelude::*, FmtSubscriber};
@@ -37,12 +38,14 @@ async fn try_main() -> anyhow::Result<()> {
     LogTracer::init().context("Failed to initialize LogTracer")?;
     burrow::ensureroot::ensure_root();
 
-    let maybe_layer = system_log()?;
-    if let Some(layer) = maybe_layer {
-        let logger = layer.with_subscriber(FmtSubscriber::new());
-        tracing::subscriber::set_global_default(logger).context("Failed to set the global tracing subscriber")?;
-    }
-
+	if cfg!(target_os = "linux") || cfg!(target_vendor = "apple") {
+    	let maybe_layer = system_log()?;
+    	if let Some(layer) = maybe_layer {
+        	let logger = layer.with_subscriber(FmtSubscriber::new());
+        	tracing::subscriber::set_global_default(logger).context("Failed to set the global tracing subscriber")?;
+    	}
+	}
+	
     let iface = TunInterface::new()?;
     tracing::info!(interface_name = ?iface.name());
 
