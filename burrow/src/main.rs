@@ -46,15 +46,16 @@ async fn try_main() -> anyhow::Result<()> {
 }
 
 #[tokio::main(flavor = "current_thread")]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     println!("Platform: {}", std::env::consts::OS);
 
     let cli = Cli::parse();
     match &cli.command {
         Commands::Start(..) => {
-            try_main().await.unwrap();
+            try_main().await?;
         }
     }
+    Ok(())
 }
 
 #[cfg(target_os = "linux")]
