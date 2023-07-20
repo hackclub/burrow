@@ -345,6 +345,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D020F66229E4A6E5002790F6 /* NetworkExtension.xcconfig */;
 			buildSettings = {
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -352,6 +355,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D020F66229E4A6E5002790F6 /* NetworkExtension.xcconfig */;
 			buildSettings = {
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
