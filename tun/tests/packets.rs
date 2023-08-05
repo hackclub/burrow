@@ -18,7 +18,7 @@ fn tst_read() {
     println!("tun ip: {:?}", tun.ipv4_addr()?);
     println!("Waiting for a packet...");
     let buf = &mut [0u8; 1500];
-    let res = tun.read(buf);
+    let res = tun.recv(buf);
     println!("Received!");
     assert!(res.is_ok());
 }
@@ -28,9 +28,9 @@ fn tst_read() {
 #[ignore = "requires interactivity"]
 #[cfg(not(target_os = "windows"))]
 fn write_packets() {
-    let mut tun = TunInterface::new()?;
+    let tun = TunInterface::new()?;
     let mut buf = [0u8; 1500];
     buf[0] = 6 << 4;
-    let bytes_written = tun.write(&buf)?;
+    let bytes_written = tun.send(&buf)?;
     assert_eq!(bytes_written, 1504);
 }
