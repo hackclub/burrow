@@ -1,5 +1,11 @@
+use std::mem;
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+use std::os::fd::FromRawFd;
+
 use clap::{Args, Parser, Subcommand};
 use tokio::io::Result;
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+use burrow::retrieve;
 use tun::TunInterface;
 
 #[derive(Parser)]
@@ -22,17 +28,41 @@ struct Cli {
 enum Commands {
     /// Start Burrow
     Start(StartArgs),
+    /// Retrieve the file descriptor of the tun interface
+    Retrieve(RetrieveArgs),
 }
 
 #[derive(Args)]
 struct StartArgs {}
 
-async fn try_main() -> Result<()> {
-    burrow::ensureroot::ensure_root();
+#[derive(Args)]
+struct RetrieveArgs {}
 
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+async fn try_start() -> Result<()> {
+    burrow::ensureroot::ensure_root();
     let iface = TunInterface::new()?;
     println!("{:?}", iface.name());
+    let iface2 = retrieve();
+    println!("{}", iface2);
+    Ok(())
+}
 
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+async fn try_retrieve() -> Result<()> {
+    burrow::ensureroot::ensure_root();
+    let iface2 = retrieve();
+    println!("{}", iface2);
+    Ok(())
+}
+
+#[cfg(not(any(target_os = "linux", target_vendor = "apple")))]
+async fn try_start() -> Result<()> {
+    Ok(())
+}
+
+#[cfg(not(any(target_os = "linux", target_vendor = "apple")))]
+async fn try_retrieve() -> Result<()> {
     Ok(())
 }
 
@@ -43,7 +73,12 @@ async fn main() {
     let cli = Cli::parse();
     match &cli.command {
         Commands::Start(..) => {
-            try_main().await.unwrap();
+            try_start().await.unwrap();
+            println!("FINISHED");
+        }
+        Commands::Retrieve(..) => {
+            try_retrieve().await.unwrap();
+            println!("FINISHED");
         }
     }
 }
