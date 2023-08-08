@@ -1,7 +1,7 @@
 use std::net::Ipv4Addr;
 
 #[tokio::test]
-#[cfg(feature = "tokio")]
+#[cfg(all(feature = "tokio", not(target_os = "windows")))]
 async fn test_create() {
     let tun = tun::TunInterface::new().unwrap();
     let async_tun = tun::tokio::TunInterface::new(tun).unwrap();
