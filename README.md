@@ -17,9 +17,9 @@ Apple/ # Xcode project for burrow on macOS and iOS
 burrow/ # Higher-level API library for tun and tun-async
 tun/ # Low-level interface to OS networking
     src/
+        tokio/ # Async/Tokio code
         unix/ # macOS and Linux code
         windows/ # Windows networking code
-tun-async/ # Async interface to tun
 ```
 
 ## Installation 
