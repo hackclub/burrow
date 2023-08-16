@@ -8,15 +8,6 @@
     "editor.acceptSuggestionOnEnter": "on",
     "rust-analyzer.restartServerOnConfigChange": true,
     "rust-analyzer.cargo.features": "all",
-    "rust-analyzer.check.overrideCommand": [
-        "cargo",
-        "clippy",
-        "--fix",
-        "--workspace",
-        "--message-format=json",
-        "--all-targets",
-        "--allow-dirty"
-    ],
     "[rust]": {
         "editor.defaultFormatter": "rust-lang.rust-analyzer",
     }
