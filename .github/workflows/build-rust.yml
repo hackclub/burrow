@@ -60,6 +60,8 @@ jobs:
         toolchain: stable
         components: rustfmt
         targets: ${{ join(matrix.targets, ', ') }}
+    - name: Setup Rust Cache
+      uses: Swatinem/rust-cache@v2
     - name: Build
       shell: bash
       run: cargo build --verbose --workspace --all-features --target ${{ join(matrix.targets, ' --target ') }} --target ${{ join(matrix.test-targets, ' --target ') }}
