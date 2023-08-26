@@ -1,12 +1,19 @@
 pub mod ensureroot;
+#[cfg(target_vendor = "apple")]
+mod apple;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 use std::{
     mem,
     os::fd::{AsRawFd, FromRawFd},
 };
+use std::os::fd::RawFd;
+use tracing::debug;
 
 use tun::TunInterface;
+
+#[cfg(target_vendor = "apple")]
+pub use apple::{NetWorkSettings, getNetworkSettings, initialize_oslog};
 
 // TODO Separate start and retrieve functions
 
@@ -15,9 +22,13 @@ use tun::TunInterface;
 pub extern "C" fn retrieve() -> i32 {
     let iface2 = (1..100)
         .filter_map(|i| {
+            debug!("Getting TunInterface with fd: {:?}", i);
             let iface = unsafe { TunInterface::from_raw_fd(i) };
             match iface.name() {
-                Ok(_name) => Some(iface),
+                Ok(name) => {
+                    debug!("Found interface {}", name);
+                    Some(iface)
+                },
                 Err(_) => {
                     mem::forget(iface);
                     None
@@ -26,7 +37,13 @@ pub extern "C" fn retrieve() -> i32 {
         })
         .next();
     match iface2 {
-        Some(iface) => iface.as_raw_fd(),
-        None => -1,
+        Some(iface) => {
+            debug!("Found interface {:?}", iface.name());
+            iface.as_raw_fd()
+        },
+        None => {
+            debug!("No interface found");
+            -1
+        }
     }
 }

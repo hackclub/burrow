@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0B90A6DF2A99BDB300EE4E7F /* NetworkSettingsConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B90A6DE2A99BDB300EE4E7F /* NetworkSettingsConverter.swift */; };
 		43AA26D82A10004900F14CE6 /* MenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AA26D72A10004900F14CE6 /* MenuView.swift */; };
 		D00AA8972A4669BC005C8102 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00AA8962A4669BC005C8102 /* AppDelegate.swift */; };
 		D020F65829E4A697002790F6 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D020F65729E4A697002790F6 /* PacketTunnelProvider.swift */; };
@@ -46,6 +47,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0B90A6DE2A99BDB300EE4E7F /* NetworkSettingsConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkSettingsConverter.swift; sourceTree = "<group>"; };
 		43AA26D72A10004900F14CE6 /* MenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuView.swift; sourceTree = "<group>"; };
 		D00AA8962A4669BC005C8102 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D020F63D29E4A1FF002790F6 /* Identity.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Identity.xcconfig; sourceTree = "<group>"; };
@@ -118,6 +120,7 @@
 			isa = PBXGroup;
 			children = (
 				D020F65729E4A697002790F6 /* PacketTunnelProvider.swift */,
+				0B90A6DE2A99BDB300EE4E7F /* NetworkSettingsConverter.swift */,
 				D020F65929E4A697002790F6 /* Info.plist */,
 				D020F66729E4A95D002790F6 /* NetworkExtension-iOS.entitlements */,
 				D020F66629E4A95D002790F6 /* NetworkExtension-macOS.entitlements */,
@@ -304,6 +307,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B90A6DF2A99BDB300EE4E7F /* NetworkSettingsConverter.swift in Sources */,
 				D020F65829E4A697002790F6 /* PacketTunnelProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
