@@ -1,6 +1,7 @@
 pub mod ensureroot;
 #[cfg(target_vendor = "apple")]
 mod apple;
+mod server;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 use std::{

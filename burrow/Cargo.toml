@@ -8,12 +8,15 @@ crate-type = ["lib", "staticlib"]
 
 [dependencies]
 tokio = { version = "1.21", features = ["rt", "macros"] }
-tun = { version = "0.1", path = "../tun" }
+tun = { version = "0.1", path = "../tun" , features = ["tokio"]}
 clap = { version = "4.3.2", features = ["derive"] }
 env_logger = "0.10"
 log = "0.4"
 tracing = "0.1"
 tracing-subscriber = "0.3"
+serde = { version = "1.0.188", features = ["derive"] }
+serde_json = "1.0.105"
+axum = {version = "0.6.20", features = ["json", "macros"]}
 
 [target.'cfg(target_os = "linux")'.dependencies]
 caps = "0.5.5"

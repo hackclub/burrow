@@ -19,8 +19,8 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             completionHandler(err)
         }
         logger.info("fd: \(fild)")
-        let networkSettings = genNetSec(fild: fild)
-        logger.info("Network Settings: - ipv4:\(networkSettings.ipv4Settings) -mtu: \(networkSettings.mtu)")
+        let network_settings = genNetSec(fild: fild)
+        logger.info("Network Settings: - ipv4:\(network_settings.ipv4Settings) -mtu: \(network_settings.mtu)")
         completionHandler(nil)
     }
 

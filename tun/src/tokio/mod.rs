@@ -5,6 +5,9 @@ pub struct TunInterface {
     inner: AsyncFd<crate::TunInterface>,
 }
 
+unsafe impl Send for TunInterface {
+}
+
 impl TunInterface {
     pub fn new(tun: crate::TunInterface) -> io::Result<Self> {
         Ok(Self {
@@ -56,16 +59,6 @@ impl TunInterface {
         loop {
             let mut guard = self.inner.readable().await?;
             match guard.try_io(|inner| inner.get_ref().name()) {
-                Ok(result) => return result,
-                Err(_would_block) => continue,
-            }
-        }
-    }
-
-    pub async fn set_name(&self, name: &str) -> io::Result<()> {
-        loop {
-            let mut guard = self.inner.readable().await?;
-            match guard.try_io(|inner| inner.get_ref().set_name(name)) {
                 Ok(result) => return result,
                 Err(_would_block) => continue,
             }
