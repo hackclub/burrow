@@ -5,9 +5,6 @@ pub struct TunInterface {
     inner: AsyncFd<crate::TunInterface>,
 }
 
-unsafe impl Send for TunInterface {
-}
-
 impl TunInterface {
     pub fn new(tun: crate::TunInterface) -> io::Result<Self> {
         Ok(Self {

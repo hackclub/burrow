@@ -7,7 +7,7 @@ edition = "2021"
 crate-type = ["lib", "staticlib"]
 
 [dependencies]
-tokio = { version = "1.21", features = ["rt", "macros"] }
+tokio = { version = "1.21", features = ["rt", "rt-multi-thread", "macros"] }
 tun = { version = "0.1", path = "../tun" , features = ["tokio"]}
 clap = { version = "4.3.2", features = ["derive"] }
 env_logger = "0.10"

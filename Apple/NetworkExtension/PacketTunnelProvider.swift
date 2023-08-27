@@ -4,23 +4,15 @@ import OSLog
 
 class PacketTunnelProvider: NEPacketTunnelProvider {
     let logger = Logger(subsystem: "com.hackclub.burrow", category: "General")
+    var osInitialized = false
     
     override func startTunnel(options: [String: NSObject]?, completionHandler: @escaping (Error?) -> Void) {
-        libburrow.initialize_oslog()
-        let fild = libburrow.retrieve()
-        if fild == -1 {
-            // Not sure if this is the right way to return an error
-            logger.error("Failed to retrieve file descriptor for burrow.")
-            let err = NSError(
-                domain: "com.hackclub.burrow",
-                code: 1_010,
-                userInfo: [NSLocalizedDescriptionKey: "Failed to find TunInterface"]
-            )
-            completionHandler(err)
+        if(!osInitialized){
+            libburrow.initialize_oslog()
+            osInitialized=true
         }
-        logger.info("fd: \(fild)")
-        let network_settings = genNetSec(fild: fild)
-        logger.info("Network Settings: - ipv4:\(network_settings.ipv4Settings) -mtu: \(network_settings.mtu)")
+        libburrow.spawn_server()
+        logger.debug("spawned server")
         completionHandler(nil)
     }
 

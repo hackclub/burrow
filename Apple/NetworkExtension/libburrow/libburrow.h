@@ -9,3 +9,4 @@ typedef struct {
 
 NetWorkSettings getNetworkSettings(int);
 void initialize_oslog();
+void spawn_server();

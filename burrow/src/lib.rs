@@ -16,6 +16,8 @@ use tun::TunInterface;
 #[cfg(target_vendor = "apple")]
 pub use apple::{NetWorkSettings, getNetworkSettings, initialize_oslog};
 
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+pub use server::spawn_server;
 // TODO Separate start and retrieve functions
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
@@ -47,4 +49,23 @@ pub extern "C" fn retrieve() -> i32 {
             -1
         }
     }
+}
+
+pub fn get_iface() -> Option<TunInterface> {
+    (1..100)
+        .filter_map(|i| {
+            debug!("Getting TunInterface with fd: {:?}", i);
+            let iface = unsafe { TunInterface::from_raw_fd(i) };
+            match iface.name() {
+                Ok(name) => {
+                    debug!("Found interface {}", name);
+                    Some(iface)
+                },
+                Err(_) => {
+                    mem::forget(iface);
+                    None
+                }
+            }
+        })
+        .next()
 }
