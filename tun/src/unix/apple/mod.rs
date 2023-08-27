@@ -1,12 +1,13 @@
 use byteorder::{ByteOrder, NetworkEndian};
 use fehler::throws;
 use libc::{c_char, iovec, writev, AF_INET, AF_INET6};
-use log::info;
+use tracing::info;
 use socket2::{Domain, SockAddr, Socket, Type};
 use std::io::IoSlice;
 use std::net::{Ipv4Addr, SocketAddrV4};
 use std::os::fd::{AsRawFd, RawFd};
 use std::{io::Error, mem};
+use tracing::instrument;
 
 mod kern_control;
 mod sys;
@@ -23,16 +24,19 @@ pub struct TunInterface {
 
 impl TunInterface {
     #[throws]
+    #[instrument]
     pub fn new() -> TunInterface {
         Self::new_with_options(TunOptions::new())?
     }
 
     #[throws]
+    #[instrument]
     pub fn new_with_options(_: TunOptions) -> TunInterface {
         TunInterface::connect(0)?
     }
 
     #[throws]
+    #[instrument]
     fn connect(index: u32) -> TunInterface {
         use socket2::{Domain, Protocol, Socket, Type};
 
@@ -48,6 +52,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn name(&self) -> String {
         let mut buf = [0 as c_char; sys::IFNAMSIZ];
         let mut len = buf.len() as sys::socklen_t;
@@ -62,6 +67,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     fn ifreq(&self) -> sys::ifreq {
         let mut iff: sys::ifreq = unsafe { mem::zeroed() };
         iff.ifr_name = string_to_ifname(&self.name()?);
@@ -69,6 +75,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn set_ipv4_addr(&self, addr: Ipv4Addr) {
         let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
         let mut iff = self.ifreq()?;
@@ -78,6 +85,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn ipv4_addr(&self) -> Ipv4Addr {
         let mut iff = self.ifreq()?;
         self.perform(|fd| unsafe { sys::if_get_addr(fd, &mut iff) })?;
@@ -87,11 +95,15 @@ impl TunInterface {
 
     #[throws]
     fn perform<R>(&self, perform: impl FnOnce(RawFd) -> Result<R, nix::Error>) -> R {
+        let span = tracing::info_span!("perform", fd = self.as_raw_fd());
+        let _enter = span.enter();
+
         let socket = Socket::new(Domain::IPV4, Type::DGRAM, None)?;
         perform(socket.as_raw_fd())?
     }
 
     #[throws]
+    #[instrument]
     pub fn mtu(&self) -> i32 {
         let mut iff = self.ifreq()?;
         self.perform(|fd| unsafe { sys::if_get_mtu(fd, &mut iff) })?;
@@ -101,6 +113,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn set_mtu(&self, mtu: i32) {
         let mut iff = self.ifreq()?;
         iff.ifr_ifru.ifru_mtu = mtu;
@@ -109,6 +122,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn netmask(&self) -> Ipv4Addr {
         let mut iff = self.ifreq()?;
         self.perform(|fd| unsafe { sys::if_get_netmask(fd, &mut iff) })?;
@@ -120,6 +134,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn set_netmask(&self, addr: Ipv4Addr) {
         let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
         let mut iff = self.ifreq()?;
@@ -133,6 +148,7 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
     pub fn send(&self, buf: &[u8]) -> usize {
         use std::io::ErrorKind;
         let proto = match buf[0] >> 4 {
