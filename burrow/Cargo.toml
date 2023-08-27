@@ -7,9 +7,15 @@ edition = "2021"
 crate-type = ["lib", "staticlib"]
 
 [dependencies]
-tokio = { version = "1.21", features = ["rt", "sync", "io-util", "macros"] }
+anyhow = "1.0"
+tokio = { version = "1.21", features = ["rt", "macros", "sync", "io-util"] }
 tun = { version = "0.1", path = "../tun", features = ["serde"] }
 clap = { version = "4.3.2", features = ["derive"] }
+tracing = "0.1"
+tracing-log = "0.1"
+tracing-journald = "0.3"
+tracing-oslog = {git = "https://github.com/Stormshield-robinc/tracing-oslog"}
+tracing-subscriber = "0.3"
 env_logger = "0.10"
 log = "0.4"
 serde = { version = "1", features = ["derive"] }

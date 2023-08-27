@@ -2,6 +2,7 @@ use std::{
     io::{Error, Read},
     os::fd::{AsRawFd, FromRawFd, IntoRawFd, RawFd},
 };
+use tracing::instrument;
 
 use super::TunOptions;
 
@@ -41,11 +42,13 @@ impl IntoRawFd for TunInterface {
 
 impl TunInterface {
     #[throws]
+    #[instrument]
     pub fn recv(&mut self, buf: &mut [u8]) -> usize {
         self.socket.read(buf)?
     }
 }
 
+#[instrument]
 pub fn ifname_to_string(buf: [libc::c_char; libc::IFNAMSIZ]) -> String {
     // TODO: Switch to `CStr::from_bytes_until_nul` when stabilized
     unsafe {
@@ -56,6 +59,7 @@ pub fn ifname_to_string(buf: [libc::c_char; libc::IFNAMSIZ]) -> String {
     }
 }
 
+#[instrument]
 pub fn string_to_ifname(name: &str) -> [libc::c_char; libc::IFNAMSIZ] {
     let mut buf = [0 as libc::c_char; libc::IFNAMSIZ];
     let len = name.len().min(buf.len());

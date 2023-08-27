@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use fehler::throws;
 use std::io::Error;
 use std::ptr;
@@ -12,6 +13,15 @@ pub use queue::TunQueue;
 pub struct TunInterface {
     handle: sys::WINTUN_ADAPTER_HANDLE,
     name: String,
+}
+
+impl Debug for TunInterface {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TunInterface")
+            .field("handle", &"SYS_WINTUN_ADAPTER_HANDLE".to_string())
+            .field("name", &self.name)
+            .finish()
+    }
 }
 
 impl TunInterface {
