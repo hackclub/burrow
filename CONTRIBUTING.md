@@ -18,11 +18,11 @@ All types of contributions are encouraged and valued. See the [Table of Contents
 - [I Want To Contribute](#i-want-to-contribute)
 - [Reporting Bugs](#reporting-bugs)
 - [Suggesting Enhancements](#suggesting-enhancements)
-- [Your First Code Contribution](#your-first-code-contribution)
-- [Improving The Documentation](#improving-the-documentation)
 - [Styleguides](#styleguides)
 - [Commit Messages](#commit-messages)
 - [Join The Project Team](#join-the-project-team)
+<!-- - [Your First Code Contribution](#your-first-code-contribution) -->
+<!-- - [Improving The Documentation](#improving-the-documentation) -->
 
 
 ## Code of Conduct
@@ -78,7 +78,8 @@ A good bug report shouldn't leave others needing to chase you up for more inform
 
 > You must never report security related issues, vulnerabilities or bugs including sensitive information to the issue tracker, or elsewhere in public. Instead sensitive bugs must be sent by email to <>.
 
-# TODO: where do security issues get sent? ~CS
+
+<!-- TODO: where do security issues get sent? ~CS -->
 
 
 We use GitHub issues to track bugs and errors. If you run into an issue with the project:
@@ -121,28 +122,33 @@ Enhancement suggestions are tracked as [GitHub issues](/issues).
 - **Explain why this enhancement would be useful** to most burrow users. You may also want to point out the other projects that solved it better and which could serve as inspiration.
 
 
-
+<!--
 ### Your First Code Contribution
 
 #### Code Style
 
 ### Improving The Documentation
-
+-->
 
 ## Styleguides
 ### Commit Messages
 
-Burrow uses an automatic git linter to enforce our commit style. We enforce the following rules:
+Burrow uses an automatic [git linter](https://jorisroovers.com/gitlint/latest/) to enforce our commit style. We enforce the [following rules](/.gitlint):
 
-<TODO: Enumerate gitlint rules>
+* Your commit title must have a maximum length of **50 characters**.
+* Your commit body must have a maximum length of **72 characters**.
+* Neither your title nor body must have issue numbers (#123 etc)
+
+You can add a body to your commit like so;
+`git commit -m "Title" -m "Body"`
 
 If you make a mistake, that's no problem! We ask that you [rebase](https://git-rebase.io) your commits to make them compliant with our style guidelines.
 
 
 
 ## Join The Project Team
-
+Join us over on the [Hack Club Slack](https://hackclub.com/slack) in the [#burrow](https://hackclub.slack.com/archives/C052HA0NE4T) channel! Let us know what you're interested in and we can set up a call to help you out making your first PR. This isn't necessary if you know what you're doing :P
 
 
 ## Attribution
-This guide is based on the **contributing.md**. [Make your own](https://contributing.md/)!
+This guide is based on https://contributing.md/
