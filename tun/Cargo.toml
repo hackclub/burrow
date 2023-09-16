@@ -23,6 +23,9 @@ tokio = ["tokio/net", "dep:futures"]
 [target.'cfg(feature = "tokio")'.dev-dependencies]
 tokio = { features = ["rt", "macros"] }
 
+[target.'cfg(linux)'.dependencies]
+rtnetlink = "0.13.1"
+
 [target.'cfg(windows)'.dependencies]
 lazy_static = "1.4"
 libloading = "0.7"

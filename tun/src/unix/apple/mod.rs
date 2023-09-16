@@ -1,5 +1,5 @@
 use byteorder::{ByteOrder, NetworkEndian};
-use fehler::throws;
+use fehler::{throw, throws};
 use libc::{c_char, iovec, writev, AF_INET, AF_INET6};
 use tracing::info;
 use socket2::{Domain, SockAddr, Socket, Type};
@@ -8,6 +8,7 @@ use std::net::{Ipv4Addr, SocketAddrV4};
 use std::os::fd::{AsRawFd, RawFd};
 use std::{io::Error, mem};
 use tracing::instrument;
+
 
 mod kern_control;
 mod sys;
@@ -54,6 +55,11 @@ impl TunInterface {
     #[throws]
     #[instrument]
     pub fn name(&self) -> String {
+        ifname_to_string(self.ifname()?)
+    }
+
+    #[throws]
+    fn ifname(&self) -> [libc::c_char; libc::IFNAMSIZ] {
         let mut buf = [0 as c_char; sys::IFNAMSIZ];
         let mut len = buf.len() as sys::socklen_t;
         sys::syscall!(getsockopt(
@@ -63,7 +69,20 @@ impl TunInterface {
             buf.as_mut_ptr() as *mut sys::c_void,
             &mut len,
         ))?;
-        ifname_to_string(buf)
+        buf
+    }
+
+
+    #[throws]
+    #[instrument]
+    pub fn index(&self) -> usize {
+        let ifname = self.ifname()?;
+        let index = unsafe { libc::if_nametoindex(ifname.as_ptr()) };
+        if index == 0 {
+            throw!(Error::last_os_error())
+        }
+
+        index as usize
     }
 
     #[throws]

@@ -9,6 +9,7 @@ mod imp;
 pub(crate) mod imp;
 
 mod options;
+pub mod routing;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 #[cfg(feature = "tokio")]
