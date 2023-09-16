@@ -1,4 +1,5 @@
 use std::io;
+
 use tokio::io::unix::AsyncFd;
 use tracing::instrument;
 
@@ -16,7 +17,7 @@ impl TunInterface {
     }
 
     #[instrument]
-    pub async fn write(&self, buf: &[u8]) -> io::Result<usize> {
+    pub async fn send(&self, buf: &[u8]) -> io::Result<usize> {
         loop {
             let mut guard = self.inner.writable().await?;
             match guard.try_io(|inner| inner.get_ref().send(buf)) {
@@ -27,7 +28,7 @@ impl TunInterface {
     }
 
     #[instrument]
-    pub async fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+    pub async fn recv(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         loop {
             let mut guard = self.inner.readable_mut().await?;
             match guard.try_io(|inner| (*inner).get_mut().recv(buf)) {

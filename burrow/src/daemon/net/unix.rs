@@ -1,13 +1,20 @@
-use super::*;
 use std::{
-    os::fd::{FromRawFd, RawFd},
-    os::unix::net::UnixListener as StdUnixListener,
+    os::{
+        fd::{FromRawFd, RawFd},
+        unix::net::UnixListener as StdUnixListener,
+    },
     path::Path,
 };
+
+use anyhow::Result;
 use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     net::{UnixListener, UnixStream},
+    sync::mpsc,
 };
+
+use super::{DaemonRequest, DaemonResponse};
+use crate::daemon::DaemonCommand;
 
 const UNIX_SOCKET_PATH: &str = "/run/burrow.sock";
 
@@ -40,7 +47,8 @@ pub(crate) async fn listen_with_optional_fd(
         let cmd_tx = cmd_tx.clone();
 
         //  I'm pretty sure we won't need to manually join / shut this down,
-        //  `lines` will return Err during dropping, and this task should exit gracefully.
+        //  `lines` will return Err during dropping, and this task should exit
+        // gracefully.
         tokio::task::spawn(async {
             let cmd_tx = cmd_tx;
             let mut stream = stream;

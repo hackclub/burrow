@@ -1,16 +1,18 @@
+use std::{
+    fs::OpenOptions,
+    io::{Error, Write},
+    mem,
+    net::{Ipv4Addr, Ipv6Addr, SocketAddrV4},
+    os::{
+        fd::RawFd,
+        unix::io::{AsRawFd, FromRawFd, IntoRawFd},
+    },
+};
+
 use fehler::throws;
-
-use socket2::{Domain, SockAddr, Socket, Type};
-use std::fs::OpenOptions;
-use std::io::{Error, Write};
-use std::mem;
-use std::net::{Ipv4Addr, Ipv6Addr, SocketAddrV4};
-use std::os::fd::RawFd;
-use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd};
-
-use tracing::{info, instrument};
-
 use libc::in6_ifreq;
+use socket2::{Domain, SockAddr, Socket, Type};
+use tracing::{info, instrument};
 
 use super::{ifname_to_string, string_to_ifname, TunOptions};
 
@@ -24,9 +26,7 @@ pub struct TunInterface {
 impl TunInterface {
     #[throws]
     #[instrument]
-    pub fn new() -> TunInterface {
-        Self::new_with_options(TunOptions::new())?
-    }
+    pub fn new() -> TunInterface { Self::new_with_options(TunOptions::new())? }
 
     #[throws]
     #[instrument]
@@ -212,7 +212,5 @@ impl TunInterface {
 
     #[throws]
     #[instrument]
-    pub fn send(&self, buf: &[u8]) -> usize {
-        self.socket.send(buf)?
-    }
+    pub fn send(&self, buf: &[u8]) -> usize { self.socket.send(buf)? }
 }

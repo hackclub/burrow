@@ -1,5 +1,6 @@
-use fehler::throws;
 use std::io::Error;
+
+use fehler::throws;
 
 use super::TunInterface;
 
@@ -15,25 +16,17 @@ pub struct TunOptions {
 }
 
 impl TunOptions {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub fn new() -> Self { Self::default() }
 
     pub fn name(mut self, name: &str) -> Self {
         self.name = Some(name.to_owned());
         self
     }
 
-    pub fn no_pi(mut self, enable: bool) {
-        self.no_pi = enable.then_some(());
-    }
+    pub fn no_pi(mut self, enable: bool) { self.no_pi = enable.then_some(()); }
 
-    pub fn tun_excl(mut self, enable: bool) {
-        self.tun_excl = enable.then_some(());
-    }
+    pub fn tun_excl(mut self, enable: bool) { self.tun_excl = enable.then_some(()); }
 
     #[throws]
-    pub fn open(self) -> TunInterface {
-        TunInterface::new_with_options(self)?
-    }
+    pub fn open(self) -> TunInterface { TunInterface::new_with_options(self)? }
 }

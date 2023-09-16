@@ -1,7 +1,6 @@
-use fehler::throws;
-use std::io::Error;
+use std::{io::Error, net::Ipv4Addr};
 
-use std::net::Ipv4Addr;
+use fehler::throws;
 use tun::TunInterface;
 
 #[throws]
@@ -9,8 +8,8 @@ use tun::TunInterface;
 #[ignore = "requires interactivity"]
 #[cfg(not(target_os = "windows"))]
 fn tst_read() {
-    // This test is interactive, you need to send a packet to any server through 192.168.1.10
-    // EG. `sudo route add 8.8.8.8 192.168.1.10`,
+    // This test is interactive, you need to send a packet to any server through
+    // 192.168.1.10 EG. `sudo route add 8.8.8.8 192.168.1.10`,
     //`dig @8.8.8.8 hackclub.com`
     let mut tun = TunInterface::new()?;
     println!("tun name: {:?}", tun.name()?);

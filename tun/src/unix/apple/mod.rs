@@ -1,21 +1,23 @@
+use std::{
+    io::{Error, IoSlice},
+    mem,
+    net::{Ipv4Addr, SocketAddrV4},
+    os::fd::{AsRawFd, RawFd},
+};
+
 use byteorder::{ByteOrder, NetworkEndian};
 use fehler::throws;
 use libc::{c_char, iovec, writev, AF_INET, AF_INET6};
-use tracing::info;
 use socket2::{Domain, SockAddr, Socket, Type};
-use std::io::IoSlice;
-use std::net::{Ipv4Addr, SocketAddrV4};
-use std::os::fd::{AsRawFd, RawFd};
-use std::{io::Error, mem};
-use tracing::instrument;
+use tracing::{self, instrument};
 
 mod kern_control;
 mod sys;
 
-pub use super::queue::TunQueue;
-
-use super::{ifname_to_string, string_to_ifname, TunOptions};
 use kern_control::SysControlSocket;
+
+pub use super::queue::TunQueue;
+use super::{ifname_to_string, string_to_ifname, TunOptions};
 
 #[derive(Debug)]
 pub struct TunInterface {
@@ -81,7 +83,7 @@ impl TunInterface {
         let mut iff = self.ifreq()?;
         iff.ifr_ifru.ifru_addr = unsafe { *addr.as_ptr() };
         self.perform(|fd| unsafe { sys::if_set_addr(fd, &iff) })?;
-        info!("ipv4_addr_set: {:?} (fd: {:?})", addr, self.as_raw_fd())
+        tracing::info!("ipv4_addr_set: {:?} (fd: {:?})", addr, self.as_raw_fd())
     }
 
     #[throws]
@@ -118,7 +120,7 @@ impl TunInterface {
         let mut iff = self.ifreq()?;
         iff.ifr_ifru.ifru_mtu = mtu;
         self.perform(|fd| unsafe { sys::if_set_mtu(fd, &iff) })?;
-        info!("mtu_set: {:?} (fd: {:?})", mtu, self.as_raw_fd())
+        tracing::info!("mtu_set: {:?} (fd: {:?})", mtu, self.as_raw_fd())
     }
 
     #[throws]
@@ -140,7 +142,7 @@ impl TunInterface {
         let mut iff = self.ifreq()?;
         iff.ifr_ifru.ifru_netmask = unsafe { *addr.as_ptr() };
         self.perform(|fd| unsafe { sys::if_set_netmask(fd, &iff) })?;
-        info!(
+        tracing::info!(
             "netmask_set: {:?} (fd: {:?})",
             unsafe { iff.ifr_ifru.ifru_netmask },
             self.as_raw_fd()

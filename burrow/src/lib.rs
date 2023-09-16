@@ -1,5 +1,5 @@
-#![deny(missing_debug_implementations)]
 pub mod ensureroot;
+pub mod wireguard;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 use std::{

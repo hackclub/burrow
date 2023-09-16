@@ -1,17 +1,15 @@
-use anyhow::Context;
 use std::mem;
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 use std::os::fd::FromRawFd;
 
+use anyhow::{Context, Result};
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+use burrow::retrieve;
 use clap::{Args, Parser, Subcommand};
 use tracing::instrument;
-
 use tracing_log::LogTracer;
 use tracing_oslog::OsLogger;
 use tracing_subscriber::{prelude::*, FmtSubscriber};
-use tokio::io::Result;
-#[cfg(any(target_os = "linux", target_vendor = "apple"))]
-use burrow::retrieve;
 use tun::TunInterface;
 
 mod daemon;
@@ -66,13 +64,17 @@ async fn try_start() -> Result<()> {
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 #[instrument]
 async fn try_retrieve() -> Result<()> {
-    LogTracer::init().context("Failed to initialize LogTracer").unwrap();
+    LogTracer::init()
+        .context("Failed to initialize LogTracer")
+        .unwrap();
 
     if cfg!(target_os = "linux") || cfg!(target_vendor = "apple") {
         let maybe_layer = system_log().unwrap();
         if let Some(layer) = maybe_layer {
             let logger = layer.with_subscriber(FmtSubscriber::new());
-            tracing::subscriber::set_global_default(logger).context("Failed to set the global tracing subscriber").unwrap();
+            tracing::subscriber::set_global_default(logger)
+                .context("Failed to set the global tracing subscriber")
+                .unwrap();
         }
     }
 
@@ -128,18 +130,18 @@ async fn main() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-fn system_log() -> anyhow::Result<Option<tracing_journald::Layer>> {
+fn system_log() -> Result<Option<tracing_journald::Layer>> {
     let maybe_journald = tracing_journald::layer();
     match maybe_journald {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             tracing::trace!("journald not found");
             Ok(None)
-        },
-        _ => Ok(Some(maybe_journald?))
+        }
+        _ => Ok(Some(maybe_journald?)),
     }
 }
 
 #[cfg(target_vendor = "apple")]
-fn system_log() -> anyhow::Result<Option<OsLogger>> {
+fn system_log() -> Result<Option<OsLogger>> {
     Ok(Some(OsLogger::new("com.hackclub.burrow", "default")))
 }

@@ -245,7 +245,6 @@
 			);
 			mainGroup = D05B9F6929E39EEC008CB1F9;
 			packageReferences = (
-				D0BCC6102A0B327700AD070D /* XCRemoteSwiftPackageReference "SwiftLint" */,
 			);
 			productRefGroup = D05B9F7329E39EEC008CB1F9 /* Products */;
 			projectDirPath = "";

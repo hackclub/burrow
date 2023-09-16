@@ -4,7 +4,7 @@ use std::net::Ipv4Addr;
 #[cfg(all(feature = "tokio", not(target_os = "windows")))]
 async fn test_create() {
     let tun = tun::TunInterface::new().unwrap();
-    let async_tun = tun::tokio::TunInterface::new(tun).unwrap();
+    let _ = tun::tokio::TunInterface::new(tun).unwrap();
 }
 
 #[tokio::test]
@@ -17,6 +17,6 @@ async fn test_write() {
     let async_tun = tun::tokio::TunInterface::new(tun).unwrap();
     let mut buf = [0u8; 1500];
     buf[0] = 6 << 4;
-    let bytes_written = async_tun.write(&buf).await.unwrap();
+    let bytes_written = async_tun.send(&buf).await.unwrap();
     assert!(bytes_written > 0);
 }

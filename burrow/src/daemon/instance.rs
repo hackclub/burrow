@@ -1,4 +1,8 @@
-use super::*;
+use anyhow::Result;
+use tokio::sync::mpsc;
+use tun::TunInterface;
+
+use super::DaemonCommand;
 
 pub struct DaemonInstance {
     rx: mpsc::Receiver<DaemonCommand>,
@@ -7,10 +11,7 @@ pub struct DaemonInstance {
 
 impl DaemonInstance {
     pub fn new(rx: mpsc::Receiver<DaemonCommand>) -> Self {
-        Self {
-            rx,
-            tun_interface: None,
-        }
+        Self { rx, tun_interface: None }
     }
 
     pub async fn run(&mut self) -> Result<()> {

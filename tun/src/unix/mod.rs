@@ -2,6 +2,7 @@ use std::{
     io::{Error, Read},
     os::fd::{AsRawFd, FromRawFd, IntoRawFd, RawFd},
 };
+
 use tracing::instrument;
 
 use super::TunOptions;
@@ -28,9 +29,8 @@ impl AsRawFd for TunInterface {
 
 impl FromRawFd for TunInterface {
     unsafe fn from_raw_fd(fd: RawFd) -> TunInterface {
-        TunInterface {
-            socket: socket2::Socket::from_raw_fd(fd),
-        }
+        let socket = socket2::Socket::from_raw_fd(fd);
+        TunInterface { socket }
     }
 }
 

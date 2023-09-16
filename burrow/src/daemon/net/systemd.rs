@@ -1,6 +1,3 @@
-use super::*;
-use std::os::fd::IntoRawFd;
-
 pub async fn listen(cmd_tx: mpsc::Sender<DaemonCommand>) -> Result<()> {
     if !libsystemd::daemon::booted() || listen_with_systemd(cmd_tx.clone()).await.is_err() {
         unix::listen(cmd_tx).await?;

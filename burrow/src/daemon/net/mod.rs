@@ -1,5 +1,6 @@
-use super::*;
 use serde::{Deserialize, Serialize};
+
+use super::DaemonCommand;
 
 #[cfg(target_family = "unix")]
 mod unix;

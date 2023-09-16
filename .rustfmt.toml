@@ -1,0 +1,12 @@
+condense_wildcard_suffixes = true
+format_macro_matchers = true
+imports_layout = "HorizontalVertical"
+imports_granularity = "Crate"
+newline_style = "Unix"
+overflow_delimited_expr = true
+reorder_impl_items = true
+group_imports = "StdExternalCrate"
+trailing_semicolon = false
+use_field_init_shorthand = true
+use_try_shorthand = true
+struct_lit_width = 30

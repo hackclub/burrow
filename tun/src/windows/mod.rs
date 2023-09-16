@@ -1,14 +1,13 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, io::Error, ptr};
+
 use fehler::throws;
-use std::io::Error;
-use std::ptr;
 use widestring::U16CString;
 use windows::Win32::Foundation::GetLastError;
 mod queue;
 
-use super::TunOptions;
-
 pub use queue::TunQueue;
+
+use super::TunOptions;
 
 pub struct TunInterface {
     handle: sys::WINTUN_ADAPTER_HANDLE,
@@ -26,9 +25,7 @@ impl Debug for TunInterface {
 
 impl TunInterface {
     #[throws]
-    pub fn new() -> TunInterface {
-        Self::new_with_options(TunOptions::new())?
-    }
+    pub fn new() -> TunInterface { Self::new_with_options(TunOptions::new())? }
 
     #[throws]
     pub(crate) fn new_with_options(options: TunOptions) -> TunInterface {
@@ -46,15 +43,11 @@ impl TunInterface {
         }
     }
 
-    pub fn name(&self) -> String {
-        self.name.clone()
-    }
+    pub fn name(&self) -> String { self.name.clone() }
 }
 
 impl Drop for TunInterface {
-    fn drop(&mut self) {
-        unsafe { sys::WINTUN.WintunCloseAdapter(self.handle) }
-    }
+    fn drop(&mut self) { unsafe { sys::WINTUN.WintunCloseAdapter(self.handle) } }
 }
 
 pub(crate) mod sys {

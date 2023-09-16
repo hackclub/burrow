@@ -1,13 +1,11 @@
+use std::{io::Error, net::Ipv4Addr};
+
 use fehler::throws;
-use std::io::Error;
-use std::net::Ipv4Addr;
 use tun::TunInterface;
 
 #[test]
 #[throws]
-fn test_create() {
-    TunInterface::new()?;
-}
+fn test_create() { TunInterface::new()?; }
 
 #[test]
 #[throws]
