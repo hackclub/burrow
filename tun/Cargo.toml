@@ -13,11 +13,12 @@ byteorder = "1.4"
 tracing = "0.1"
 log = "0.4"
 serde = { version = "1", features = ["derive"], optional = true }
+schemars = { version = "0.8", optional = true }
 
 futures = { version = "0.3.28", optional = true }
 
 [features]
-serde = ["dep:serde"]
+serde = ["dep:serde", "dep:schemars"]
 tokio = ["tokio/net", "dep:futures"]
 
 [target.'cfg(feature = "tokio")'.dev-dependencies]

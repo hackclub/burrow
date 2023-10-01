@@ -1,0 +1,5 @@
+---
+source: burrow/src/daemon/response.rs
+expression: "serde_json::to_string(&DaemonResponse::new(Err::<DaemonResponseData,\n                        String>(\"error\".to_string())))?"
+---
+{"result":{"Err":"error"},"id":0}

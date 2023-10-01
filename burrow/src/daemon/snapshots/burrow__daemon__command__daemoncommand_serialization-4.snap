@@ -1,0 +1,5 @@
+---
+source: burrow/src/daemon/command.rs
+expression: "serde_json::to_string(&DaemonCommand::ServerConfig).unwrap()"
+---
+"ServerConfig"
