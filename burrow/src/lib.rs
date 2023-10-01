@@ -1,6 +1,8 @@
 #![deny(missing_debug_implementations)]
 pub mod ensureroot;
 
+use anyhow::Result;
+
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 use std::{
     mem,
@@ -10,6 +12,15 @@ use std::{
 use tun::TunInterface;
 
 // TODO Separate start and retrieve functions
+
+mod daemon;
+pub use daemon::{DaemonCommand, DaemonResponseData, DaemonStartOptions, DaemonResponse, ServerInfo};
+
+#[cfg(target_vendor = "apple")]
+mod apple;
+
+#[cfg(target_vendor = "apple")]
+pub use apple::*;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 #[no_mangle]

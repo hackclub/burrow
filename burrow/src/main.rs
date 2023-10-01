@@ -4,12 +4,12 @@ use std::mem;
 use std::os::fd::FromRawFd;
 
 use clap::{Args, Parser, Subcommand};
-use tracing::instrument;
+use tracing::{instrument, Level};
 
 use tracing_log::LogTracer;
 use tracing_oslog::OsLogger;
-use tracing_subscriber::{prelude::*, FmtSubscriber};
-use tokio::io::Result;
+use tracing_subscriber::{prelude::*, FmtSubscriber, EnvFilter};
+use anyhow::Result;
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 use burrow::retrieve;
 use tun::TunInterface;
@@ -17,6 +17,7 @@ use tun::TunInterface;
 mod daemon;
 
 use daemon::{DaemonClient, DaemonCommand, DaemonStartOptions};
+use crate::daemon::DaemonResponseData;
 
 #[derive(Parser)]
 #[command(name = "Burrow")]
@@ -44,6 +45,10 @@ enum Commands {
     Stop,
     /// Start Burrow daemon
     Daemon(DaemonArgs),
+    /// Server Info
+    ServerInfo,
+    /// Server config
+    ServerConfig,
 }
 
 #[derive(Args)]
@@ -61,24 +66,35 @@ async fn try_start() -> Result<()> {
     client
         .send_command(DaemonCommand::Start(DaemonStartOptions::default()))
         .await
+        .map(|_| ())
 }
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 #[instrument]
 async fn try_retrieve() -> Result<()> {
-    LogTracer::init().context("Failed to initialize LogTracer").unwrap();
-
-    if cfg!(target_os = "linux") || cfg!(target_vendor = "apple") {
-        let maybe_layer = system_log().unwrap();
-        if let Some(layer) = maybe_layer {
-            let logger = layer.with_subscriber(FmtSubscriber::new());
-            tracing::subscriber::set_global_default(logger).context("Failed to set the global tracing subscriber").unwrap();
-        }
-    }
-
     burrow::ensureroot::ensure_root();
     let iface2 = retrieve();
     tracing::info!("{}", iface2);
+    Ok(())
+}
+
+async fn initialize_tracing() -> Result<()> {
+    LogTracer::init().context("Failed to initialize LogTracer")?;
+
+    #[cfg(any(target_os = "linux", target_vendor = "apple"))]
+    {
+        let maybe_layer = system_log()?;
+        if let Some(layer) = maybe_layer {
+            let logger = layer.with_subscriber(
+                FmtSubscriber::builder()
+                    .with_line_number(true)
+                    .with_env_filter(EnvFilter::from_default_env())
+                    .finish()
+            );
+            tracing::subscriber::set_global_default(logger).context("Failed to set the global tracing subscriber")?;
+        }
+    }
+
     Ok(())
 }
 
@@ -86,6 +102,44 @@ async fn try_retrieve() -> Result<()> {
 async fn try_stop() -> Result<()> {
     let mut client = DaemonClient::new().await?;
     client.send_command(DaemonCommand::Stop).await?;
+    Ok(())
+}
+
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+async fn try_serverinfo() -> Result<()>{
+    let mut client = DaemonClient::new().await?;
+    let res = client.send_command(DaemonCommand::ServerInfo).await?;
+    match res.result {
+        Ok(DaemonResponseData::ServerInfo(si)) => {
+            println!("Got Result! {:?}", si);
+        }
+        Ok(DaemonResponseData::None) => {
+            println!("Server not started.")
+        }
+        Ok(res) => {println!("Unexpected Response: {:?}", res)}
+        Err(e) => {
+            println!("Error when retrieving from server: {}", e)
+        }
+    }
+    Ok(())
+}
+
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+async fn try_serverconfig() -> Result<()>{
+    let mut client = DaemonClient::new().await?;
+    let res = client.send_command(DaemonCommand::ServerConfig).await?;
+    match res.result {
+        Ok(DaemonResponseData::ServerConfig(cfig)) => {
+            println!("Got Result! {:?}", cfig);
+        }
+        Ok(DaemonResponseData::None) => {
+            println!("Server not started.")
+        }
+        Ok(res) => {println!("Unexpected Response: {:?}", res)}
+        Err(e) => {
+            println!("Error when retrieving from server: {}", e)
+        }
+    }
     Ok(())
 }
 
@@ -104,24 +158,40 @@ async fn try_stop() -> Result<()> {
     Ok(())
 }
 
+#[cfg(not(any(target_os = "linux", target_vendor = "apple")))]
+async fn try_serverinfo() -> Result<()> {
+    Ok(())
+}
+
+#[cfg(not(any(target_os = "linux", target_vendor = "apple")))]
+async fn try_serverconfig() -> Result<()> {
+    Ok(())
+}
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
+    initialize_tracing().await?;
     tracing::info!("Platform: {}", std::env::consts::OS);
 
     let cli = Cli::parse();
     match &cli.command {
         Commands::Start(..) => {
-            try_start().await.unwrap();
+            try_start().await?;
             tracing::info!("FINISHED");
         }
         Commands::Retrieve(..) => {
-            try_retrieve().await.unwrap();
+            try_retrieve().await?;
             tracing::info!("FINISHED");
         }
         Commands::Stop => {
-            try_stop().await.unwrap();
+            try_stop().await?;
         }
         Commands::Daemon(_) => daemon::daemon_main().await?,
+        Commands::ServerInfo => {
+            try_serverinfo().await?
+        }
+        Commands::ServerConfig => {
+            try_serverconfig().await?
+        }
     }
 
     Ok(())
@@ -141,5 +211,5 @@ fn system_log() -> anyhow::Result<Option<tracing_journald::Layer>> {
 
 #[cfg(target_vendor = "apple")]
 fn system_log() -> anyhow::Result<Option<OsLogger>> {
-    Ok(Some(OsLogger::new("com.hackclub.burrow", "default")))
+    Ok(Some(OsLogger::new("com.hackclub.burrow", "burrow-cli")))
 }
