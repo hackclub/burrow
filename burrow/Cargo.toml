@@ -2,6 +2,9 @@
 name = "burrow"
 version = "0.1.0"
 edition = "2021"
+description = ""
+license = "GPL-3.0-or-later"
+license-file = "../LICENSE.md"
 
 [lib]
 crate-type = ["lib", "staticlib"]
@@ -27,3 +30,12 @@ libsystemd = "0.6"
 
 [target.'cfg(target_vendor = "apple")'.dependencies]
 nix = { version = "0.26.2" }
+
+[package.metadata.generate-rpm]
+assets = [
+    { source = "target/release/burrow", dest = "/usr/bin/burrow", mode = "755" },
+    { source = "systemd/burrow.service", dest = "/etc/systemd/system/burrow.service", mode = "644" },
+    { source = "systemd/burrow.socket", dest = "/etc/systemd/system/burrow.socket", mode = "644" },
+]
+post_install_script = "../package/rpm/post_install"
+pre_uninstall_script = "../package/rpm/pre_uninstall"
