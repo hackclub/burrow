@@ -1,0 +1,19 @@
+name: Build RPM
+on:
+  push:
+    branches: [ "main" ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: Swatinem/rust-cache@v2
+    - name: Install
+      run: cargo install cargo-generate-rpm
+    - name: Build
+      run: 
+        cargo build --release |
+        strip -s target/release/burrow
+    - name: Build RPM
+      run: cargo cargo-generate-rpm -p burrow
+
