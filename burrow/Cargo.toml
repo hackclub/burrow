@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 description = ""
 license = "GPL-3.0-or-later"
-license-file = "../LICENSE.md"
 
 [lib]
 crate-type = ["lib", "staticlib"]
