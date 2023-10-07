@@ -14,8 +14,8 @@ jobs:
     - name: Install
       run: cargo install cargo-generate-rpm
     - name: Build
-      run: 
-        cargo build --release |
+      run: |
+        cargo build --release
         strip -s target/release/burrow
     - name: Build RPM
       run: cargo cargo-generate-rpm -p burrow
