@@ -2,7 +2,7 @@
 name = "burrow"
 version = "0.1.0"
 edition = "2021"
-description = ""
+description = "Burrow is an open source tool for burrowing through firewalls, built by teenagers at Hack Club."
 license = "GPL-3.0-or-later"
 
 [lib]
