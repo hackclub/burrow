@@ -45,7 +45,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             return nil
         }
         // Using a makeshift remote tunnel address
-        var nst = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "1.1.1.1")
+        let nst = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "1.1.1.1")
         nst.ipv4Settings = NEIPv4Settings(addresses: [addr], subnetMasks: ["255.255.255.0"])
         logger.log("Initialized ipv4 settings: \(nst.ipv4Settings)")
         return nst
