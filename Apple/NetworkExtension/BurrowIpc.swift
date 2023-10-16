@@ -26,7 +26,7 @@ final class LineProtocol: NWProtocolFramerImplementation {
     }
     func handleInput(framer: NWProtocolFramer.Instance) -> Int {
         var result: [Data] = []
-        framer.parseInput(minimumIncompleteLength: 1, maximumLength: 16_000) { buffer, _ in
+        _ = framer.parseInput(minimumIncompleteLength: 1, maximumLength: 16_000) { buffer, _ in
             guard let (lines, size) = lines(from: buffer) else {
                 return 0
             }
@@ -62,12 +62,23 @@ extension NWConnection {
             }
         }
     }
+    func send_raw(_ request: Data) async throws -> Data {
+        try await withCheckedThrowingContinuation { continuation in
+            let comp: NWConnection.SendCompletion = .contentProcessed {error in
+                if let error = error {
+                    continuation.resume(with: .failure(error))
+                } else {
+                    continuation.resume(with: .success(request))
+                }
+            }
+            self.send(content: request, completion: comp)
+        }
+    }
 }
 
 final class BurrowIpc {
     let connection: NWConnection
     private var generator = SystemRandomNumberGenerator()
-    private var continuations: [UInt: UnsafeContinuation<Data, Error>] = [:]
     private var logger: Logger
     init(logger: Logger) {
         let params = NWParameters.tcp
@@ -80,36 +91,16 @@ final class BurrowIpc {
         self.logger = logger
     }
     func send<T: Request, U: Decodable>(_ request: T) async throws -> U {
-        let data: Data = try await withUnsafeThrowingContinuation { continuation in
+        do {
             let id: UInt = generator.next(upperBound: UInt.max)
-            continuations[id] = continuation
             var copy = request
             copy.id = id
-            do {
-                var data = try JSONEncoder().encode(request)
-                data.append(contentsOf: [10])
-                let completion: NWConnection.SendCompletion = .contentProcessed { error in
-                    guard let error = error else { return }
-                    continuation.resume(throwing: error)
-                }
-                connection.send(content: data, completion: completion)
-            } catch {
-                continuation.resume(throwing: error)
-                return
-            }
-        }
-        return try JSONDecoder().decode(Response<U>.self, from: data).result
-    }
-    func send_raw(_ request: Data) async throws -> Data {
-        try await withCheckedThrowingContinuation { continuation in
-            let comp: NWConnection.SendCompletion = .contentProcessed {error in
-                if let error = error {
-                    continuation.resume(with: .failure(error))
-                } else {
-                    continuation.resume(with: .success(request))
-                }
-            }
-            self.connection.send(content: request, completion: comp)
+            var data = try JSONEncoder().encode(request)
+            data.append(contentsOf: [10])
+            _ = try await self.connection.send_raw(data)
+            return try JSONDecoder().decode(Response<U>.self, from: data).result
+        } catch {
+            throw error
         }
     }
 
@@ -126,7 +117,7 @@ final class BurrowIpc {
         do {
             var data: Data = try JSONEncoder().encode(request)
             data.append(contentsOf: [10])
-            try await send_raw(data)
+            _ = try await self.connection.send_raw(data)
             self.logger.debug("message sent")
             let receivedData = try await receive_raw()
             self.logger.info("Received result: \(String(decoding: receivedData, as: UTF8.self))")
