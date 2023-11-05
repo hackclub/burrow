@@ -13,8 +13,15 @@ pub use systemd::{listen, DaemonClient};
 
 #[cfg(target_os = "windows")]
 mod windows;
+
 #[cfg(target_os = "windows")]
 pub use windows::{listen, DaemonClient};
+
+#[cfg(target_vendor = "apple")]
+mod apple;
+
+#[cfg(target_vendor = "apple")]
+pub use apple::start_srv;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct DaemonRequest {
@@ -22,8 +29,3 @@ pub struct DaemonRequest {
     pub command: DaemonCommand,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
-pub struct DaemonResponse {
-    //  Error types can't be serialized, so this is the second best option.
-    result: std::result::Result<(), String>,
-}
