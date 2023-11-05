@@ -1,7 +1,7 @@
 {
     "app-id" : "com.hackclub.burrow",
     "runtime" : "org.gnome.Platform",
-    "runtime-version" : "44",
+    "runtime-version" : "45",
     "sdk" : "org.gnome.Sdk",
     "sdk-extensions" : [
         "org.freedesktop.Sdk.Extension.rust-stable"
@@ -53,11 +53,11 @@
             "subdir" : "burrow-gtk",
             "buildsystem" : "meson",
             "sources" : [
-                {
-                    "type" : "git",
-                    "branch" : "main",
-                    "url" : "https://github.com/hackclub/burrow.git"
+                {                
+                    "type": "dir",
+                    "path": "./"
                 }
+
             ]
         }
     ]
