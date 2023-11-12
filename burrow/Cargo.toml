@@ -2,24 +2,28 @@
 name = "burrow"
 version = "0.1.0"
 edition = "2021"
+description = "Burrow is an open source tool for burrowing through firewalls, built by teenagers at Hack Club."
+license = "GPL-3.0-or-later"
 
 [lib]
 crate-type = ["lib", "staticlib"]
 
 [dependencies]
 anyhow = "1.0"
-tokio = { version = "1.21", features = ["rt", "macros", "sync", "io-util"] }
-tun = { version = "0.1", path = "../tun", features = ["serde"] }
+tokio = { version = "1.21", features = ["rt", "macros", "sync", "io-util", "rt-multi-thread"] }
+tun = { version = "0.1", path = "../tun", features = ["serde", "tokio"] }
 clap = { version = "4.3.2", features = ["derive"] }
 tracing = "0.1"
 tracing-log = "0.1"
 tracing-journald = "0.3"
 tracing-oslog = {git = "https://github.com/Stormshield-robinc/tracing-oslog"}
-tracing-subscriber = "0.3"
+tracing-subscriber = { version = "0.3" , features = ["std", "env-filter"]}
 env_logger = "0.10"
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+async-channel = "1.9"
+schemars = "0.8"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 caps = "0.5.5"
@@ -27,3 +31,15 @@ libsystemd = "0.6"
 
 [target.'cfg(target_vendor = "apple")'.dependencies]
 nix = { version = "0.26.2" }
+
+[dev-dependencies]
+insta = { version = "1.32.0", features = ["yaml"] }
+
+[package.metadata.generate-rpm]
+assets = [
+    { source = "target/release/burrow", dest = "/usr/bin/burrow", mode = "755" },
+    { source = "systemd/burrow.service", dest = "/etc/systemd/system/burrow.service", mode = "644" },
+    { source = "systemd/burrow.socket", dest = "/etc/systemd/system/burrow.socket", mode = "644" },
+]
+post_install_script = "../package/rpm/post_install"
+pre_uninstall_script = "../package/rpm/pre_uninstall"

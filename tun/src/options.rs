@@ -4,7 +4,7 @@ use std::io::Error;
 use super::TunInterface;
 
 #[derive(Debug, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize, schemars::JsonSchema))]
 pub struct TunOptions {
     /// (Windows + Linux) Name the tun interface.
     pub(crate) name: Option<String>,
