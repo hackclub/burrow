@@ -33,9 +33,7 @@ brew install --cask visual-studio-code
 
 3. Download and Install **Xcode** from the [App Store](https://apps.apple.com/us/app/xcode/id497799835) or the [Apple Developer](https://developer.apple.com/downloads) website.
 
-4. Check the _"current"_ version of Xcode using the command line:
-
-**_Note: If you have multiple versions of Xcode installed, you may need to switch to the new version that you installed._**
+4. Make sure the _"current"_ version of Xcode matches the one you are using:
 
 ```
 $ xcode-select -p
@@ -44,8 +42,7 @@ $ xcode-select -p
 If the output is not the version of Xcode you just installed, run the following command to switch to the new version:
 
 ```
-$ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-
+$ sudo xcode-select -s {PATH_TO_XCODE}
 ```
 
 </details>
