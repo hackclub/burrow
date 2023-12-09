@@ -1,5 +1,5 @@
 {
-    "app-id" : "com.hackclub.burrow",
+    "app-id" : "com.hackclub.burrow-devel",
     "runtime" : "org.gnome.Platform",
     "runtime-version" : "45",
     "sdk" : "org.gnome.Sdk",
@@ -24,31 +24,16 @@
             "RUST_LOG" : "burrow-gtk=debug"
         }
     },
-    "cleanup" : [
-        "/include",
-        "/lib/pkgconfig",
-        "/man",
-        "/share/doc",
-        "/share/gtk-doc",
-        "/share/man",
-        "/share/pkgconfig",
-        "*.la",
-        "*.a"
-    ],
     "modules" : [
         {
             "name" : "burrow-gtk",
             "builddir" : true,
             "subdir" : "burrow-gtk",
-            "buildsystem" : "simple",
-            "build-commands": [
-                "cargo build --release",
-                "install -Dm755 -t /app/bin target/release/burrow-gtk"
-            ],
+            "buildsystem" : "meson",
             "sources" : [
                 {                
                     "type": "dir",
-                    "path": "../"
+                    "path": "../../"
                 }
             ]
         }
