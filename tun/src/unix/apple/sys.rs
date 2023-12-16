@@ -2,11 +2,20 @@ use std::mem;
 
 use libc::{c_char, c_int, c_short, c_uint, c_ulong, sockaddr};
 pub use libc::{
-    c_void, sockaddr_ctl, sockaddr_in, socklen_t, AF_SYSTEM, AF_SYS_CONTROL, IFNAMSIZ,
+    c_void,
+    sockaddr_ctl,
+    sockaddr_in,
+    socklen_t,
+    AF_SYSTEM,
+    AF_SYS_CONTROL,
+    IFNAMSIZ,
     SYSPROTO_CONTROL,
 };
 use nix::{
-    ioctl_read_bad, ioctl_readwrite, ioctl_write_ptr_bad, request_code_readwrite,
+    ioctl_read_bad,
+    ioctl_readwrite,
+    ioctl_write_ptr_bad,
+    request_code_readwrite,
     request_code_write,
 };
 

@@ -1,20 +1,23 @@
-use super::*;
-use anyhow::anyhow;
-use log::log;
-use std::hash::Hash;
-use std::path::PathBuf;
 use std::{
-    ascii, io,
-    os::fd::{FromRawFd, RawFd},
-    os::unix::net::UnixListener as StdUnixListener,
-    path::Path,
+    io,
+    os::{
+        fd::{FromRawFd, RawFd},
+        unix::net::UnixListener as StdUnixListener,
+    },
+    path::{Path, PathBuf},
 };
+use std::sync::Arc;
+
+use anyhow::{anyhow, Result};
 use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     net::{UnixListener, UnixStream},
 };
-use tracing::debug;
-use tracing::info;
+use tracing::{debug, info};
+
+use tokio::sync::Notify;
+use super::*;
+use crate::daemon::{DaemonCommand, DaemonResponse, DaemonResponseData};
 
 #[cfg(not(target_vendor = "apple"))]
 const UNIX_SOCKET_PATH: &str = "/run/burrow.sock";
@@ -35,7 +38,7 @@ fn fetch_socket_path() -> Option<PathBuf> {
     for path in tries {
         let path = PathBuf::from(path);
         if path.exists() {
-            return Some(path);
+            return Some(path)
         }
     }
     None
@@ -49,14 +52,16 @@ fn fetch_socket_path() -> Option<PathBuf> {
 pub async fn listen(
     cmd_tx: async_channel::Sender<DaemonCommand>,
     rsp_rx: async_channel::Receiver<DaemonResponse>,
+    notify: Option<Arc<Notify>>
 ) -> Result<()> {
-    listen_with_optional_fd(cmd_tx, rsp_rx, None).await
+    listen_with_optional_fd(cmd_tx, rsp_rx, None, notify).await
 }
 
 pub(crate) async fn listen_with_optional_fd(
     cmd_tx: async_channel::Sender<DaemonCommand>,
     rsp_rx: async_channel::Receiver<DaemonResponse>,
     raw_fd: Option<RawFd>,
+    notify: Option<Arc<Notify>>
 ) -> Result<()> {
     let path = Path::new(UNIX_SOCKET_PATH);
 
@@ -81,12 +86,16 @@ pub(crate) async fn listen_with_optional_fd(
         info!("Relative path: {}", path.to_string_lossy());
         UnixListener::bind(path)?
     };
+    if let Some(notify) = notify {
+        notify.notify_one();
+    }
     loop {
         let (stream, _) = listener.accept().await?;
         let cmd_tx = cmd_tx.clone();
 
         //  I'm pretty sure we won't need to manually join / shut this down,
-        //  `lines` will return Err during dropping, and this task should exit gracefully.
+        //  `lines` will return Err during dropping, and this task should exit
+        // gracefully.
         let rsp_rxc = rsp_rx.clone();
         tokio::task::spawn(async move {
             let cmd_tx = cmd_tx;
@@ -102,6 +111,7 @@ pub(crate) async fn listen_with_optional_fd(
                     Ok(req) => Some(req),
                     Err(e) => {
                         res.result = Err(e.to_string());
+                        tracing::error!("Failed to parse request: {}", e);
                         None
                     }
                 };
@@ -115,6 +125,8 @@ pub(crate) async fn listen_with_optional_fd(
                     retres.push('\n');
                     info!("Sending response: {}", retres);
                     write_stream.write_all(retres.as_bytes()).await.unwrap();
+                } else {
+                    write_stream.write_all(res.as_bytes()).await.unwrap();
                 }
             }
         });

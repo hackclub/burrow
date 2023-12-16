@@ -113,7 +113,7 @@ final class BurrowIpc {
         return data
     }
 
-    func request<U: Decodable>(_ request: Request, type: U.Type) async throws -> U {
+    func request<U: Decodable>(_ request: any Request, type: U.Type) async throws -> U {
         do {
             var data: Data = try JSONEncoder().encode(request)
             data.append(contentsOf: [10])

@@ -1,21 +1,24 @@
+use std::{
+    io::{Error, IoSlice},
+    mem,
+    net::{Ipv4Addr, SocketAddrV4},
+    os::fd::{AsRawFd, FromRawFd, RawFd},
+};
+
 use byteorder::{ByteOrder, NetworkEndian};
 use fehler::throws;
 use libc::{c_char, iovec, writev, AF_INET, AF_INET6};
-use tracing::info;
 use socket2::{Domain, SockAddr, Socket, Type};
-use std::io::IoSlice;
-use std::net::{Ipv4Addr, SocketAddrV4};
-use std::os::fd::{AsRawFd, RawFd};
-use std::{io::Error, mem};
-use tracing::instrument;
+use tracing::{self, instrument};
 
-mod kern_control;
-mod sys;
+pub mod kern_control;
+pub mod sys;
+
+use kern_control::SysControlSocket;
 
 pub use super::queue::TunQueue;
-
-use super::{ifname_to_string, string_to_ifname, TunOptions};
-use kern_control::SysControlSocket;
+use super::{ifname_to_string, string_to_ifname};
+use crate::TunOptions;
 
 #[derive(Debug)]
 pub struct TunInterface {
@@ -31,8 +34,49 @@ impl TunInterface {
 
     #[throws]
     #[instrument]
-    pub fn new_with_options(_: TunOptions) -> TunInterface {
-        TunInterface::connect(0)?
+    pub fn new_with_options(options: TunOptions) -> TunInterface {
+        let ti = if options.tun_retrieve {
+            TunInterface::retrieve().ok_or(Error::new(
+                std::io::ErrorKind::NotFound,
+                "No tun interface found",
+            ))?
+        } else {
+            TunInterface::connect(0)?
+        };
+        ti.configure(options)?;
+        ti
+    }
+
+    pub fn retrieve() -> Option<TunInterface> {
+        (3..100)
+            .filter_map(|fd| unsafe {
+                let peer_addr = socket2::SockAddr::init(|storage, len| {
+                    *len = mem::size_of::<sys::sockaddr_ctl>() as u32;
+                    libc::getpeername(fd, storage as *mut _, len);
+                    Ok(())
+                })
+                .map(|(_, addr)| (fd, addr));
+                peer_addr.ok()
+            })
+            .filter(|(_fd, addr)| {
+                let ctl_addr = unsafe { &*(addr.as_ptr() as *const libc::sockaddr_ctl) };
+                addr.family() == libc::AF_SYSTEM as u8
+                    && ctl_addr.ss_sysaddr == libc::AF_SYS_CONTROL as u16
+            })
+            .map(|(fd, _)| {
+                let socket = unsafe { socket2::Socket::from_raw_fd(fd) };
+                TunInterface { socket }
+            })
+            .next()
+    }
+
+    #[throws]
+    fn configure(&self, options: TunOptions) {
+        if let Some(addr) = options.address {
+            if let Ok(addr) = addr.parse() {
+                self.set_ipv4_addr(addr)?;
+            }
+        }
     }
 
     #[throws]
@@ -81,7 +125,7 @@ impl TunInterface {
         let mut iff = self.ifreq()?;
         iff.ifr_ifru.ifru_addr = unsafe { *addr.as_ptr() };
         self.perform(|fd| unsafe { sys::if_set_addr(fd, &iff) })?;
-        info!("ipv4_addr_set: {:?} (fd: {:?})", addr, self.as_raw_fd())
+        tracing::info!("ipv4_addr_set: {:?} (fd: {:?})", addr, self.as_raw_fd())
     }
 
     #[throws]
@@ -118,7 +162,7 @@ impl TunInterface {
         let mut iff = self.ifreq()?;
         iff.ifr_ifru.ifru_mtu = mtu;
         self.perform(|fd| unsafe { sys::if_set_mtu(fd, &iff) })?;
-        info!("mtu_set: {:?} (fd: {:?})", mtu, self.as_raw_fd())
+        tracing::info!("mtu_set: {:?} (fd: {:?})", mtu, self.as_raw_fd())
     }
 
     #[throws]
@@ -140,7 +184,7 @@ impl TunInterface {
         let mut iff = self.ifreq()?;
         iff.ifr_ifru.ifru_netmask = unsafe { *addr.as_ptr() };
         self.perform(|fd| unsafe { sys::if_set_netmask(fd, &iff) })?;
-        info!(
+        tracing::info!(
             "netmask_set: {:?} (fd: {:?})",
             unsafe { iff.ifr_ifru.ifru_netmask },
             self.as_raw_fd()

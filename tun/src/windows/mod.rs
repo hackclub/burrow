@@ -1,14 +1,13 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, io::Error, ptr};
+
 use fehler::throws;
-use std::io::Error;
-use std::ptr;
 use widestring::U16CString;
 use windows::Win32::Foundation::GetLastError;
 mod queue;
 
-use super::TunOptions;
-
 pub use queue::TunQueue;
+
+use super::TunOptions;
 
 pub struct TunInterface {
     handle: sys::WINTUN_ADAPTER_HANDLE,
@@ -40,10 +39,7 @@ impl TunInterface {
         if handle.is_null() {
             unsafe { GetLastError() }.ok()?
         }
-        TunInterface {
-            handle,
-            name: name_owned,
-        }
+        TunInterface { handle, name: name_owned }
     }
 
     pub fn name(&self) -> String {

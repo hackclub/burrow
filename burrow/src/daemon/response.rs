@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use tun::TunInterface;
@@ -7,30 +6,27 @@ use tun::TunInterface;
 pub struct DaemonResponse {
     //  Error types can't be serialized, so this is the second best option.
     pub result: Result<DaemonResponseData, String>,
-    pub id: u32
+    pub id: u32,
 }
 
-impl DaemonResponse{
-    pub fn new(result: Result<DaemonResponseData, impl ToString>) -> Self{
-        Self{
-            result: result.map_err(|e| e.to_string()),
-            id: 0
-        }
-    }
-}
-
-impl Into<DaemonResponse> for DaemonResponseData{
-    fn into(self) -> DaemonResponse{
-        DaemonResponse::new(Ok::<DaemonResponseData, String>(self))
-    }
-}
-
-impl DaemonResponse{
-    pub fn with_id(self, id: u32) -> Self{
+impl DaemonResponse {
+    pub fn new(result: Result<DaemonResponseData, impl ToString>) -> Self {
         Self {
-            id,
-            ..self
+            result: result.map_err(|e| e.to_string()),
+            id: 0,
         }
+    }
+}
+
+impl From<DaemonResponseData> for DaemonResponse {
+    fn from(val: DaemonResponseData) -> Self {
+        DaemonResponse::new(Ok::<DaemonResponseData, String>(val))
+    }
+}
+
+impl DaemonResponse {
+    pub fn with_id(self, id: u32) -> Self {
+        Self { id, ..self }
     }
 }
 
@@ -38,24 +34,22 @@ impl DaemonResponse{
 pub struct ServerInfo {
     pub name: Option<String>,
     pub ip: Option<String>,
-    pub mtu: Option<i32>
+    pub mtu: Option<i32>,
 }
 
-impl TryFrom<&TunInterface> for ServerInfo{
+impl TryFrom<&TunInterface> for ServerInfo {
     type Error = anyhow::Error;
 
-    #[cfg(any(target_os="linux",target_vendor="apple"))]
+    #[cfg(any(target_os = "linux", target_vendor = "apple"))]
     fn try_from(server: &TunInterface) -> anyhow::Result<Self> {
-        Ok(
-            ServerInfo{
-                name: server.name().ok(),
-                ip: server.ipv4_addr().ok().map(|ip| ip.to_string()),
-                mtu: server.mtu().ok()
-            }
-        )
+        Ok(ServerInfo {
+            name: server.name().ok(),
+            ip: server.ipv4_addr().ok().map(|ip| ip.to_string()),
+            mtu: server.mtu().ok(),
+        })
     }
 
-    #[cfg(not(any(target_os="linux",target_vendor="apple")))]
+    #[cfg(not(any(target_os = "linux", target_vendor = "apple")))]
     fn try_from(server: &TunInterface) -> anyhow::Result<Self> {
         Err(anyhow!("Not implemented in this platform"))
     }
@@ -65,45 +59,55 @@ impl TryFrom<&TunInterface> for ServerInfo{
 pub struct ServerConfig {
     pub address: Option<String>,
     pub name: Option<String>,
-    pub mtu: Option<i32>
+    pub mtu: Option<i32>,
 }
 
 impl Default for ServerConfig {
     fn default() -> Self {
-        Self{
-            address: Some("10.0.0.1".to_string()), // Dummy remote address
+        Self {
+            address: Some("10.13.13.2".to_string()), // Dummy remote address
             name: None,
-            mtu: None
+            mtu: None,
         }
     }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
-pub enum DaemonResponseData{
+pub enum DaemonResponseData {
     ServerInfo(ServerInfo),
     ServerConfig(ServerConfig),
-    None
+    None,
 }
 
 #[test]
-fn test_response_serialization() -> anyhow::Result<()>{
-    insta::assert_snapshot!(
-        serde_json::to_string(&DaemonResponse::new(Ok::<DaemonResponseData, String>(DaemonResponseData::None)))?
-    );
-    insta::assert_snapshot!(
-        serde_json::to_string(&DaemonResponse::new(Ok::<DaemonResponseData, String>(DaemonResponseData::ServerInfo(ServerInfo{
+fn test_response_serialization() -> anyhow::Result<()> {
+    insta::assert_snapshot!(serde_json::to_string(&DaemonResponse::new(Ok::<
+        DaemonResponseData,
+        String,
+    >(
+        DaemonResponseData::None
+    )))?);
+    insta::assert_snapshot!(serde_json::to_string(&DaemonResponse::new(Ok::<
+        DaemonResponseData,
+        String,
+    >(
+        DaemonResponseData::ServerInfo(ServerInfo {
             name: Some("burrow".to_string()),
             ip: None,
             mtu: Some(1500)
-        }))))?
-    );
-    insta::assert_snapshot!(
-        serde_json::to_string(&DaemonResponse::new(Err::<DaemonResponseData, String>("error".to_string())))?
-    );
-    insta::assert_snapshot!(
-        serde_json::to_string(&DaemonResponse::new(Ok::<DaemonResponseData, String>(DaemonResponseData::ServerConfig(
-            ServerConfig::default()
-        ))))?
-    );
+        })
+    )))?);
+    insta::assert_snapshot!(serde_json::to_string(&DaemonResponse::new(Err::<
+        DaemonResponseData,
+        String,
+    >(
+        "error".to_string()
+    )))?);
+    insta::assert_snapshot!(serde_json::to_string(&DaemonResponse::new(Ok::<
+        DaemonResponseData,
+        String,
+    >(
+        DaemonResponseData::ServerConfig(ServerConfig::default())
+    )))?);
     Ok(())
 }

@@ -2,4 +2,4 @@
 source: burrow/src/daemon/response.rs
 expression: "serde_json::to_string(&DaemonResponse::new(Ok::<DaemonResponseData,\n                        String>(DaemonResponseData::ServerConfig(ServerConfig::default()))))?"
 ---
-{"result":{"Ok":{"ServerConfig":{"address":"10.0.0.1","name":null,"mtu":null}}},"id":0}
+{"result":{"Ok":{"ServerConfig":{"address":"10.13.13.2","name":null,"mtu":null}}},"id":0}
