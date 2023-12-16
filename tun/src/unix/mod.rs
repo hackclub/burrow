@@ -1,10 +1,10 @@
 use std::{
-    io::{Error, Read},
+    io::Error,
+    mem::MaybeUninit,
     os::fd::{AsRawFd, FromRawFd, IntoRawFd, RawFd},
 };
-use tracing::instrument;
 
-use super::TunOptions;
+use tracing::instrument;
 
 mod queue;
 
@@ -28,9 +28,8 @@ impl AsRawFd for TunInterface {
 
 impl FromRawFd for TunInterface {
     unsafe fn from_raw_fd(fd: RawFd) -> TunInterface {
-        TunInterface {
-            socket: socket2::Socket::from_raw_fd(fd),
-        }
+        let socket = socket2::Socket::from_raw_fd(fd);
+        TunInterface { socket }
     }
 }
 
@@ -40,11 +39,26 @@ impl IntoRawFd for TunInterface {
     }
 }
 
+unsafe fn assume_init(buf: &[MaybeUninit<u8>]) -> &[u8] {
+    &*(buf as *const [MaybeUninit<u8>] as *const [u8])
+}
+
 impl TunInterface {
     #[throws]
     #[instrument]
-    pub fn recv(&mut self, buf: &mut [u8]) -> usize {
-        self.socket.read(buf)?
+    pub fn recv(&self, buf: &mut [u8]) -> usize {
+        // Use IoVec to read directly into target buffer
+        let mut tmp_buf = [MaybeUninit::uninit(); 1500];
+        let len = self.socket.recv(&mut tmp_buf)?;
+        let result_buf = unsafe { assume_init(&tmp_buf[4..len]) };
+        buf[..len - 4].copy_from_slice(result_buf);
+        len - 4
+    }
+
+    #[throws]
+    #[instrument]
+    pub fn set_nonblocking(&mut self, nb: bool) {
+        self.socket.set_nonblocking(nb)?;
     }
 }
 

@@ -1,5 +1,5 @@
 ---
 source: burrow/src/daemon/command.rs
-expression: "serde_json::to_string(&DaemonCommand::Stop).unwrap()"
+expression: "serde_json::to_string(&DaemonCommand::ServerInfo).unwrap()"
 ---
-"Stop"
+"ServerInfo"

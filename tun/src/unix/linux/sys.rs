@@ -1,10 +1,7 @@
-use nix::{ioctl_read_bad, ioctl_write_ptr_bad, request_code_read, request_code_write};
 use std::mem::size_of;
 
-pub use libc::ifreq;
-pub use libc::sockaddr;
-pub use libc::sockaddr_in;
-pub use libc::sockaddr_in6;
+pub use libc::{ifreq, sockaddr, sockaddr_in, sockaddr_in6};
+use nix::{ioctl_read_bad, ioctl_write_ptr_bad, request_code_read, request_code_write};
 
 ioctl_write_ptr_bad!(
     tun_set_iff,

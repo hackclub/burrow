@@ -1,5 +1,6 @@
-use super::*;
 use serde::{Deserialize, Serialize};
+
+use super::DaemonCommand;
 
 #[cfg(target_family = "unix")]
 mod unix;
@@ -28,4 +29,3 @@ pub struct DaemonRequest {
     pub id: u32,
     pub command: DaemonCommand,
 }
-

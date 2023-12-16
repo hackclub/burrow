@@ -26,7 +26,7 @@ async fn generate(out_dir: &std::path::Path) -> anyhow::Result<()> {
     println!("cargo:rerun-if-changed={}", binary_path.to_str().unwrap());
 
     if let (Ok(..), Ok(..)) = (File::open(&bindings_path), File::open(&binary_path)) {
-        return Ok(());
+        return Ok(())
     };
 
     let archive = download(out_dir)
@@ -80,8 +80,9 @@ async fn download(directory: &std::path::Path) -> anyhow::Result<std::fs::File> 
 
 #[cfg(windows)]
 fn parse(file: std::fs::File) -> anyhow::Result<(bindgen::Bindings, Vec<u8>)> {
-    use anyhow::Context;
     use std::io::Read;
+
+    use anyhow::Context;
 
     let reader = std::io::BufReader::new(file);
     let mut archive = zip::ZipArchive::new(reader)?;

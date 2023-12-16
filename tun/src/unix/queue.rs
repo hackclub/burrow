@@ -1,10 +1,10 @@
-use fehler::throws;
-
 use std::{
     io::{Error, Read, Write},
     mem::MaybeUninit,
     os::unix::io::{AsRawFd, IntoRawFd, RawFd},
 };
+
+use fehler::throws;
 use tracing::instrument;
 
 use crate::TunInterface;
@@ -15,10 +15,9 @@ pub struct TunQueue {
 }
 
 impl TunQueue {
-    #[throws]
     #[instrument]
-    pub fn recv(&self, buf: &mut [MaybeUninit<u8>]) -> usize {
-        self.socket.recv(buf)?
+    pub fn recv(&self, buf: &mut [MaybeUninit<u8>]) -> Result<usize, Error> {
+        self.socket.recv(buf)
     }
 }
 
@@ -43,9 +42,7 @@ impl Write for TunQueue {
 
 impl From<TunInterface> for TunQueue {
     fn from(interface: TunInterface) -> TunQueue {
-        TunQueue {
-            socket: interface.socket,
-        }
+        TunQueue { socket: interface.socket }
     }
 }
 
