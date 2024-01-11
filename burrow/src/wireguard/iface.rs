@@ -135,7 +135,7 @@ impl Interface {
                 debug!("spawning read task for peer {}", i);
                 let pcb = pcbs.pcbs[i].clone();
                 let tun = tun.clone();
-                let tsk = async move {
+                let main_tsk = async move {
                     if let Err(e) = pcb.open_if_closed().await {
                         log::error!("failed to open pcb: {}", e);
                         return
@@ -147,8 +147,29 @@ impl Interface {
                         debug!("pcb ran successfully");
                     }
                 };
+
+                let pcb = pcbs.pcbs[i].clone();
+                let update_timers_tsk = async move {
+                    let mut buf = [0u8; 65535];
+                    loop {
+                        tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
+                        pcb.update_timers(&mut buf).await;
+                    }
+                };
+
+                let pcb = pcbs.pcbs[i].clone();
+                let reset_rate_limiter_tsk = async move {
+                    loop {
+                        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+                        pcb.reset_rate_limiter().await;
+                    }
+                };
+                tsks.extend(vec![
+                    tokio::spawn(main_tsk),
+                    tokio::spawn(update_timers_tsk),
+                    tokio::spawn(reset_rate_limiter_tsk)
+                ]);
                 debug!("task made..");
-                tsks.push(tokio::spawn(tsk));
             }
             debug!("spawned read tasks");
         }

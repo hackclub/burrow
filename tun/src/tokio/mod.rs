@@ -26,7 +26,6 @@ impl TunInterface {
         }
     }
 
-    #[instrument]
     pub async fn recv(&self, buf: &mut [u8]) -> io::Result<usize> {
         loop {
             let mut guard = self.inner.readable().await?;

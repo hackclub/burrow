@@ -1,6 +1,6 @@
 use std::{net::SocketAddr, sync::Arc};
 
-use anyhow::Error;
+use anyhow::{Error, Result};
 use fehler::throws;
 use ip_network::IpNetwork;
 use rand::random;
@@ -131,5 +131,29 @@ impl PeerPcb {
             _ => panic!("Unexpected result from encapsulate"),
         };
         Ok(())
+    }
+
+    pub async fn update_timers(&self, dst: &mut [u8]) -> Result<(), Error> {
+        match self.tunnel.write().await.update_timers(dst) {
+            TunnResult::Done => {}
+            TunnResult::Err(e) => {
+                tracing::error!(message = "Update timers error", error = ?e)
+            }
+            TunnResult::WriteToNetwork(packet) => {
+                self.open_if_closed().await?;
+                let handle = self.socket.read().await;
+                let Some(socket) = handle.as_ref() else {
+                    tracing::error!("No socket for peer");
+                    return Ok(())
+                };
+                socket.send(packet).await?;
+            }
+            _ => panic!("Unexpected result from update_timers"),
+        };
+        Ok(())
+    }
+
+    pub async fn reset_rate_limiter(&self) {
+        self.tunnel.read().await.reset_rate_limiter();
     }
 }
