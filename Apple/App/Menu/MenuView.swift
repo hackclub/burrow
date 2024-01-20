@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MenuItemToggleView: View {
-    @ObservedObject var tunnel: Tunnel
+    var tunnel: Tunnel
 
     var body: some View {
         HStack {
@@ -23,7 +23,6 @@ struct MenuItemToggleView: View {
         .padding(.horizontal, 4)
         .padding(10)
         .frame(minWidth: 300, minHeight: 32, maxHeight: 32)
-        .task { await tunnel.update() }
     }
 }
 
