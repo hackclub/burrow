@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     name: Build ${{ matrix.configuration['platform'] }} Release
-    runs-on: macos-14
+    runs-on: macos-13
     strategy:
       fail-fast: false
       matrix:

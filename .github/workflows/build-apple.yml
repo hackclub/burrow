@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build App (${{ matrix.platform }})
-    runs-on: macos-14
+    runs-on: macos-13
     strategy:
       fail-fast: false
       matrix:
