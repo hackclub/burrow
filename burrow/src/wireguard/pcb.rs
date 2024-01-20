@@ -5,7 +5,9 @@ use fehler::throws;
 use ip_network::IpNetwork;
 use rand::random;
 use tokio::{net::UdpSocket, sync::RwLock, task::JoinHandle};
+use tokio::io::AsyncWrite;
 use tun::tokio::TunInterface;
+use crate::wireguard::noise::errors::WireGuardError;
 
 use super::{
     noise::{TunnResult, Tunnel},
@@ -62,6 +64,7 @@ impl PeerPcb {
             tracing::debug!("{}: waiting for packet", rid);
             let guard = self.socket.read().await;
             let Some(socket) = guard.as_ref() else {
+                self.open_if_closed().await?;
                 continue
             };
             let mut res_buf = [0; 1500];
@@ -136,6 +139,10 @@ impl PeerPcb {
     pub async fn update_timers(&self, dst: &mut [u8]) -> Result<(), Error> {
         match self.tunnel.write().await.update_timers(dst) {
             TunnResult::Done => {}
+            TunnResult::Err(WireGuardError::ConnectionExpired) => {
+                tracing::debug!("Connection expired, closing socket");
+                self.socket.write().await.take();
+            }
             TunnResult::Err(e) => {
                 tracing::error!(message = "Update timers error", error = ?e)
             }
