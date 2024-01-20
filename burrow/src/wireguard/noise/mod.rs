@@ -346,6 +346,10 @@ impl Tunnel {
         self.handle_verified_packet(packet, dst)
     }
 
+    pub fn reset_rate_limiter(&self) {
+        self.rate_limiter.reset_count();
+    }
+
     pub(crate) fn handle_verified_packet<'a>(
         &mut self,
         packet: Packet,

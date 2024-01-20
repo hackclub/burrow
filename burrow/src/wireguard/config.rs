@@ -101,7 +101,7 @@ impl Default for Config {
             },
             peers: vec![Peer {
                 endpoint: "wg.burrow.rs:51820".into(),
-                allowed_ips: vec!["8.8.8.8/32".into()],
+                allowed_ips: vec!["8.8.8.8/32".into(), "0.0.0.0/0".into()],
                 public_key: "uy75leriJay0+oHLhRMpV+A5xAQ0hCJ+q7Ww81AOvT4=".into(),
                 preshared_key: Some("s7lx/mg+reVEMnGnqeyYOQkzD86n2+gYnx1M9ygi08k=".into()),
                 persistent_keepalive: Default::default(),

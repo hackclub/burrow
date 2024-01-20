@@ -43,6 +43,7 @@ runs:
         -clonedSourcePackagesDirPath SourcePackages \
         -packageCachePath $PWD/PackageCache \
         -skipPackagePluginValidation \
+        -skipMacroValidation \
         -scheme '${{ inputs.scheme }}' \
         -destination '${{ inputs.destination }}' \
         -resultBundlePath BuildResults.xcresult
