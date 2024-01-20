@@ -2,15 +2,16 @@ import Combine
 import NetworkExtension
 import SwiftUI
 
-@MainActor
-class Tunnel: ObservableObject {
-    @Published private(set) var status: Status = .unknown
-    @Published private var error: NEVPNError?
+@Observable class Tunnel {
+    private(set) var status: Status = .unknown
+    private var error: NEVPNError?
 
     private let bundleIdentifier: String
     private let configure: (NETunnelProviderManager, NETunnelProviderProtocol) -> Void
     private var tasks: [Task<Void, Error>] = []
 
+    // Each manager corresponds to one entry in the Settings app.
+    // Our goal is to maintain a single manager, so we create one if none exist and delete extra if there are any.
     private var managers: [NEVPNManager]? {
         didSet { status = currentStatus }
     }
@@ -48,24 +49,31 @@ class Tunnel: ObservableObject {
         self.bundleIdentifier = bundleIdentifier
         self.configure = configure
 
+        listenForUpdates()
+        Task { await update() }
+    }
+
+    private func listenForUpdates() {
+        let center = NotificationCenter.default
         let statusTask = Task {
-            for try await _ in NotificationCenter.default.notifications(named: .NEVPNStatusDidChange) {
+            for try await _ in center.notifications(named: .NEVPNStatusDidChange).map({ _ in () }) {
                 status = currentStatus
             }
         }
         let configurationTask = Task {
-            for try await _ in NotificationCenter.default.notifications(named: .NEVPNConfigurationChange) {
+            for try await _ in center.notifications(named: .NEVPNConfigurationChange).map({ _ in () }) {
                 await update()
             }
         }
         tasks = [statusTask, configurationTask]
     }
 
-    func update() async {
+    private func update() async {
         do {
-            managers = try await NETunnelProviderManager.managers
-        } catch let error as NEVPNError {
-            self.error = error
+            let updated = try await NETunnelProviderManager.managers
+            await MainActor.run { managers = updated }
+        } catch let vpnError as NEVPNError {
+            error = vpnError
         } catch {
             print(error)
         }
@@ -109,7 +117,9 @@ class Tunnel: ObservableObject {
     }
 
     deinit {
-        tasks.forEach { $0.cancel() }
+        for task in tasks {
+            task.cancel()
+        }
     }
 }
 
