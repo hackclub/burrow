@@ -3,6 +3,10 @@ pub mod wireguard;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 mod daemon;
+pub(crate) mod tracing;
+
+#[cfg(target_vendor = "apple")]
+pub use daemon::apple::spawn_in_process;
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 pub use daemon::{
     DaemonClient,
@@ -12,9 +16,3 @@ pub use daemon::{
     DaemonStartOptions,
     ServerInfo,
 };
-
-#[cfg(target_vendor = "apple")]
-mod apple;
-
-#[cfg(target_vendor = "apple")]
-pub use apple::*;

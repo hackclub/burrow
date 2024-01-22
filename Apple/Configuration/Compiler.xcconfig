@@ -21,7 +21,7 @@ CODE_SIGN_IDENTITY = Apple Development
 
 INFOPLIST_FILE = Configuration/Info.plist
 GENERATE_INFOPLIST_FILE = YES
-INFOPLIST_KEY_NSHumanReadableCopyright = Copyright © 2023 Hack Club
+INFOPLIST_KEY_NSHumanReadableCopyright = Copyright © 2023-2024 Hack Club
 INFOPLIST_KEY_CFBundleDisplayName = Burrow
 
 ENABLE_BITCODE = NO

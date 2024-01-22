@@ -44,13 +44,7 @@ const MAX_QUEUE_DEPTH: usize = 256;
 const N_SESSIONS: usize = 8;
 
 pub mod x25519 {
-    pub use x25519_dalek::{
-        EphemeralSecret,
-        PublicKey,
-        ReusableSecret,
-        SharedSecret,
-        StaticSecret,
-    };
+    pub use x25519_dalek::{PublicKey, ReusableSecret, SharedSecret, StaticSecret};
 }
 
 #[derive(Debug)]

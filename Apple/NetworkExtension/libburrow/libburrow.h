@@ -1,2 +1,2 @@
-void start_srv();
-void initialize_oslog();
+__attribute__((__swift_name__("spawnInProcess(socketPath:)")))
+extern void spawn_in_process(const char * __nullable path);

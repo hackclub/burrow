@@ -16,7 +16,6 @@ pub mod sys;
 
 use kern_control::SysControlSocket;
 
-pub use super::queue::TunQueue;
 use super::{ifname_to_string, string_to_ifname};
 use crate::TunOptions;
 

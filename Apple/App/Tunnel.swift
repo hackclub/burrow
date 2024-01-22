@@ -1,11 +1,13 @@
-import Combine
+import BurrowShared
 import NetworkExtension
 import SwiftUI
 
-@Observable class Tunnel {
+@Observable
+class Tunnel {
     private(set) var status: Status = .unknown
     private var error: NEVPNError?
 
+    private let logger = Logger.logger(for: Tunnel.self)
     private let bundleIdentifier: String
     private let configure: (NETunnelProviderManager, NETunnelProviderProtocol) -> Void
     private var tasks: [Task<Void, Error>] = []
@@ -49,33 +51,34 @@ import SwiftUI
         self.bundleIdentifier = bundleIdentifier
         self.configure = configure
 
-        listenForUpdates()
-        Task { await update() }
-    }
-
-    private func listenForUpdates() {
         let center = NotificationCenter.default
-        let statusTask = Task {
-            for try await _ in center.notifications(named: .NEVPNStatusDidChange).map({ _ in () }) {
-                status = currentStatus
-            }
-        }
-        let configurationTask = Task {
+        let configurationChanged = Task {
             for try await _ in center.notifications(named: .NEVPNConfigurationChange).map({ _ in () }) {
                 await update()
             }
         }
-        tasks = [statusTask, configurationTask]
+        let statusChanged = Task {
+            for try await _ in center.notifications(named: .NEVPNStatusDidChange).map({ _ in () }) {
+                await MainActor.run {
+                    status = currentStatus
+                }
+            }
+        }
+        tasks = [configurationChanged, statusChanged]
+
+        Task { await update() }
     }
 
     private func update() async {
         do {
             let updated = try await NETunnelProviderManager.managers
-            await MainActor.run { managers = updated }
+            await MainActor.run {
+                managers = updated
+            }
         } catch let vpnError as NEVPNError {
             error = vpnError
         } catch {
-            print(error)
+            logger.error("Failed to update VPN configurations: \(error)")
         }
     }
 
@@ -117,9 +120,7 @@ import SwiftUI
     }
 
     deinit {
-        for task in tasks {
-            task.cancel()
-        }
+        tasks.forEach { $0.cancel() }
     }
 }
 
@@ -127,19 +128,19 @@ extension NEVPNConnection {
     var tunnelStatus: Tunnel.Status {
         switch status {
         case .connected:
-            return .connected(connectedDate!)
+            .connected(connectedDate!)
         case .connecting:
-            return .connecting
+            .connecting
         case .disconnecting:
-            return .disconnecting
+            .disconnecting
         case .disconnected:
-            return .disconnected
+            .disconnected
         case .reasserting:
-            return .reasserting
+            .reasserting
         case .invalid:
-            return .invalid
+            .invalid
         @unknown default:
-            return .unknown
+            .unknown
         }
     }
 }
