@@ -8,14 +8,20 @@
 
 /* Begin PBXBuildFile section */
 		0B28F1562ABF463A000D44B0 /* DataTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B28F1552ABF463A000D44B0 /* DataTypes.swift */; };
-		0B46E8E02AC918CA00BA2A3C /* BurrowIpc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B46E8DF2AC918CA00BA2A3C /* BurrowIpc.swift */; };
+		0B46E8E02AC918CA00BA2A3C /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B46E8DF2AC918CA00BA2A3C /* Client.swift */; };
 		43AA26D82A10004900F14CE6 /* MenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AA26D72A10004900F14CE6 /* MenuView.swift */; };
+		D00117312B2FFFC900D87C25 /* NWConnection+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */; };
+		D00117332B3001A400D87C25 /* NewlineProtocolFramer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */; };
+		D001173B2B30341C00D87C25 /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D001173A2B30341C00D87C25 /* Logging.swift */; };
+		D00117442B30372900D87C25 /* libBurrowShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D00117382B30341C00D87C25 /* libBurrowShared.a */; };
+		D00117452B30372C00D87C25 /* libBurrowShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D00117382B30341C00D87C25 /* libBurrowShared.a */; };
 		D00AA8972A4669BC005C8102 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00AA8962A4669BC005C8102 /* AppDelegate.swift */; };
 		D020F65829E4A697002790F6 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D020F65729E4A697002790F6 /* PacketTunnelProvider.swift */; };
 		D020F65D29E4A697002790F6 /* BurrowNetworkExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D020F65329E4A697002790F6 /* BurrowNetworkExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */; };
 		D05B9F7829E39EEC008CB1F9 /* TunnelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7729E39EEC008CB1F9 /* TunnelView.swift */; };
 		D05B9F7A29E39EED008CB1F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D05B9F7929E39EED008CB1F9 /* Assets.xcassets */; };
+		D08252762B5C9FC4005DA378 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08252752B5C9FC4005DA378 /* Constants.swift */; };
 		D0BCC5FD2A086D4700AD070D /* NetworkExtension+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */; };
 		D0BCC5FF2A086E1C00AD070D /* Status.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BCC5FE2A086E1C00AD070D /* Status.swift */; };
 		D0BCC6082A0981FE00AD070D /* Tunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B98FC629FDC5B5004E7149 /* Tunnel.swift */; };
@@ -24,6 +30,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		D00117462B30373100D87C25 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D05B9F6A29E39EEC008CB1F9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D00117372B30341C00D87C25;
+			remoteInfo = Shared;
+		};
+		D00117482B30373500D87C25 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D05B9F6A29E39EEC008CB1F9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D00117372B30341C00D87C25;
+			remoteInfo = Shared;
+		};
 		D020F65B29E4A697002790F6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D05B9F6A29E39EEC008CB1F9 /* Project object */;
@@ -49,8 +69,14 @@
 
 /* Begin PBXFileReference section */
 		0B28F1552ABF463A000D44B0 /* DataTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTypes.swift; sourceTree = "<group>"; };
-		0B46E8DF2AC918CA00BA2A3C /* BurrowIpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowIpc.swift; sourceTree = "<group>"; };
+		0B46E8DF2AC918CA00BA2A3C /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
 		43AA26D72A10004900F14CE6 /* MenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuView.swift; sourceTree = "<group>"; };
+		D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NWConnection+Async.swift"; sourceTree = "<group>"; };
+		D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewlineProtocolFramer.swift; sourceTree = "<group>"; };
+		D00117382B30341C00D87C25 /* libBurrowShared.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBurrowShared.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		D001173A2B30341C00D87C25 /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
+		D00117412B30347800D87C25 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
+		D00117422B30348D00D87C25 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
 		D00AA8962A4669BC005C8102 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D020F63D29E4A1FF002790F6 /* Identity.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Identity.xcconfig; sourceTree = "<group>"; };
 		D020F64029E4A1FF002790F6 /* Compiler.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Compiler.xcconfig; sourceTree = "<group>"; };
@@ -70,6 +96,8 @@
 		D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowApp.swift; sourceTree = "<group>"; };
 		D05B9F7729E39EEC008CB1F9 /* TunnelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelView.swift; sourceTree = "<group>"; };
 		D05B9F7929E39EED008CB1F9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D08252742B5C9DEB005DA378 /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
+		D08252752B5C9FC4005DA378 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		D0B98FBF29FD8072004E7149 /* build-rust.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-rust.sh"; sourceTree = "<group>"; };
 		D0B98FC629FDC5B5004E7149 /* Tunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tunnel.swift; sourceTree = "<group>"; };
 		D0B98FD829FDDB6F004E7149 /* libburrow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libburrow.h; sourceTree = "<group>"; };
@@ -80,10 +108,18 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		D00117352B30341C00D87C25 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D020F65029E4A697002790F6 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D00117442B30372900D87C25 /* libBurrowShared.a in Frameworks */,
 				D0BCC6092A09A03E00AD070D /* libburrow.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -92,6 +128,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D00117452B30372C00D87C25 /* libBurrowShared.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -104,6 +141,33 @@
 				43AA26D72A10004900F14CE6 /* MenuView.swift */,
 			);
 			path = Menu;
+			sourceTree = "<group>";
+		};
+		D00117392B30341C00D87C25 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				D001173A2B30341C00D87C25 /* Logging.swift */,
+				D08252752B5C9FC4005DA378 /* Constants.swift */,
+				D00117422B30348D00D87C25 /* Shared.xcconfig */,
+				D001173F2B30347800D87C25 /* Constants */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		D001173F2B30347800D87C25 /* Constants */ = {
+			isa = PBXGroup;
+			children = (
+				D08252742B5C9DEB005DA378 /* Constants.h */,
+				D00117412B30347800D87C25 /* module.modulemap */,
+			);
+			path = Constants;
+			sourceTree = "<group>";
+		};
+		D00117432B30372900D87C25 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		D020F63C29E4A1FF002790F6 /* Configuration */ = {
@@ -122,12 +186,14 @@
 			isa = PBXGroup;
 			children = (
 				D020F65729E4A697002790F6 /* PacketTunnelProvider.swift */,
+				0B46E8DF2AC918CA00BA2A3C /* Client.swift */,
+				0B28F1552ABF463A000D44B0 /* DataTypes.swift */,
+				D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */,
+				D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */,
 				D020F65929E4A697002790F6 /* Info.plist */,
 				D020F66729E4A95D002790F6 /* NetworkExtension-iOS.entitlements */,
 				D020F66629E4A95D002790F6 /* NetworkExtension-macOS.entitlements */,
 				D020F66229E4A6E5002790F6 /* NetworkExtension.xcconfig */,
-				0B28F1552ABF463A000D44B0 /* DataTypes.swift */,
-				0B46E8DF2AC918CA00BA2A3C /* BurrowIpc.swift */,
 				D0B98FD729FDDB57004E7149 /* libburrow */,
 			);
 			path = NetworkExtension;
@@ -138,8 +204,10 @@
 			children = (
 				D05B9F7429E39EEC008CB1F9 /* App */,
 				D020F65629E4A697002790F6 /* NetworkExtension */,
+				D00117392B30341C00D87C25 /* Shared */,
 				D020F63C29E4A1FF002790F6 /* Configuration */,
 				D05B9F7329E39EEC008CB1F9 /* Products */,
+				D00117432B30372900D87C25 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -148,6 +216,7 @@
 			children = (
 				D05B9F7229E39EEC008CB1F9 /* Burrow.app */,
 				D020F65329E4A697002790F6 /* BurrowNetworkExtension.appex */,
+				D00117382B30341C00D87C25 /* libBurrowShared.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -184,6 +253,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		D00117372B30341C00D87C25 /* Shared */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D001173C2B30341C00D87C25 /* Build configuration list for PBXNativeTarget "Shared" */;
+			buildPhases = (
+				D00117342B30341C00D87C25 /* Sources */,
+				D00117352B30341C00D87C25 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D082527D2B5DEB80005DA378 /* PBXTargetDependency */,
+			);
+			name = Shared;
+			productName = Shared;
+			productReference = D00117382B30341C00D87C25 /* libBurrowShared.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 		D020F65229E4A697002790F6 /* NetworkExtension */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D020F65E29E4A697002790F6 /* Build configuration list for PBXNativeTarget "NetworkExtension" */;
@@ -196,7 +282,8 @@
 			buildRules = (
 			);
 			dependencies = (
-				D08252712B5C3E2E005DA378 /* PBXTargetDependency */,
+				D08252792B5DEB78005DA378 /* PBXTargetDependency */,
+				D00117492B30373500D87C25 /* PBXTargetDependency */,
 			);
 			name = NetworkExtension;
 			productName = BurrowNetworkExtension;
@@ -215,7 +302,8 @@
 			buildRules = (
 			);
 			dependencies = (
-				D08252732B5C3E33005DA378 /* PBXTargetDependency */,
+				D082527B2B5DEB7D005DA378 /* PBXTargetDependency */,
+				D00117472B30373100D87C25 /* PBXTargetDependency */,
 				D020F65C29E4A697002790F6 /* PBXTargetDependency */,
 			);
 			name = App;
@@ -230,9 +318,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1430;
-				LastUpgradeCheck = 1510;
+				LastSwiftUpdateCheck = 1510;
+				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					D00117372B30341C00D87C25 = {
+						CreatedOnToolsVersion = 15.1;
+					};
 					D020F65229E4A697002790F6 = {
 						CreatedOnToolsVersion = 14.3;
 					};
@@ -251,7 +342,7 @@
 			);
 			mainGroup = D05B9F6929E39EEC008CB1F9;
 			packageReferences = (
-				D082526F2B5C3E23005DA378 /* XCRemoteSwiftPackageReference "SwiftLint" */,
+				D08252772B5DEB6E005DA378 /* XCRemoteSwiftPackageReference "SwiftLint" */,
 			);
 			productRefGroup = D05B9F7329E39EEC008CB1F9 /* Products */;
 			projectDirPath = "";
@@ -259,6 +350,7 @@
 			targets = (
 				D05B9F7129E39EEC008CB1F9 /* App */,
 				D020F65229E4A697002790F6 /* NetworkExtension */,
+				D00117372B30341C00D87C25 /* Shared */,
 			);
 		};
 /* End PBXProject section */
@@ -306,12 +398,23 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D00117342B30341C00D87C25 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D001173B2B30341C00D87C25 /* Logging.swift in Sources */,
+				D08252762B5C9FC4005DA378 /* Constants.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D020F64F29E4A697002790F6 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D00117332B3001A400D87C25 /* NewlineProtocolFramer.swift in Sources */,
 				0B28F1562ABF463A000D44B0 /* DataTypes.swift in Sources */,
-				0B46E8E02AC918CA00BA2A3C /* BurrowIpc.swift in Sources */,
+				D00117312B2FFFC900D87C25 /* NWConnection+Async.swift in Sources */,
+				0B46E8E02AC918CA00BA2A3C /* Client.swift in Sources */,
 				D020F65829E4A697002790F6 /* PacketTunnelProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -333,22 +436,50 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		D00117472B30373100D87C25 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D00117372B30341C00D87C25 /* Shared */;
+			targetProxy = D00117462B30373100D87C25 /* PBXContainerItemProxy */;
+		};
+		D00117492B30373500D87C25 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D00117372B30341C00D87C25 /* Shared */;
+			targetProxy = D00117482B30373500D87C25 /* PBXContainerItemProxy */;
+		};
 		D020F65C29E4A697002790F6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D020F65229E4A697002790F6 /* NetworkExtension */;
 			targetProxy = D020F65B29E4A697002790F6 /* PBXContainerItemProxy */;
 		};
-		D08252712B5C3E2E005DA378 /* PBXTargetDependency */ = {
+		D08252792B5DEB78005DA378 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = D08252702B5C3E2E005DA378 /* SwiftLintPlugin */;
+			productRef = D08252782B5DEB78005DA378 /* SwiftLintPlugin */;
 		};
-		D08252732B5C3E33005DA378 /* PBXTargetDependency */ = {
+		D082527B2B5DEB7D005DA378 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = D08252722B5C3E33005DA378 /* SwiftLintPlugin */;
+			productRef = D082527A2B5DEB7D005DA378 /* SwiftLintPlugin */;
+		};
+		D082527D2B5DEB80005DA378 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = D082527C2B5DEB80005DA378 /* SwiftLintPlugin */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		D001173D2B30341C00D87C25 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D00117422B30348D00D87C25 /* Shared.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		D001173E2B30341C00D87C25 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D00117422B30348D00D87C25 /* Shared.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
 		D020F65F29E4A697002790F6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D020F66229E4A6E5002790F6 /* NetworkExtension.xcconfig */;
@@ -394,6 +525,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D001173C2B30341C00D87C25 /* Build configuration list for PBXNativeTarget "Shared" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D001173D2B30341C00D87C25 /* Debug */,
+				D001173E2B30341C00D87C25 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D020F65E29E4A697002790F6 /* Build configuration list for PBXNativeTarget "NetworkExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -424,7 +564,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		D082526F2B5C3E23005DA378 /* XCRemoteSwiftPackageReference "SwiftLint" */ = {
+		D08252772B5DEB6E005DA378 /* XCRemoteSwiftPackageReference "SwiftLint" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/realm/SwiftLint.git";
 			requirement = {
@@ -435,14 +575,19 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		D08252702B5C3E2E005DA378 /* SwiftLintPlugin */ = {
+		D08252782B5DEB78005DA378 /* SwiftLintPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D082526F2B5C3E23005DA378 /* XCRemoteSwiftPackageReference "SwiftLint" */;
+			package = D08252772B5DEB6E005DA378 /* XCRemoteSwiftPackageReference "SwiftLint" */;
 			productName = "plugin:SwiftLintPlugin";
 		};
-		D08252722B5C3E33005DA378 /* SwiftLintPlugin */ = {
+		D082527A2B5DEB7D005DA378 /* SwiftLintPlugin */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D082526F2B5C3E23005DA378 /* XCRemoteSwiftPackageReference "SwiftLint" */;
+			package = D08252772B5DEB6E005DA378 /* XCRemoteSwiftPackageReference "SwiftLint" */;
+			productName = "plugin:SwiftLintPlugin";
+		};
+		D082527C2B5DEB80005DA378 /* SwiftLintPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D08252772B5DEB6E005DA378 /* XCRemoteSwiftPackageReference "SwiftLint" */;
 			productName = "plugin:SwiftLintPlugin";
 		};
 /* End XCSwiftPackageProductDependency section */

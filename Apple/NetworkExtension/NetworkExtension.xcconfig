@@ -6,6 +6,6 @@ PRODUCT_BUNDLE_IDENTIFIER = $(NETWORK_EXTENSION_BUNDLE_IDENTIFIER)
 INFOPLIST_FILE = NetworkExtension/Info.plist
 
 CODE_SIGN_ENTITLEMENTS = NetworkExtension/NetworkExtension-iOS.entitlements
-CODE_SIGN_ENTITLEMENTS[sdk=macos*] = NetworkExtension/NetworkExtension-macOS.entitlements
+CODE_SIGN_ENTITLEMENTS[sdk=macosx*] = NetworkExtension/NetworkExtension-macOS.entitlements
 
 SWIFT_INCLUDE_PATHS = $(inherited) $(PROJECT_DIR)/NetworkExtension

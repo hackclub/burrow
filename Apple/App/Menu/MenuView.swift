@@ -39,10 +39,10 @@ extension Tunnel {
     var isOn: Binding<Bool> {
         Binding {
             switch self.status {
-            case .unknown, .disabled, .disconnecting, .disconnected, .invalid, .permissionRequired, .configurationReadWriteFailed:
-                return false
             case .connecting, .reasserting, .connected:
-                return true
+                true
+            default:
+                false
             }
         } set: { newValue in
             switch (self.status, newValue) {

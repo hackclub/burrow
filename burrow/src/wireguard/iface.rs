@@ -153,7 +153,13 @@ impl Interface {
                     let mut buf = [0u8; 65535];
                     loop {
                         tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
-                        pcb.update_timers(&mut buf).await;
+                        match pcb.update_timers(&mut buf).await {
+                            Ok(..) => (),
+                            Err(e) => {
+                                error!("Failed to update timers: {}", e);
+                                return
+                            }
+                        }
                     }
                 };
 
@@ -167,7 +173,7 @@ impl Interface {
                 tsks.extend(vec![
                     tokio::spawn(main_tsk),
                     tokio::spawn(update_timers_tsk),
-                    tokio::spawn(reset_rate_limiter_tsk)
+                    tokio::spawn(reset_rate_limiter_tsk),
                 ]);
                 debug!("task made..");
             }

@@ -6,7 +6,7 @@ use tun::TunInterface;
 pub struct DaemonResponse {
     //  Error types can't be serialized, so this is the second best option.
     pub result: Result<DaemonResponseData, String>,
-    pub id: u32,
+    pub id: u64,
 }
 
 impl DaemonResponse {
@@ -25,7 +25,7 @@ impl From<DaemonResponseData> for DaemonResponse {
 }
 
 impl DaemonResponse {
-    pub fn with_id(self, id: u32) -> Self {
+    pub fn with_id(self, id: u64) -> Self {
         Self { id, ..self }
     }
 }

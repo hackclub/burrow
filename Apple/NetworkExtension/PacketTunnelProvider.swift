@@ -1,51 +1,49 @@
+import BurrowShared
 import libburrow
 import NetworkExtension
 import os
 
 class PacketTunnelProvider: NEPacketTunnelProvider {
-    let logger = Logger(subsystem: "com.hackclub.burrow", category: "frontend")
-    var client: BurrowIpc?
-    var osInitialized = false
+    private let logger = Logger.logger(for: PacketTunnelProvider.self)
+
     override func startTunnel(options: [String: NSObject]? = nil) async throws {
-        logger.log("Starting tunnel")
-        if !osInitialized {
-            libburrow.initialize_oslog()
-            osInitialized = true
-        }
-        libburrow.start_srv()
-        client = BurrowIpc(logger: logger)
-        logger.info("Started server")
         do {
-            let command = BurrowSingleCommand(id: 0, command: "ServerConfig")
-            guard let data = try await client?.request(command, type: Response<BurrowResult<ServerConfigData>>.self)
-            else {
-                throw BurrowError.cantParseResult
-            }
+            libburrow.spawnInProcess(socketPath: try Constants.socketURL.path)
+
+            let client = try Client()
+
+            let command = BurrowRequest(id: 0, command: "ServerConfig")
+            let data = try await client.request(command, type: Response<BurrowResult<ServerConfigData>>.self)
+
             let encoded = try JSONEncoder().encode(data.result)
             self.logger.log("Received final data: \(String(decoding: encoded, as: UTF8.self))")
             guard let serverconfig = data.result.Ok else {
                 throw BurrowError.resultIsError
             }
-            guard let tunNs = self.generateTunSettings(from: serverconfig) else {
+            guard let tunNs = generateTunSettings(from: serverconfig) else {
                 throw BurrowError.addrDoesntExist
             }
             try await self.setTunnelNetworkSettings(tunNs)
             self.logger.info("Set remote tunnel address to \(tunNs.tunnelRemoteAddress)")
 
-            //                let tunFd = self.packetFlow.value(forKeyPath: "socket.fileDescriptor") as! Int;
-            //                self.logger.info("Found File Descriptor: \(tunFd)")
-            let startCommand = start_req_fd(id: 1)
-            guard let data = try await client?.request(startCommand, type: Response<BurrowResult<String>>.self)
-            else {
-                throw BurrowError.cantParseResult
-            }
-            let encodedStartRes = try JSONEncoder().encode(data.result)
-            self.logger.log("Received start server response: \(String(decoding: encodedStartRes, as: UTF8.self))")
+            let startRequest = BurrowRequest(
+                id: .random(in: (.min)..<(.max)),
+                command: BurrowStartRequest(
+                    Start: BurrowStartRequest.StartOptions(
+                        tun: BurrowStartRequest.TunOptions(
+                            name: nil, no_pi: false, tun_excl: false, tun_retrieve: true, address: nil
+                        )
+                    )
+                )
+            )
+            let response = try await client.request(startRequest, type: Response<BurrowResult<String>>.self)
+            self.logger.log("Received start server response: \(String(describing: response.result))")
         } catch {
-            self.logger.error("An error occurred: \(error)")
+            self.logger.error("Failed to start tunnel: \(error)")
             throw error
         }
     }
+
     private func generateTunSettings(from: ServerConfigData) -> NETunnelNetworkSettings? {
         let cfig = from.ServerConfig
         guard let addr = cfig.address else {
@@ -56,14 +54,5 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         nst.ipv4Settings = NEIPv4Settings(addresses: [addr], subnetMasks: ["255.255.255.0"])
         logger.log("Initialized ipv4 settings: \(nst.ipv4Settings)")
         return nst
-    }
-    override func stopTunnel(with reason: NEProviderStopReason) async {
-    }
-    override func handleAppMessage(_ messageData: Data) async -> Data? {
-        messageData
-    }
-    override func sleep() async {
-    }
-    override func wake() {
     }
 }
