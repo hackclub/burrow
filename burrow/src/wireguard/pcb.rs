@@ -115,9 +115,12 @@ impl PeerPcb {
     }
 
     pub async fn send(&self, src: &[u8]) -> Result<(), Error> {
+        tracing::debug!("Sending packet: {:?}", src);
         let mut dst_buf = [0u8; 3000];
         match self.tunnel.write().await.encapsulate(src, &mut dst_buf[..]) {
-            TunnResult::Done => {}
+            TunnResult::Done => {
+                tracing::debug!("Encapsulate done");
+            }
             TunnResult::Err(e) => {
                 tracing::error!(message = "Encapsulate error", error = ?e)
             }
@@ -137,6 +140,7 @@ impl PeerPcb {
     }
 
     pub async fn update_timers(&self, dst: &mut [u8]) -> Result<(), Error> {
+        tracing::debug!("update timers called...");
         match self.tunnel.write().await.update_timers(dst) {
             TunnResult::Done => {}
             TunnResult::Err(WireGuardError::ConnectionExpired) => {
@@ -147,6 +151,7 @@ impl PeerPcb {
                 tracing::error!(message = "Update timers error", error = ?e)
             }
             TunnResult::WriteToNetwork(packet) => {
+                tracing::debug!("Sending Packet for timer update: {:?}", packet);
                 self.open_if_closed().await?;
                 let handle = self.socket.read().await;
                 let Some(socket) = handle.as_ref() else {
@@ -154,9 +159,11 @@ impl PeerPcb {
                     return Ok(())
                 };
                 socket.send(packet).await?;
+                tracing::debug!("Sent Packet for timer update");
             }
             _ => panic!("Unexpected result from update_timers"),
         };
+        tracing::debug!("update timers exit...");
         Ok(())
     }
 

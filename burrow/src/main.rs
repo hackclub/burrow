@@ -98,19 +98,27 @@ async fn initialize_tracing() -> Result<()> {
 
     #[cfg(any(target_os = "linux", target_vendor = "apple"))]
     {
-        let maybe_layer = system_log()?;
-        if let Some(layer) = maybe_layer {
-            let logger = layer.with_subscriber(
-                FmtSubscriber::builder()
-                    .with_line_number(true)
-                    .with_env_filter(EnvFilter::from_default_env())
-                    .finish(),
+    let maybe_layer = system_log()?;
+    if let Some(layer) = maybe_layer {
+        let registry = tracing_subscriber::registry()
+            .with(layer)
+            .with(tracing_subscriber::fmt::layer()
+                .with_line_number(true)
+                .with_filter(EnvFilter::from_default_env())
             );
-            tracing::subscriber::set_global_default(logger)
-                .context("Failed to set the global tracing subscriber")?;
+
+        #[cfg(feature = "tokio-console")]
+        let registry =  registry.with(
+            console_subscriber::spawn()
+                .with_filter(EnvFilter::from_default_env()
+                    .add_directive("tokio=trace".parse()?)
+                    .add_directive("runtime=trace".parse()?)
+                )
+        );
+
+        tracing::subscriber::set_global_default(registry).context("Failed to set the global tracing subscriber")?;
         }
     }
-
     Ok(())
 }
 
