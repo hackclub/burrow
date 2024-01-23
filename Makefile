@@ -1,4 +1,6 @@
 tun_num := $(shell ifconfig | awk -F 'utun|[: ]' '/utun[0-9]/ {print $$2}' | tail -n 1)
+cargo_console := RUST_BACKTRACE=1 RUST_LOG=debug RUSTFLAGS='--cfg tokio_unstable' cargo run --all-features
+cargo_norm := RUST_BACKTRACE=1 RUST_LOG=debug cargo run
 
 check:
 	@cargo check
@@ -6,11 +8,14 @@ check:
 build:
 	@cargo run build
 
+daemon-console:
+	@$(cargo_console) daemon
+
 daemon:
-	@RUST_BACKTRACE=1 RUST_LOG=debug cargo run daemon
+	@$(cargo_norm) daemon
 
 start:
-	@RUST_BACKTRACE=1 RUST_LOG=debug cargo run start
+	@$(cargo_norm) start
 
 test-dns:
 	@sudo route delete 8.8.8.8

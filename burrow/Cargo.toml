@@ -10,7 +10,7 @@ crate-type = ["lib", "staticlib"]
 
 [dependencies]
 anyhow = "1.0"
-tokio = { version = "1.21", features = ["rt", "macros", "sync", "io-util", "rt-multi-thread", "time"] }
+tokio = { version = "1.21", features = ["rt", "macros", "sync", "io-util", "rt-multi-thread", "time", "tracing"] }
 tun = { version = "0.1", path = "../tun", features = ["serde", "tokio"] }
 clap = { version = "4.3.2", features = ["derive"] }
 tracing = "0.1"
@@ -40,6 +40,7 @@ async-channel = "2.1.1"
 schemars = "0.8"
 futures = "0.3.28"
 uuid = { version = "1.6.1", features = ["v4"] }
+console-subscriber = { version = "0.2.0" , optional = true}
 
 [target.'cfg(target_os = "linux")'.dependencies]
 caps = "0.5.5"
@@ -60,3 +61,6 @@ assets = [
 ]
 post_install_script = "../package/rpm/post_install"
 pre_uninstall_script = "../package/rpm/pre_uninstall"
+
+[features]
+tokio-console = ["dep:console-subscriber"]
