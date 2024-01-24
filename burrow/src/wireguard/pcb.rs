@@ -1,10 +1,11 @@
 use std::{net::SocketAddr, sync::Arc};
+use std::time::Duration;
 
 use anyhow::{Error, Result};
 use fehler::throws;
 use ip_network::IpNetwork;
 use rand::random;
-use tokio::{net::UdpSocket, sync::RwLock, task::JoinHandle};
+use tokio::{net::UdpSocket, sync::RwLock, task::JoinHandle, time::timeout};
 use tokio::io::AsyncWrite;
 use tun::tokio::TunInterface;
 use crate::wireguard::noise::errors::WireGuardError;
@@ -94,7 +95,7 @@ impl PeerPcb {
                     TunnResult::WriteToNetwork(packet) => {
                         tracing::debug!("WriteToNetwork: {:?}", packet);
                         self.open_if_closed().await?;
-                        socket.send(packet).await?;
+                        self.socket.read().await.as_ref().unwrap().send(packet).await?;
                         tracing::debug!("WriteToNetwork done");
                         res_dat = &[];
                         continue
@@ -140,12 +141,9 @@ impl PeerPcb {
     }
 
     pub async fn update_timers(&self, dst: &mut [u8]) -> Result<(), Error> {
-        tracing::debug!("update timers called...");
         match self.tunnel.write().await.update_timers(dst) {
             TunnResult::Done => {}
             TunnResult::Err(WireGuardError::ConnectionExpired) => {
-                tracing::debug!("Connection expired, closing socket");
-                self.socket.write().await.take();
             }
             TunnResult::Err(e) => {
                 tracing::error!(message = "Update timers error", error = ?e)
@@ -163,7 +161,6 @@ impl PeerPcb {
             }
             _ => panic!("Unexpected result from update_timers"),
         };
-        tracing::debug!("update timers exit...");
         Ok(())
     }
 
