@@ -39,5 +39,5 @@ anyhow = "1.0"
 bindgen = "0.65"
 reqwest = { version = "0.11", features = ["native-tls"] }
 ssri = { version = "9.0", default-features = false }
-tokio = { version = "1.28", features = ["rt"] }
+tokio = { version = "1.28", features = ["rt", "macros"] }
 zip = { version = "0.6", features = ["deflate"] }

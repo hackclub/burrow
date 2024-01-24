@@ -1,18 +1,21 @@
+use std::{
+    fs::OpenOptions,
+    io::{Error, Write},
+    mem,
+    net::{Ipv4Addr, Ipv6Addr, SocketAddrV4},
+    os::{
+        fd::RawFd,
+        unix::io::{AsRawFd, FromRawFd, IntoRawFd},
+    },
+};
+
 use fehler::throws;
-
+use libc::in6_ifreq;
 use socket2::{Domain, SockAddr, Socket, Type};
-use std::fs::OpenOptions;
-use std::io::{Error, Write};
-use std::mem;
-use std::net::{Ipv4Addr, Ipv6Addr, SocketAddrV4};
-use std::os::fd::RawFd;
-use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd};
-
 use tracing::{info, instrument};
 
-use libc::in6_ifreq;
-
-use super::{ifname_to_string, string_to_ifname, TunOptions};
+use super::{ifname_to_string, string_to_ifname};
+use crate::TunOptions;
 
 mod sys;
 
@@ -38,10 +41,10 @@ impl TunInterface {
 
         let mut flags = libc::IFF_TUN as i16;
 
-        if options.no_pi.is_some() {
+        if options.no_pi {
             flags |= libc::IFF_NO_PI as i16;
         }
-        if options.tun_excl.is_some() {
+        if options.tun_excl {
             flags |= libc::IFF_TUN_EXCL as i16;
         }
 

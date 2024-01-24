@@ -6,10 +6,13 @@ on:
   pull_request:
     branches:
     - "*"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
     name: Build App (${{ matrix.platform }})
-    runs-on: macos-12
+    runs-on: macos-13
     strategy:
       fail-fast: false
       matrix:
@@ -21,7 +24,7 @@ jobs:
           rust-targets:
           - aarch64-apple-ios
         - scheme: App
-          destination: platform=iOS Simulator,OS=16.2,name=iPhone 14 Pro
+          destination: platform=iOS Simulator,OS=17.2,name=iPhone 15 Pro
           platform: iOS Simulator
           sdk-name: iphonesimulator
           rust-targets:
@@ -35,7 +38,7 @@ jobs:
           - x86_64-apple-darwin
           - aarch64-apple-darwin
     env:
-      DEVELOPER_DIR: /Applications/Xcode_14.2.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_15.2.app/Contents/Developer
     steps:
     - name: Checkout
       uses: actions/checkout@v3

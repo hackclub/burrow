@@ -1,6 +1,12 @@
-use super::*;
+use anyhow::Result;
 
-pub async fn listen(_cmd_tx: async_channel::Sender<DaemonCommand>, _rsp_rx: async_channel::Receiver<DaemonResponse>) -> Result<()> {
+use super::*;
+use crate::daemon::DaemonResponse;
+
+pub async fn listen(
+    _cmd_tx: async_channel::Sender<DaemonCommand>,
+    _rsp_rx: async_channel::Receiver<DaemonResponse>,
+) -> Result<()> {
     unimplemented!("This platform does not currently support daemon mode.")
 }
 

@@ -8,6 +8,9 @@
     "editor.acceptSuggestionOnEnter": "on",
     "rust-analyzer.restartServerOnConfigChange": true,
     "rust-analyzer.cargo.features": "all",
+    "rust-analyzer.rustfmt.extraArgs": [
+        "+nightly"
+    ],
     "[rust]": {
         "editor.defaultFormatter": "rust-lang.rust-analyzer",
     }
