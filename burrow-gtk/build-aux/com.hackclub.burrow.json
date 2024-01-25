@@ -41,6 +41,7 @@
             "builddir" : true,
             "subdir" : "burrow-gtk",
             "buildsystem" : "meson",
+            "config-opts": ["--buildtype=release"],
             "sources" : [
                 {                
                     "type": "dir",

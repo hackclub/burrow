@@ -18,7 +18,7 @@ pub enum AppMsg {
 
 impl App {
     pub fn run() {
-        let app = RelmApp::new("com.hackclub.burrow");
+        let app = RelmApp::new(config::ID);
         Self::setup_gresources().unwrap();
         Self::setup_i18n().unwrap();
 

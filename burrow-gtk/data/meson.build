@@ -1,39 +1,90 @@
+# app.desktop.in.in
+desktop_conf = configuration_data()
+desktop_conf.set('APP_ID', app_id)
+desktop_conf.set('APP_NAME', app_name)
+desktop_conf.set('APP_NAME_CAPITALIZED', app_name_capitalized)
+
+desktop_file_in = configure_file(
+    input: 'app.desktop.in.in',
+    output: '@BASENAME@',
+    configuration: desktop_conf,
+)
+
 desktop_file = i18n.merge_file(
-        input: 'com.hackclub.burrow.desktop.in',
-       output: 'com.hackclub.burrow.desktop',
-         type: 'desktop',
-       po_dir: '../po',
-      install: true,
-  install_dir: join_paths(get_option('datadir'), 'applications')
+    input: desktop_file_in,
+    output: app_id + '.desktop',
+    type: 'desktop',
+    po_dir: '../po',
+    install: true,
+    install_dir: datadir / 'applications',
 )
 
-desktop_utils = find_program('desktop-file-validate', required: false)
-if desktop_utils.found()
-  test('Validate desktop file', desktop_utils, args: [desktop_file])
+if desktop_file_validate.found()
+    test(
+        'validate-desktop',
+        desktop_file_validate,
+        args: [desktop_file],
+    )
 endif
 
-appstream_file = i18n.merge_file(
-        input: 'com.hackclub.burrow.appdata.xml.in',
-       output: 'com.hackclub.burrow.appdata.xml',
-       po_dir: '../po',
-      install: true,
-  install_dir: join_paths(get_option('datadir'), 'appdata')
+# app.gschema.xml.in
+gschema_conf = configuration_data()
+gschema_conf.set('APP_ID', app_id)
+gschema_conf.set('APP_NAME', app_name)
+gschema_conf.set('APP_IDPATH', app_idpath)
+gschema_file = configure_file(
+    input: 'app.gschema.xml.in',
+    output: app_id + '.gschema.xml',
+    configuration: gschema_conf,
+    install: true,
+    install_dir: datadir / 'glib-2.0' / 'schemas',
 )
 
-appstream_util = find_program('appstream-util', required: false)
+if glib_compile_schemas.found()
+    test(
+        'validate-gschema',
+        glib_compile_schemas,
+        args: [
+            '--dry-run',
+            datadir / 'glib-2.0' / 'schemas',
+        ],
+    )
+endif
+
+# app.metainfo.xml.in
+appdata_conf = configuration_data()
+appdata_conf.set('APP_ID', app_id)
+appdata_conf.set('APP_NAME', app_name)
+appdata_conf.set('APP_NAME_CAPITALIZED', app_name_capitalized)
+appdata_file_in = configure_file(
+    input: 'app.metainfo.xml.in',
+    output: '@BASENAME@',
+    configuration: appdata_conf,
+)
+appdata_file = i18n.merge_file(
+    input: appdata_file_in,
+    output: app_id + '.metainfo.xml',
+    po_dir: '../po',
+    install: true,
+    install_dir: datadir / 'metainfo',
+)
+
 if appstream_util.found()
-  test('Validate appstream file', appstream_util, args: ['validate', appstream_file])
+    test(
+        'validate-appdata',
+        appstream_util,
+        args: ['validate', '--nonet', appdata_file],
+    )
 endif
 
-install_data('com.hackclub.burrow.gschema.xml',
-  install_dir: join_paths(get_option('datadir'), 'glib-2.0/schemas')
+install_data(
+    'icons/hicolor/scalable/apps/' + app_name + '.svg',
+    install_dir: datadir / 'icons' / 'hicolor' / 'scalable' / 'apps',
+    rename: app_id + '.svg',
 )
 
-compile_schemas = find_program('glib-compile-schemas', required: false)
-if compile_schemas.found()
-  test('Validate schema file',
-       compile_schemas,
-       args: ['--strict', '--dry-run', meson.current_source_dir()])
-endif
-
-subdir('icons')
+install_data(
+    'icons/hicolor/symbolic/apps/' + app_name + '-symbolic.svg',
+    install_dir: datadir / 'icons' / 'hicolor' / 'symbolic' / 'apps',
+    rename: app_id + '-symbolic.svg',
+)

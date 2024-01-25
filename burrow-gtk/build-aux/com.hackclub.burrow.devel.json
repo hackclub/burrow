@@ -24,12 +24,24 @@
             "RUST_LOG" : "burrow-gtk=debug"
         }
     },
+    "cleanup" : [
+        "/include",
+        "/lib/pkgconfig",
+        "/man",
+        "/share/doc",
+        "/share/gtk-doc",
+        "/share/man",
+        "/share/pkgconfig",
+        "*.la",
+        "*.a"
+    ],
     "modules" : [
         {
             "name" : "burrow-gtk",
             "builddir" : true,
             "subdir" : "burrow-gtk",
             "buildsystem" : "meson",
+            "config-opts": ["--buildtype=debug"],
             "sources" : [
                 {                
                     "type": "dir",

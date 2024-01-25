@@ -1,7 +1,7 @@
 [Desktop Entry]
-Name=Burrow
-Exec=burrow-gtk
-Icon=com.hackclub.burrow
+Name=@APP_NAME_CAPITALIZED@
+Exec=@APP_NAME@
+Icon=@APP_ID@
 Terminal=false
 Type=Application
 Categories=GTK;Network

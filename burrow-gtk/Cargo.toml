@@ -10,7 +10,7 @@ anyhow = "1.0"
 relm4 = { features = ["libadwaita", "gnome_45"], git = "https://github.com/Relm4/Relm4" }
 burrow = { version = "*", path = "../burrow/" }
 tokio = { version = "1.35.0", features = ["time", "sync"] }
-gettext-rs = "0.7.0"
+gettext-rs = { version = "0.7.0", features = ["gettext-system"] }
 
 [build-dependencies]
 anyhow = "1.0"

@@ -1,4 +1,8 @@
-pub static VERSION: &str = @VERSION@;
-pub static GETTEXT_PACKAGE: &str = @GETTEXT_PACKAGE@;
-pub static LOCALEDIR: &str = @LOCALEDIR@;
-pub static PKGDATADIR: &str = @PKGDATADIR@;
+#[allow(unused)]
+pub const ID: &str = @ID@;
+#[allow(unused)]
+pub const VERSION: &str = @VERSION@;
+#[allow(unused)]
+pub const LOCALEDIR: &str = @LOCALEDIR@;
+#[allow(unused)]
+pub const GETTEXT_PACKAGE: &str = @GETTEXT_PACKAGE@;
