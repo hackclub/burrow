@@ -6,7 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-relm4 = { version = "0.6.2", features = ["libadwaita"] }
-relm4-components = "0.6.2"
-relm4-icons = { version = "0.6.0", features = ["plus"] }
+anyhow = "1.0"
+relm4 = { features = ["libadwaita", "gnome_45"], git = "https://github.com/Relm4/Relm4" }
 burrow = { version = "*", path = "../burrow/" }
+tokio = { version = "1.35.0", features = ["time", "sync"] }
+gettext-rs = { version = "0.7.0", features = ["gettext-system"] }
+
+[build-dependencies]
+anyhow = "1.0"
+glib-build-tools = "0.18.0"

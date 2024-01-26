@@ -1,0 +1,8 @@
+#[allow(unused)]
+pub const ID: &str = @ID@;
+#[allow(unused)]
+pub const VERSION: &str = @VERSION@;
+#[allow(unused)]
+pub const LOCALEDIR: &str = @LOCALEDIR@;
+#[allow(unused)]
+pub const GETTEXT_PACKAGE: &str = @GETTEXT_PACKAGE@;

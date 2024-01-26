@@ -1,1 +1,1 @@
-i18n.gettext('burrow-gtk', preset: 'glib')
+i18n.gettext(app_name, preset: 'glib')

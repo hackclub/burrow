@@ -15,5 +15,5 @@ jobs:
     - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
       with:
         bundle: Burrow.flatpak
-        manifest-path: burrow-gtk/com.hackclub.burrow.devel.json
+        manifest-path: burrow-gtk/build-aux/com.hackclub.burrow.devel.json
         cache-key: flatpak-builder-${{ github.sha }}
