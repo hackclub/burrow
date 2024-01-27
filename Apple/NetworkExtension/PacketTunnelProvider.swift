@@ -49,9 +49,14 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         guard let addr = cfig.address else {
             return nil
         }
+
+        let settings = NEIPv4Settings(addresses: [addr], subnetMasks: ["255.255.255.0"])
+        settings.includedRoutes = [.default()]
+
         // Using a makeshift remote tunnel address
         let nst = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "1.1.1.1")
-        nst.ipv4Settings = NEIPv4Settings(addresses: [addr], subnetMasks: ["255.255.255.0"])
+        nst.ipv4Settings = settings
+        nst.dnsSettings = .init(servers: ["1.1.1.1"])
         logger.log("Initialized ipv4 settings: \(nst.ipv4Settings)")
         return nst
     }
