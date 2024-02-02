@@ -1,4 +1,4 @@
-FROM docker.io/library/rust:1.74.0-slim-bookworm AS builder
+FROM docker.io/library/rust:1.76.0-slim-bookworm AS builder
 
 ARG TARGETPLATFORM
 ARG LLVM_VERSION=16

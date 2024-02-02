@@ -31,7 +31,7 @@ struct BurrowStartRequest: Codable {
         let no_pi: Bool
         let tun_excl: Bool
         let tun_retrieve: Bool
-        let address: String?
+        let address: [String]
     }
     struct StartOptions: Codable {
         let tun: TunOptions
@@ -51,7 +51,7 @@ struct BurrowResult<T>: Codable where T: Codable {
 
 struct ServerConfigData: Codable {
     struct InternalConfig: Codable {
-        let address: String?
+        let address: [String]
         let name: String?
         let mtu: Int32?
     }

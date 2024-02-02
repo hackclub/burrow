@@ -55,7 +55,7 @@ async fn try_start() -> Result<()> {
     let mut client = DaemonClient::new().await?;
     client
         .send_command(DaemonCommand::Start(DaemonStartOptions {
-            tun: TunOptions::new().address("10.13.13.2"),
+            tun: TunOptions::new().address(vec!["10.13.13.2", "::2"]),
         }))
         .await
         .map(|_| ())

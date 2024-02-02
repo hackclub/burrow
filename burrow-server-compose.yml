@@ -1,0 +1,38 @@
+version: "2.1"
+networks:
+  wg6:
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: "aa:bb:cc:de::/64"
+services:
+  burrow:
+    image: lscr.io/linuxserver/wireguard:latest
+    privileged: true
+    container_name: burrow_server
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Calcutta
+      - SERVERURL=wg.burrow.rs
+      - SERVERPORT=51820
+      - PEERS=10
+      - PEERDNS=1.1.1.1
+      - INTERNAL_SUBNET=10.13.13.0
+      - ALLOWEDIPS=0.0.0.0/0, ::/0
+      - PERSISTENTKEEPALIVE_PEERS=all
+      - LOG_CONFS=true #optional
+    volumes:
+      - ./config:/config
+      - /lib/modules:/lib/modules
+    ports:
+      - 51820:51820/udp
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv6.conf.eth0.proxy_ndp=1
+    restart: unless-stopped

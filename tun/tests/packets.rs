@@ -1,4 +1,5 @@
 use std::{io::Error, net::Ipv4Addr};
+use std::net::Ipv6Addr;
 
 use fehler::throws;
 use tun::TunInterface;
@@ -32,4 +33,16 @@ fn write_packets() {
     buf[0] = 6 << 4;
     let bytes_written = tun.send(&buf)?;
     assert_eq!(bytes_written, 1504);
+}
+
+#[test]
+#[throws]
+#[ignore = "requires interactivity"]
+#[cfg(not(target_os = "windows"))]
+fn set_ipv6() {
+    let tun = TunInterface::new()?;
+    println!("tun name: {:?}", tun.name()?);
+    let targ_addr: Ipv6Addr = "::1".parse().unwrap();
+    println!("v6 addr: {:?}", targ_addr);
+    tun.set_ipv6_addr(targ_addr)?;
 }
