@@ -31,7 +31,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
                 command: BurrowStartRequest(
                     Start: BurrowStartRequest.StartOptions(
                         tun: BurrowStartRequest.TunOptions(
-                            name: nil, no_pi: false, tun_excl: false, tun_retrieve: true, address: nil
+                            name: nil, no_pi: false, tun_excl: false, tun_retrieve: true, address: []
                         )
                     )
                 )
@@ -46,12 +46,21 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
     private func generateTunSettings(from: ServerConfigData) -> NETunnelNetworkSettings? {
         let cfig = from.ServerConfig
-        guard let addr = cfig.address else {
-            return nil
-        }
-        // Using a makeshift remote tunnel address
         let nst = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "1.1.1.1")
-        nst.ipv4Settings = NEIPv4Settings(addresses: [addr], subnetMasks: ["255.255.255.0"])
+        var v4Addresses = [String]()
+        var v6Addresses = [String]()
+        for addr in cfig.address {
+            if IPv4Address(addr) != nil {
+                v6Addresses.append(addr)
+            }
+            if IPv6Address(addr) != nil {
+                v4Addresses.append(addr)
+            }
+        }
+        nst.ipv4Settings = NEIPv4Settings(addresses: v4Addresses, subnetMasks: v4Addresses.map { _ in
+            "255.255.255.0"
+        })
+        nst.ipv6Settings = NEIPv6Settings(addresses: v6Addresses, networkPrefixLengths: v6Addresses.map { _ in 64 })
         logger.log("Initialized ipv4 settings: \(nst.ipv4Settings)")
         return nst
     }

@@ -57,7 +57,7 @@ impl TryFrom<&TunInterface> for ServerInfo {
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 pub struct ServerConfig {
-    pub address: Option<String>,
+    pub address: Vec<String>,
     pub name: Option<String>,
     pub mtu: Option<i32>,
 }
@@ -65,7 +65,7 @@ pub struct ServerConfig {
 impl Default for ServerConfig {
     fn default() -> Self {
         Self {
-            address: Some("10.13.13.2".to_string()), // Dummy remote address
+            address: vec!["10.13.13.2".to_string()], // Dummy remote address
             name: None,
             mtu: None,
         }

@@ -1,13 +1,11 @@
-use std::{
-    io::{Error, IoSlice},
-    mem,
-    net::{Ipv4Addr, SocketAddrV4},
-    os::fd::{AsRawFd, FromRawFd, RawFd},
-};
+use std::{io::{Error, IoSlice}, mem, net::{Ipv4Addr, SocketAddrV4}, os::fd::{AsRawFd, FromRawFd, RawFd}, ptr};
+use std::net::{IpAddr, Ipv6Addr, SocketAddrV6};
+use std::ptr::addr_of;
 
 use byteorder::{ByteOrder, NetworkEndian};
 use fehler::throws;
-use libc::{c_char, iovec, writev, AF_INET, AF_INET6};
+use libc::{c_char, iovec, writev, AF_INET, AF_INET6, sockaddr_in6};
+use nix::sys::socket::SockaddrIn6;
 use socket2::{Domain, SockAddr, Socket, Type};
 use tracing::{self, instrument};
 
@@ -49,7 +47,7 @@ impl TunInterface {
     pub fn retrieve() -> Option<TunInterface> {
         (3..100)
             .filter_map(|fd| unsafe {
-                let peer_addr = socket2::SockAddr::init(|storage, len| {
+                let peer_addr = socket2::SockAddr::try_init(|storage, len| {
                     *len = mem::size_of::<sys::sockaddr_ctl>() as u32;
                     libc::getpeername(fd, storage as *mut _, len);
                     Ok(())
@@ -71,9 +69,12 @@ impl TunInterface {
 
     #[throws]
     fn configure(&self, options: TunOptions) {
-        if let Some(addr) = options.address {
-            if let Ok(addr) = addr.parse() {
-                self.set_ipv4_addr(addr)?;
+        for addr in options.address{
+            if let Ok(addr) = addr.parse::<IpAddr>() {
+                match addr {
+                    IpAddr::V4(addr) => {self.set_ipv4_addr(addr)?}
+                    IpAddr::V6(addr) => {self.set_ipv6_addr(addr)?}
+                }
             }
         }
     }
@@ -119,6 +120,14 @@ impl TunInterface {
 
     #[throws]
     #[instrument]
+    fn in6_ifreq(&self) -> sys::in6_ifreq {
+        let mut iff: sys::in6_ifreq = unsafe { mem::zeroed() };
+        iff.ifr_name = string_to_ifname(&self.name()?);
+        iff
+    }
+
+    #[throws]
+    #[instrument]
     pub fn set_ipv4_addr(&self, addr: Ipv4Addr) {
         let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
         let mut iff = self.ifreq()?;
@@ -137,11 +146,35 @@ impl TunInterface {
     }
 
     #[throws]
+    pub fn set_ipv6_addr(&self, addr: Ipv6Addr) {
+        // let addr = SockAddr::from(SocketAddrV6::new(addr, 0, 0, 0));
+        // println!("addr: {:?}", addr);
+        // let mut iff = self.in6_ifreq()?;
+        // let sto = addr.as_storage();
+        // let ifadddr_ptr: *const sockaddr_in6 = addr_of!(sto).cast();
+        // iff.ifr_ifru.ifru_addr = unsafe { *ifadddr_ptr };
+        // println!("ifru addr set");
+        // println!("{:?}", sys::SIOCSIFADDR_IN6);
+        // self.perform6(|fd| unsafe { sys::if_set_addr6(fd, &iff) })?;
+        // tracing::info!("ipv6_addr_set");
+        tracing::warn!("Setting IPV6 address on MacOS CLI mode is not supported yet.");
+    }
+
+    #[throws]
     fn perform<R>(&self, perform: impl FnOnce(RawFd) -> Result<R, nix::Error>) -> R {
         let span = tracing::info_span!("perform", fd = self.as_raw_fd());
         let _enter = span.enter();
 
         let socket = Socket::new(Domain::IPV4, Type::DGRAM, None)?;
+        perform(socket.as_raw_fd())?
+    }
+
+    #[throws]
+    fn perform6<R>(&self, perform: impl FnOnce(RawFd) -> Result<R, nix::Error>) -> R {
+        let span = tracing::info_span!("perform6", fd = self.as_raw_fd());
+        let _enter = span.enter();
+
+        let socket = Socket::new(Domain::IPV6, Type::DGRAM, None)?;
         perform(socket.as_raw_fd())?
     }
 

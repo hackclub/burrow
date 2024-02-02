@@ -21,7 +21,7 @@ impl SysControlSocket for socket2::Socket {
         unsafe { sys::resolve_ctl_info(self.as_raw_fd(), &mut info as *mut sys::ctl_info)? };
 
         let (_, addr) = unsafe {
-            socket2::SockAddr::init(|addr_storage, len| {
+            socket2::SockAddr::try_init(|addr_storage, len| {
                 *len = size_of::<sys::sockaddr_ctl>() as u32;
 
                 let addr: &mut sys::sockaddr_ctl = &mut *addr_storage.cast();

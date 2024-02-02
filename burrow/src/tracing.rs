@@ -39,6 +39,7 @@ pub fn initialize() {
             tracing_subscriber::fmt::layer()
                 .with_level(true)
                 .with_writer(std::io::stderr)
+                .with_line_number(true)
                 .compact()
                 .with_filter(EnvFilter::from_default_env())
         });

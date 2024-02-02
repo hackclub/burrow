@@ -42,7 +42,7 @@ pub struct Peer {
 
 pub struct Interface {
     pub private_key: String,
-    pub address: String,
+    pub address: Vec<String>,
     pub listen_port: u32,
     pub dns: Vec<String>,
     pub mtu: Option<u32>,
@@ -93,8 +93,8 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             interface: Interface {
-                private_key: "GNqIAOCRxjl/cicZyvkvpTklgQuUmGUIEkH7IXF/sEE=".into(),
-                address: "10.13.13.2/24".into(),
+                private_key: "OEPVdomeLTxTIBvv3TYsJRge0Hp9NMiY0sIrhT8OWG8=".into(),
+                address: vec!["10.13.13.2/24".into()],
                 listen_port: 51820,
                 dns: Default::default(),
                 mtu: Default::default(),
@@ -102,8 +102,8 @@ impl Default for Config {
             peers: vec![Peer {
                 endpoint: "wg.burrow.rs:51820".into(),
                 allowed_ips: vec!["8.8.8.8/32".into(), "0.0.0.0/0".into()],
-                public_key: "uy75leriJay0+oHLhRMpV+A5xAQ0hCJ+q7Ww81AOvT4=".into(),
-                preshared_key: Some("s7lx/mg+reVEMnGnqeyYOQkzD86n2+gYnx1M9ygi08k=".into()),
+                public_key: "8GaFjVO6c4luCHG4ONO+1bFG8tO+Zz5/Gy+Geht1USM=".into(),
+                preshared_key: Some("ha7j4BjD49sIzyF9SNlbueK0AMHghlj6+u0G3bzC698=".into()),
                 persistent_keepalive: Default::default(),
                 name: Default::default(),
             }],

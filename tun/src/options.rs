@@ -21,7 +21,7 @@ pub struct TunOptions {
     /// (Apple) Retrieve the tun interface
     pub tun_retrieve: bool,
     /// (Linux) The IP address of the tun interface.
-    pub address: Option<String>,
+    pub address: Vec<String>,
 }
 
 impl TunOptions {
@@ -44,8 +44,8 @@ impl TunOptions {
         self
     }
 
-    pub fn address(mut self, address: impl ToString) -> Self {
-        self.address = Some(address.to_string());
+    pub fn address(mut self, address: Vec<impl ToString>) -> Self {
+        self.address = address.iter().map(|x| x.to_string()).collect();
         self
     }
 
