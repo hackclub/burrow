@@ -21,6 +21,12 @@
   sudo apt install -y flatpak-builder
   ```
 
+  3. Install appimage build tools (Optional)
+  
+  ```
+  sudo apt install -y wget fuse
+  ```
+
 </details>
 
 <details>
@@ -38,6 +44,12 @@
   sudo dnf install -y flatpak-builder
   ```
 
+  3. Install appimage build tools (Optional)
+  
+  ```
+  sudo dnf install -y wget fuse
+  ```
+
 </details>
 
 <details>
@@ -53,6 +65,12 @@
 
   ```
   sudo xbps-install -Sy flatpak-builder
+  ```
+
+  3. Install appimage build tools (Optional)
+  
+  ```
+  sudo xbps-install -Sy wget fuse
   ```
 
 </details>
@@ -98,6 +116,23 @@ flatpak install --user \
 
 </details>
 
+<details>
+  <summary>AppImage</summary>
+
+  1. Enter the `burrow-gtk`
+
+  ```bash
+  cd burrow-gtk
+  ```
+
+  2. Compile the AppImage
+  
+  ```
+  ./build-aux/build_appimage.sh
+  ```
+
+</details>
+
 
 ## Running
 
@@ -116,6 +151,17 @@ flatpak install --user \
 
   ```
   flatpak run com.hackclub.burrow-devel
+  ```
+
+</details>
+
+<details>
+  <summary>AppImage</summary>
+
+  The compiled binary can be found in `build-appimage/Burrow-*.AppImage`.
+
+  ```
+  ./build-appimage/Burrow-*.AppImage
   ```
 
 </details>
