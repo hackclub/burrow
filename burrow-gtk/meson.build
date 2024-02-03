@@ -34,8 +34,8 @@ i18n = import('i18n')
 gnome = import('gnome')
 
 # External Dependencies
-dependency('gtk4', version: '>= 4.12')
-dependency('libadwaita-1', version: '>= 1.4')
+dependency('gtk4', version: '>= 4.0')
+dependency('libadwaita-1', version: '>= 1.2')
 
 glib_compile_resources = find_program('glib-compile-resources', required: true)
 glib_compile_schemas = find_program('glib-compile-schemas', required: true)

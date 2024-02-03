@@ -29,7 +29,7 @@ impl AsyncComponent for SwitchScreen {
     view! {
         gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
-            set_valign: Align::BaselineFill,
+            set_valign: Align::Fill,
 
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,

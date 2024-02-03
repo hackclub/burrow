@@ -21,7 +21,7 @@ impl SimpleComponent for SettingsScreen {
 
     fn init(
         init: Self::Init,
-        root: Self::Root,
+        root: &Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let diag_group = settings::DiagGroup::builder()

@@ -81,16 +81,28 @@ impl AsyncComponent for App {
         let view_switcher_bar = adw::ViewSwitcherBar::builder().stack(&view_stack).build();
         view_switcher_bar.set_reveal(true);
 
-        let toolbar = adw::ToolbarView::new();
-        toolbar.add_top_bar(
+        //  When libadwaita 1.4 support becomes more avaliable, this approach is more appropriate
+        //
+        // let toolbar = adw::ToolbarView::new();
+        // toolbar.add_top_bar(
+        //     &adw::HeaderBar::builder()
+        //         .title_widget(&gtk::Label::new(Some("Burrow")))
+        //         .build(),
+        // );
+        // toolbar.add_bottom_bar(&view_switcher_bar);
+        // toolbar.set_content(Some(&view_stack));
+        // root.set_content(Some(&toolbar));
+
+        let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        content.append(
             &adw::HeaderBar::builder()
                 .title_widget(&gtk::Label::new(Some("Burrow")))
                 .build(),
         );
-        toolbar.add_bottom_bar(&view_switcher_bar);
-        toolbar.set_content(Some(&view_stack));
+        content.append(&view_stack);
+        content.append(&view_switcher_bar);
 
-        root.set_content(Some(&toolbar));
+        root.set_content(Some(&content));
 
         sender.input(AppMsg::PostInit);
 
