@@ -1,5 +1,8 @@
 # Linux GTK App Getting Started
 
+Currently, the GTK App can be built as a binary or as an AppImage.
+Note that the flatpak version can compile but will not run properly!
+
 ## Dependencies
 
 ### Install Build Dependencies
@@ -24,7 +27,7 @@
   3. Install appimage build tools (Optional)
   
   ```
-  sudo apt install -y wget fuse
+  sudo apt install -y wget fuse file
   ```
 
 </details>
@@ -35,7 +38,7 @@
   1. Install build dependencies
 
   ```
-  sudo dnf install -y clang ninja cmake meson gtk4-devel glib2-devel libadwaita-devel desktop-file-utils libappstream-glib
+  sudo dnf install -y clang ninja-build cmake meson gtk4-devel glib2-devel libadwaita-devel desktop-file-utils libappstream-glib
   ```
 
   2. Install flatpak builder (Optional)
@@ -47,7 +50,7 @@
   3. Install appimage build tools (Optional)
   
   ```
-  sudo dnf install -y wget fuse
+  sudo dnf install -y util-linux wget fuse fuse-libs file
   ```
 
 </details>
@@ -70,7 +73,7 @@
   3. Install appimage build tools (Optional)
   
   ```
-  sudo xbps-install -Sy wget fuse
+  sudo xbps-install -Sy wget fuse file
   ```
 
 </details>
