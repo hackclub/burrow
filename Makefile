@@ -17,6 +17,9 @@ daemon:
 start:
 	@$(cargo_norm) start
 
+stop:
+	@$(cargo_norm) stop
+
 test-dns:
 	@sudo route delete 8.8.8.8
 	@sudo route add 8.8.8.8 -interface utun$(tun_num)
