@@ -44,6 +44,17 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         }
     }
 
+    override func stopTunnel(with reason: NEProviderStopReason) async {
+        do {
+            let client = try Client()
+            let command = BurrowRequest(id: 0, command: "Stop")
+            let data = try await client.request(command, type: Response<BurrowResult<String>>.self)
+            self.logger.log("Stopped client.")
+        } catch {
+            self.logger.error("Failed to stop tunnel: \(error)")
+        }
+    }
+
     private func generateTunSettings(from: ServerConfigData) -> NETunnelNetworkSettings? {
         let cfig = from.ServerConfig
         let nst = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "1.1.1.1")

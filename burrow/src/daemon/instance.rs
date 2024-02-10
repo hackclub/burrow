@@ -21,7 +21,7 @@ enum RunState {
 pub struct DaemonInstance {
     rx: async_channel::Receiver<DaemonCommand>,
     sx: async_channel::Sender<DaemonResponse>,
-    tun_interface: Option<Arc<RwLock<TunInterface>>>,
+    tun_interface: Arc<RwLock<Option<TunInterface>>>,
     wg_interface: Arc<RwLock<Interface>>,
     wg_state: RunState,
 }
@@ -36,7 +36,7 @@ impl DaemonInstance {
             rx,
             sx,
             wg_interface,
-            tun_interface: None,
+            tun_interface: Arc::new(RwLock::new(None)),
             wg_state: RunState::Idle,
         }
     }
@@ -50,15 +50,15 @@ impl DaemonInstance {
                         warn!("Got start, but tun interface already up.");
                     }
                     RunState::Idle => {
-                        let tun_if = Arc::new(RwLock::new(st.tun.open()?));
+                        let tun_if = st.tun.open()?;
+                        debug!("Setting tun on wg_interface");
+                        self.wg_interface.read().await.set_tun(tun_if).await;
+                        debug!("tun set on wg_interface");
 
                         debug!("Setting tun_interface");
-                        self.tun_interface = Some(tun_if.clone());
+                        self.tun_interface = self.wg_interface.read().await.get_tun();
                         debug!("tun_interface set: {:?}", self.tun_interface);
 
-                        debug!("Setting tun on wg_interface");
-                        self.wg_interface.write().await.set_tun(tun_if);
-                        debug!("tun set on wg_interface");
 
                         debug!("Cloning wg_interface");
                         let tmp_wg = self.wg_interface.clone();
@@ -82,22 +82,18 @@ impl DaemonInstance {
                 }
                 Ok(DaemonResponseData::None)
             }
-            DaemonCommand::ServerInfo => match &self.tun_interface {
+            DaemonCommand::ServerInfo => match &self.tun_interface.read().await.as_ref() {
                 None => Ok(DaemonResponseData::None),
                 Some(ti) => {
                     info!("{:?}", ti);
                     Ok(DaemonResponseData::ServerInfo(ServerInfo::try_from(
-                        ti.read().await.inner.get_ref(),
+                        ti.inner.get_ref(),
                     )?))
                 }
             },
             DaemonCommand::Stop => {
-                if self.tun_interface.is_some() {
-                    self.tun_interface = None;
-                    info!("Daemon stopping tun interface.");
-                } else {
-                    warn!("Got stop, but tun interface is not up.")
-                }
+                self.wg_interface.read().await.remove_tun().await;
+                self.wg_state = RunState::Idle;
                 Ok(DaemonResponseData::None)
             }
             DaemonCommand::ServerConfig => {
