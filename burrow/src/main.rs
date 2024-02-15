@@ -8,6 +8,9 @@ pub(crate) mod tracing;
 mod wireguard;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
+mod auth;
+
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
 use daemon::{DaemonClient, DaemonCommand, DaemonStartOptions};
 use tun::TunOptions;
 
@@ -42,6 +45,10 @@ enum Commands {
     ServerInfo,
     /// Server config
     ServerConfig,
+    /// Authenticate with the Hack Club Slack
+    Auth,
+    /// Test serverside auth server
+    TestServerAuth,
 }
 
 #[derive(Args)]
@@ -142,6 +149,8 @@ async fn main() -> Result<()> {
         Commands::Daemon(_) => daemon::daemon_main(None, None).await?,
         Commands::ServerInfo => try_serverinfo().await?,
         Commands::ServerConfig => try_serverconfig().await?,
+        Commands::Auth => crate::auth::client::login().await?,
+        Commands::TestServerAuth => crate::auth::server::start_server().await?,
     }
 
     Ok(())
