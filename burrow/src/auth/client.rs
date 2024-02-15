@@ -1,5 +1,5 @@
 use anyhow::Result;
-use url::Url;
+use reqwest::Url;
 
 pub async fn login() -> Result<()> {
     let client_id = "2210535565.6646240622819";
