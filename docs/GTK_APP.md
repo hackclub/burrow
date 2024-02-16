@@ -24,7 +24,7 @@ Note that the flatpak version can compile but will not run properly!
   sudo apt install -y flatpak-builder
   ```
 
-  3. Install appimage build tools (Optional)
+  3. Install AppImage build tools (Optional)
   
   ```
   sudo apt install -y wget fuse file
@@ -47,7 +47,7 @@ Note that the flatpak version can compile but will not run properly!
   sudo dnf install -y flatpak-builder
   ```
 
-  3. Install appimage build tools (Optional)
+  3. Install AppImage build tools (Optional)
   
   ```
   sudo dnf install -y util-linux wget fuse fuse-libs file
@@ -70,7 +70,7 @@ Note that the flatpak version can compile but will not run properly!
   sudo xbps-install -Sy flatpak-builder
   ```
 
-  3. Install appimage build tools (Optional)
+  3. Install AppImage build tools (Optional)
   
   ```
   sudo xbps-install -Sy wget fuse file

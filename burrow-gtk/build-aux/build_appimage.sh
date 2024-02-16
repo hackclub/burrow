@@ -1,9 +1,10 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 BURROW_GTK_ROOT="$(readlink -f $(dirname -- "$(readlink -f -- "$BASH_SOURCE")")/..)"
 BURROW_GTK_BUILD="$BURROW_GTK_ROOT/build-appimage"
+LINUXDEPLOY_VERSION="${LINUXDEPLOY_VERSION:-"1-alpha-20240109-1"}"
 
 if [ "$BURROW_GTK_ROOT" != $(pwd) ]; then
     echo "Make sure to cd into burrow-gtk"
@@ -13,10 +14,10 @@ fi
 ARCHITECTURE=$(lscpu | grep Architecture | awk '{print $2}')
 
 if [ "$ARCHITECTURE" == "x86_64" ]; then
-    wget "https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20240109-1/linuxdeploy-x86_64.AppImage" -o /dev/null -O /tmp/linuxdeploy
+    wget "https://github.com/linuxdeploy/linuxdeploy/releases/download/$LINUXDEPLOY_VERSION/linuxdeploy-x86_64.AppImage" -o /dev/null -O /tmp/linuxdeploy
     chmod a+x /tmp/linuxdeploy
 elif [ "$ARCHITECTURE" == "aarch64" ]; then
-    wget "https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20240109-1/linuxdeploy-aarch64.AppImage" -o /dev/null -O /tmp/linuxdeploy
+    wget "https://github.com/linuxdeploy/linuxdeploy/releases/download/$LINUXDEPLOY_VERSION/linuxdeploy-aarch64.AppImage" -o /dev/null -O /tmp/linuxdeploy
     chmod a+x /tmp/linuxdeploy
 fi
 
