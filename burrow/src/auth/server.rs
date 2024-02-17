@@ -1,17 +1,10 @@
 use anyhow::Result;
-use axum::{
-    extract::Query,
-    http::StatusCode,
-    routing::{get, post},
-    Json,
-    Router,
-};
-use serde::{Deserialize, Serialize};
+use axum::{extract::Query, http::StatusCode, routing::get, Router};
+use reqwest::Url;
+use serde::Deserialize;
 
 pub async fn start_server() -> Result<()> {
-    let app = Router::new()
-        .route("/callback", get(callback))
-        .route("/users", post(create_user));
+    let app = Router::new().route("/callback", get(callback));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:4225").await.unwrap();
     axum::serve(listener, app).await.unwrap();
@@ -19,92 +12,140 @@ pub async fn start_server() -> Result<()> {
     Ok(())
 }
 
-async fn callback(Query(code): Query<String>) -> StatusCode {
-    let req = reqwest::get("https://slack.com/openid.connect.token").await;
+#[derive(Deserialize, Debug)]
+struct CallbackQuery {
+    code: String,
+}
+async fn callback(query: Query<CallbackQuery>) -> StatusCode {
+    let client = reqwest::Client::new();
+
+    let url: String;
+    {
+        // ...Yeah
+        let mut _url = Url::parse("https://slack.com/api/openid.connect.token").unwrap();
+        let mut q = _url.query_pairs_mut();
+        q.append_pair("client_id", super::client_id);
+        q.append_pair("client_secret", super::client_secret);
+        q.append_pair("code", &query.code);
+        q.append_pair("grant_type", "authorization_code");
+        q.append_pair("redirect_uri", "https://burrow.rs/callback");
+        drop(q);
+        url = _url.into();
+    }
+
+    let req = client.post(url).send().await;
     if req.is_err() {
-        // Couldn't fetch
+        println!("{:?}", req.err());
         return StatusCode::INTERNAL_SERVER_ERROR;
     }
-    let res = req.unwrap().json::<CodeExchangeResponse>().await;
+    let res = req.unwrap().json::<slack::CodeExchangeResponse>().await;
     if res.is_err() {
-        // Couldn't parse the returned JSON document.
+        println!("{:?}", res.err());
         return StatusCode::INTERNAL_SERVER_ERROR;
     }
     let data = res.unwrap();
 
     if !data.ok {
+        println!("not ok!");
         return StatusCode::INTERNAL_SERVER_ERROR;
     }
 
-    let payload = decode_jwt(data);
+    if let Some(access_token) = data.access_token {
+        let user = slack::fetch_slack_user(&access_token).await;
+        if user.is_err() {
+            println!("failed to fetch {:?}", user.err());
+            return StatusCode::INTERNAL_SERVER_ERROR;
+        }
+        let user = user.unwrap();
+        db::store_user(user, access_token, String::new()).expect("failed to store user in db");
 
-    StatusCode::CREATED
+        StatusCode::CREATED
+    } else {
+        StatusCode::INTERNAL_SERVER_ERROR
+    }
 }
 
-fn decode_jwt(input: CodeExchangeResponse) -> SlackUserPayload {
-    SlackUserPayload::default()
+mod slack {
+    use serde::Deserialize;
+
+    #[derive(Deserialize, Debug)]
+    pub struct CodeExchangeResponse {
+        pub ok: bool,
+
+        // Success
+        pub access_token: Option<String>,
+        token_type: Option<String>,
+        id_token: Option<String>,
+
+        // Failure
+        error: Option<String>,
+    }
+
+    #[derive(Deserialize)]
+    pub struct User {
+        pub sub: String,
+        pub name: String,
+    }
+
+    pub async fn fetch_slack_user(access_token: &str) -> Result<User, reqwest::Error> {
+        reqwest::get(format!(
+            "https://slack.com/api/openid.connect.userInfo?token={access_token}"
+        ))
+        .await?
+        .json::<User>()
+        .await
+    }
 }
 
-#[derive(Deserialize)]
-struct CodeExchangeResponse {
-    ok: bool,
-    access_token: String,
-    token_type: String,
-    id_token: String,
-}
+mod db {
+    use rusqlite::{params, Connection, Result};
 
-#[derive(Deserialize, Default)]
-struct SlackUserPayload {
-    iss: String,
-    sub: String,
-    aud: String,
-    exp: i64,
-    iat: i64,
-    auth_time: i64,
-    nonce: String,
-    at_hash: String,
-    #[serde(rename(deserialize = "https://slack.com/team_id"))]
-    team_id: String,
-    #[serde(rename(deserialize = "https://slack.com/user_id"))]
-    user_id: String,
-    email: String,
-    email_verified: bool,
-    date_email_verified: i64,
-    locale: String,
-    name: String,
-    given_name: String,
-    family_name: String,
-    #[serde(rename(deserialize = "https://slack.com/team_image_230"))]
-    team_image_230: String,
-    #[serde(rename(deserialize = "https://slack.com/team_image_default"))]
-    team_image_default: bool,
-}
+    #[derive(Debug)]
+    struct User {
+        id: i32,
+        created_at: String,
+    }
 
-async fn create_user(
-    // this argument tells axum to parse the request body
-    // as JSON into a `CreateUser` type
-    Json(payload): Json<CreateUser>,
-) -> (StatusCode, Json<User>) {
-    // insert your application logic here
-    let user = User {
-        id: 1337,
-        username: payload.username,
-    };
+    pub fn store_user(
+        openid_user: super::slack::User,
+        access_token: String,
+        refresh_token: String,
+    ) -> Result<()> {
+        let conn = Connection::open_in_memory()?;
 
-    // this will be converted into a JSON response
-    // with a status code of `201 Created`
-    (StatusCode::CREATED, Json(user))
-}
+        init_db(&conn)?;
 
-// the input to our `create_user` handler
-#[derive(Deserialize)]
-struct CreateUser {
-    username: String,
-}
+        conn.execute(
+            "INSERT INTO person (user_id, openid_provider, openid_user_id, openid_user_name, access_token, refresh_token) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            (0, "slack", openid_user.sub, openid_user.name, access_token, refresh_token),
+        )?;
 
-// the output to our `create_user` handler
-#[derive(Serialize)]
-struct User {
-    id: u64,
-    username: String,
+        Ok(())
+    }
+
+    fn init_db(conn: &rusqlite::Connection) -> Result<()> {
+        conn.execute(
+            "CREATE TABLE user (
+				id PRIMARY KEY
+				created_at TEXT NOT NULL
+			)",
+            (),
+        )?;
+
+        conn.execute(
+            "CREATE TABLE user_connection (
+			user_id INT REFERENCES user(id) ON DELETE CASCADE
+			openid_provider TEXT NOT NULL
+			openid_user_id TEXT NOT NULL
+			openid_user_name TEXT NOT NULL
+			access_token TEXT NOT NULL
+			refresh_token TEXT NOT NULL
+
+			PRIMARY KEY (openid_provider, openid_user_id)
+		)",
+            (),
+        )?;
+
+        Ok(())
+    }
 }

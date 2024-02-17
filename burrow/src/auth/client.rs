@@ -1,11 +1,11 @@
 use anyhow::Result;
 use reqwest::Url;
 
+use super::{client_id, hackclub_teamid};
+
 pub async fn login() -> Result<()> {
-    let client_id = "2210535565.6646240622819";
     let state = "vt :P";
     let nonce = "no";
-    let hackclub_teamid = "T0266FRGM";
 
     let mut url = Url::parse("https://slack.com/openid/connect/authorize")?;
     let mut q = url.query_pairs_mut();
