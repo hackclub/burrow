@@ -20,15 +20,16 @@ async fn callback(query: Query<CallbackQuery>) -> StatusCode {
     let client = reqwest::Client::new();
 
     let mut url = Url::parse("https://slack.com/api/openid.connect.token").unwrap();
-    let mut q = url.query_pairs_mut();
-    q.append_pair("client_id", super::client_id);
-    q.append_pair("client_secret", super::client_secret);
-    q.append_pair("code", &query.code);
-    q.append_pair("grant_type", "authorization_code");
-    q.append_pair("redirect_uri", "https://burrow.rs/callback");
-    drop(q);
+    {
+        let mut q = url.query_pairs_mut();
+        q.append_pair("client_id", super::client_id);
+        q.append_pair("client_secret", super::client_secret);
+        q.append_pair("code", &query.code);
+        q.append_pair("grant_type", "authorization_code");
+        q.append_pair("redirect_uri", "https://burrow.rs/callback");
+    }
 
-    let req = client.post(url.to_string()).send().await;
+    let req = client.post(url).send().await;
     if req.is_err() {
         println!("{:?}", req.err());
         return StatusCode::INTERNAL_SERVER_ERROR;
@@ -46,13 +47,14 @@ async fn callback(query: Query<CallbackQuery>) -> StatusCode {
     }
 
     if let Some(access_token) = data.access_token {
-        let user = slack::fetch_slack_user(&access_token).await;
-        if user.is_err() {
-            println!("failed to fetch {:?}", user.err());
-            return StatusCode::INTERNAL_SERVER_ERROR;
-        }
-        let user = user.unwrap();
-        db::store_user(user, access_token, String::new()).expect("failed to store user in db");
+        // println!("Access token is {access_token}");
+        // let user = slack::fetch_slack_user(&access_token).await;
+        // if user.is_err() {
+        //     println!("failed to fetch {:?}", user.err());
+        //     return StatusCode::INTERNAL_SERVER_ERROR;
+        // }
+        // let user = user.unwrap();
+        // db::store_user(user, access_token, String::new()).expect("failed to store user in db");
 
         StatusCode::CREATED
     } else {
