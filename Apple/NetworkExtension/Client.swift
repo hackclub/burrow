@@ -5,7 +5,7 @@ import Network
 final class Client {
     let connection: NWConnection
 
-    private let logger: Logger = Logger.logger(for: Client.self)
+    private let logger = Logger.logger(for: Client.self)
     private var generator = SystemRandomNumberGenerator()
 
     convenience init() throws {
