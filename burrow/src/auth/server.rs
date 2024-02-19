@@ -19,21 +19,16 @@ struct CallbackQuery {
 async fn callback(query: Query<CallbackQuery>) -> StatusCode {
     let client = reqwest::Client::new();
 
-    let url: String;
-    {
-        // ...Yeah
-        let mut _url = Url::parse("https://slack.com/api/openid.connect.token").unwrap();
-        let mut q = _url.query_pairs_mut();
-        q.append_pair("client_id", super::client_id);
-        q.append_pair("client_secret", super::client_secret);
-        q.append_pair("code", &query.code);
-        q.append_pair("grant_type", "authorization_code");
-        q.append_pair("redirect_uri", "https://burrow.rs/callback");
-        drop(q);
-        url = _url.into();
-    }
+    let mut url = Url::parse("https://slack.com/api/openid.connect.token").unwrap();
+    let mut q = url.query_pairs_mut();
+    q.append_pair("client_id", super::client_id);
+    q.append_pair("client_secret", super::client_secret);
+    q.append_pair("code", &query.code);
+    q.append_pair("grant_type", "authorization_code");
+    q.append_pair("redirect_uri", "https://burrow.rs/callback");
+    drop(q);
 
-    let req = client.post(url).send().await;
+    let req = client.post(url.to_string()).send().await;
     if req.is_err() {
         println!("{:?}", req.err());
         return StatusCode::INTERNAL_SERVER_ERROR;
