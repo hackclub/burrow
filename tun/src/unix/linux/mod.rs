@@ -2,7 +2,7 @@ use std::{
     fs::OpenOptions,
     io::{Error, Write},
     mem,
-    net::{Ipv4Addr, Ipv6Addr, SocketAddrV4},
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddrV4},
     os::{
         fd::RawFd,
         unix::io::{AsRawFd, FromRawFd, IntoRawFd},
@@ -15,7 +15,7 @@ use socket2::{Domain, SockAddr, Socket, Type};
 use tracing::{info, instrument};
 
 use super::{ifname_to_string, string_to_ifname};
-use crate::TunOptions;
+use crate::{syscall, TunOptions};
 
 mod sys;
 
