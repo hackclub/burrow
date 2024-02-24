@@ -137,7 +137,6 @@ impl AsyncComponent for App {
                     }
                 }
 
-                eprintln!("{:?}", daemon_client);
                 if disconnected_daemon_client || daemon_client.is_none() {
                     match DaemonClient::new().await {
                         Ok(new_daemon_client) => {

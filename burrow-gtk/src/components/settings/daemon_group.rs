@@ -63,9 +63,6 @@ impl AsyncComponent for DaemonGroup {
     ) {
         match msg {
             DaemonGroupMsg::LaunchLocal => {
-                //  TODO: Handle error checking
-                //  TODO: Handle privilege escalation bug
-
                 let burrow_original_bin = std::env::vars()
                     .find(|(k, _)| k == "APPDIR")
                     .map(|(_, v)| v + "/usr/bin/burrow")
@@ -75,28 +72,23 @@ impl AsyncComponent for DaemonGroup {
                     String::from_utf8(Command::new("mktemp").output().unwrap().stdout).unwrap();
                 burrow_bin.pop();
 
-                Command::new("cp")
-                    .arg(&burrow_original_bin)
-                    .arg(&burrow_bin)
-                    .output()
-                    .unwrap();
+                let privileged_spawn_script = format!(
+                    r#"TEMP=$(mktemp -p /root)
+cp {} $TEMP
+chmod +x $TEMP
+setcap CAP_NET_BIND_SERVICE,CAP_NET_ADMIN+eip $TEMP
+mv $TEMP /tmp/burrow-detached-daemon"#,
+                    burrow_original_bin
+                )
+                .replace('\n', "&&");
 
-                Command::new("chmod")
-                    .arg("+x")
-                    .arg(&burrow_bin)
-                    .output()
-                    .unwrap();
+                //  TODO: Handle error condition
 
                 Command::new("pkexec")
-                    .arg("setcap")
-                    .arg("CAP_NET_BIND_SERVICE,CAP_NET_ADMIN+eip")
+                    .arg("sh")
+                    .arg("-c")
+                    .arg(privileged_spawn_script)
                     .arg(&burrow_bin)
-                    .output()
-                    .unwrap();
-
-                Command::new("mv")
-                    .arg(&burrow_bin)
-                    .arg("/tmp/burrow-detached-daemon")
                     .output()
                     .unwrap();
 
@@ -108,7 +100,6 @@ impl AsyncComponent for DaemonGroup {
             }
             DaemonGroupMsg::DaemonStateChange => {
                 self.already_running = self.daemon_client.lock().await.is_some();
-                eprintln!("Update");
             }
         }
     }
