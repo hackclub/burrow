@@ -3,6 +3,7 @@ import AppKit
 import SwiftUI
 
 @MainActor
+@NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
     private let quitItem: NSMenuItem = {
         let quitItem = NSMenuItem(
@@ -16,7 +17,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }()
 
     private let toggleItem: NSMenuItem = {
-        let toggleView = NSHostingView(rootView: MenuItemToggleView(tunnel: BurrowApp.tunnel))
+        let toggleView = NSHostingView(rootView: MenuItemToggleView())
         toggleView.frame.size = CGSize(width: 300, height: 32)
         toggleView.autoresizingMask = [.width]
 

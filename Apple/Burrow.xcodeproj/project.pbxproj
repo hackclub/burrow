@@ -9,24 +9,32 @@
 /* Begin PBXBuildFile section */
 		0B28F1562ABF463A000D44B0 /* DataTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B28F1552ABF463A000D44B0 /* DataTypes.swift */; };
 		0B46E8E02AC918CA00BA2A3C /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B46E8DF2AC918CA00BA2A3C /* Client.swift */; };
-		43AA26D82A10004900F14CE6 /* MenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AA26D72A10004900F14CE6 /* MenuView.swift */; };
+		43AA26D82A10004900F14CE6 /* MenuItemToggleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AA26D72A10004900F14CE6 /* MenuItemToggleView.swift */; };
 		D00117312B2FFFC900D87C25 /* NWConnection+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */; };
 		D00117332B3001A400D87C25 /* NewlineProtocolFramer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */; };
 		D001173B2B30341C00D87C25 /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D001173A2B30341C00D87C25 /* Logging.swift */; };
 		D00117442B30372900D87C25 /* libBurrowShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D00117382B30341C00D87C25 /* libBurrowShared.a */; };
 		D00117452B30372C00D87C25 /* libBurrowShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D00117382B30341C00D87C25 /* libBurrowShared.a */; };
 		D00AA8972A4669BC005C8102 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00AA8962A4669BC005C8102 /* AppDelegate.swift */; };
+		D01A79312B81630D0024EC91 /* NetworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01A79302B81630D0024EC91 /* NetworkView.swift */; };
 		D020F65829E4A697002790F6 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D020F65729E4A697002790F6 /* PacketTunnelProvider.swift */; };
 		D020F65D29E4A697002790F6 /* BurrowNetworkExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D020F65329E4A697002790F6 /* BurrowNetworkExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D032E6522B8A79C20006B8AD /* HackClub.swift in Sources */ = {isa = PBXBuildFile; fileRef = D032E6512B8A79C20006B8AD /* HackClub.swift */; };
+		D032E6542B8A79DA0006B8AD /* WireGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D032E6532B8A79DA0006B8AD /* WireGuard.swift */; };
 		D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */; };
-		D05B9F7829E39EEC008CB1F9 /* TunnelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7729E39EEC008CB1F9 /* TunnelView.swift */; };
+		D05B9F7829E39EEC008CB1F9 /* BurrowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7729E39EEC008CB1F9 /* BurrowView.swift */; };
 		D05B9F7A29E39EED008CB1F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D05B9F7929E39EED008CB1F9 /* Assets.xcassets */; };
+		D05EF8C82B81818D0017AB4F /* FloatingButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05EF8C72B81818D0017AB4F /* FloatingButtonStyle.swift */; };
 		D08252762B5C9FC4005DA378 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08252752B5C9FC4005DA378 /* Constants.swift */; };
+		D09150422B9D2AF700BE3CB0 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = D09150412B9D2AF700BE3CB0 /* MainMenu.xib */; };
 		D0BCC5FD2A086D4700AD070D /* NetworkExtension+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */; };
-		D0BCC5FF2A086E1C00AD070D /* Status.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BCC5FE2A086E1C00AD070D /* Status.swift */; };
 		D0BCC6082A0981FE00AD070D /* Tunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B98FC629FDC5B5004E7149 /* Tunnel.swift */; };
 		D0BCC6092A09A03E00AD070D /* libburrow.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0BCC6032A09535900AD070D /* libburrow.a */; };
 		D0BCC60A2A09A0B800AD070D /* build-rust.sh in Resources */ = {isa = PBXBuildFile; fileRef = D0B98FBF29FD8072004E7149 /* build-rust.sh */; };
+		D0FAB5922B818A5900F6A84B /* NetworkExtensionTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FAB5912B818A5900F6A84B /* NetworkExtensionTunnel.swift */; };
+		D0FAB5962B818B2900F6A84B /* TunnelButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FAB5952B818B2900F6A84B /* TunnelButton.swift */; };
+		D0FAB5982B818B8200F6A84B /* TunnelStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FAB5972B818B8200F6A84B /* TunnelStatusView.swift */; };
+		D0FAB59A2B818B9600F6A84B /* Network.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FAB5992B818B9600F6A84B /* Network.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,7 +78,7 @@
 /* Begin PBXFileReference section */
 		0B28F1552ABF463A000D44B0 /* DataTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTypes.swift; sourceTree = "<group>"; };
 		0B46E8DF2AC918CA00BA2A3C /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
-		43AA26D72A10004900F14CE6 /* MenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuView.swift; sourceTree = "<group>"; };
+		43AA26D72A10004900F14CE6 /* MenuItemToggleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuItemToggleView.swift; sourceTree = "<group>"; };
 		D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NWConnection+Async.swift"; sourceTree = "<group>"; };
 		D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewlineProtocolFramer.swift; sourceTree = "<group>"; };
 		D00117382B30341C00D87C25 /* libBurrowShared.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBurrowShared.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -78,6 +86,7 @@
 		D00117412B30347800D87C25 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
 		D00117422B30348D00D87C25 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
 		D00AA8962A4669BC005C8102 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		D01A79302B81630D0024EC91 /* NetworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkView.swift; sourceTree = "<group>"; };
 		D020F63D29E4A1FF002790F6 /* Identity.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Identity.xcconfig; sourceTree = "<group>"; };
 		D020F64029E4A1FF002790F6 /* Compiler.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Compiler.xcconfig; sourceTree = "<group>"; };
 		D020F64229E4A1FF002790F6 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -92,19 +101,26 @@
 		D020F66729E4A95D002790F6 /* NetworkExtension-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "NetworkExtension-iOS.entitlements"; sourceTree = "<group>"; };
 		D020F66829E4AA74002790F6 /* App-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "App-iOS.entitlements"; sourceTree = "<group>"; };
 		D020F66929E4AA74002790F6 /* App-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "App-macOS.entitlements"; sourceTree = "<group>"; };
+		D032E6512B8A79C20006B8AD /* HackClub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HackClub.swift; sourceTree = "<group>"; };
+		D032E6532B8A79DA0006B8AD /* WireGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireGuard.swift; sourceTree = "<group>"; };
 		D05B9F7229E39EEC008CB1F9 /* Burrow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Burrow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowApp.swift; sourceTree = "<group>"; };
-		D05B9F7729E39EEC008CB1F9 /* TunnelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelView.swift; sourceTree = "<group>"; };
+		D05B9F7729E39EEC008CB1F9 /* BurrowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowView.swift; sourceTree = "<group>"; };
 		D05B9F7929E39EED008CB1F9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D05EF8C72B81818D0017AB4F /* FloatingButtonStyle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FloatingButtonStyle.swift; sourceTree = "<group>"; };
 		D08252742B5C9DEB005DA378 /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		D08252752B5C9FC4005DA378 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		D09150412B9D2AF700BE3CB0 /* MainMenu.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		D0B98FBF29FD8072004E7149 /* build-rust.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-rust.sh"; sourceTree = "<group>"; };
 		D0B98FC629FDC5B5004E7149 /* Tunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tunnel.swift; sourceTree = "<group>"; };
 		D0B98FD829FDDB6F004E7149 /* libburrow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libburrow.h; sourceTree = "<group>"; };
 		D0B98FDC29FDDDCF004E7149 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
 		D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NetworkExtension+Async.swift"; sourceTree = "<group>"; };
-		D0BCC5FE2A086E1C00AD070D /* Status.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Status.swift; sourceTree = "<group>"; };
 		D0BCC6032A09535900AD070D /* libburrow.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libburrow.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0FAB5912B818A5900F6A84B /* NetworkExtensionTunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkExtensionTunnel.swift; sourceTree = "<group>"; };
+		D0FAB5952B818B2900F6A84B /* TunnelButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelButton.swift; sourceTree = "<group>"; };
+		D0FAB5972B818B8200F6A84B /* TunnelStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelStatusView.swift; sourceTree = "<group>"; };
+		D0FAB5992B818B9600F6A84B /* Network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Network.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,14 +151,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		43AA26D62A0FFFD000F14CE6 /* Menu */ = {
-			isa = PBXGroup;
-			children = (
-				43AA26D72A10004900F14CE6 /* MenuView.swift */,
-			);
-			path = Menu;
-			sourceTree = "<group>";
-		};
 		D00117392B30341C00D87C25 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
@@ -199,6 +207,16 @@
 			path = NetworkExtension;
 			sourceTree = "<group>";
 		};
+		D032E64D2B8A69C90006B8AD /* Networks */ = {
+			isa = PBXGroup;
+			children = (
+				D0FAB5992B818B9600F6A84B /* Network.swift */,
+				D032E6512B8A79C20006B8AD /* HackClub.swift */,
+				D032E6532B8A79DA0006B8AD /* WireGuard.swift */,
+			);
+			path = Networks;
+			sourceTree = "<group>";
+		};
 		D05B9F6929E39EEC008CB1F9 = {
 			isa = PBXGroup;
 			children = (
@@ -224,14 +242,20 @@
 		D05B9F7429E39EEC008CB1F9 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				43AA26D62A0FFFD000F14CE6 /* Menu */,
 				D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */,
 				D00AA8962A4669BC005C8102 /* AppDelegate.swift */,
-				D05B9F7729E39EEC008CB1F9 /* TunnelView.swift */,
+				43AA26D72A10004900F14CE6 /* MenuItemToggleView.swift */,
+				D05B9F7729E39EEC008CB1F9 /* BurrowView.swift */,
+				D01A79302B81630D0024EC91 /* NetworkView.swift */,
+				D032E64D2B8A69C90006B8AD /* Networks */,
+				D0FAB5972B818B8200F6A84B /* TunnelStatusView.swift */,
+				D0FAB5952B818B2900F6A84B /* TunnelButton.swift */,
 				D0B98FC629FDC5B5004E7149 /* Tunnel.swift */,
-				D0BCC5FE2A086E1C00AD070D /* Status.swift */,
+				D0FAB5912B818A5900F6A84B /* NetworkExtensionTunnel.swift */,
 				D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */,
+				D05EF8C72B81818D0017AB4F /* FloatingButtonStyle.swift */,
 				D05B9F7929E39EED008CB1F9 /* Assets.xcassets */,
+				D09150412B9D2AF700BE3CB0 /* MainMenu.xib */,
 				D020F66829E4AA74002790F6 /* App-iOS.entitlements */,
 				D020F66929E4AA74002790F6 /* App-macOS.entitlements */,
 				D020F64929E4A34B002790F6 /* App.xcconfig */,
@@ -369,6 +393,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D05B9F7A29E39EED008CB1F9 /* Assets.xcassets in Resources */,
+				D09150422B9D2AF700BE3CB0 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -423,12 +448,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D0FAB59A2B818B9600F6A84B /* Network.swift in Sources */,
 				D0BCC6082A0981FE00AD070D /* Tunnel.swift in Sources */,
-				43AA26D82A10004900F14CE6 /* MenuView.swift in Sources */,
-				D05B9F7829E39EEC008CB1F9 /* TunnelView.swift in Sources */,
-				D0BCC5FF2A086E1C00AD070D /* Status.swift in Sources */,
+				D0FAB5982B818B8200F6A84B /* TunnelStatusView.swift in Sources */,
+				43AA26D82A10004900F14CE6 /* MenuItemToggleView.swift in Sources */,
+				D05B9F7829E39EEC008CB1F9 /* BurrowView.swift in Sources */,
+				D0FAB5922B818A5900F6A84B /* NetworkExtensionTunnel.swift in Sources */,
+				D0FAB5962B818B2900F6A84B /* TunnelButton.swift in Sources */,
 				D00AA8972A4669BC005C8102 /* AppDelegate.swift in Sources */,
+				D05EF8C82B81818D0017AB4F /* FloatingButtonStyle.swift in Sources */,
+				D032E6522B8A79C20006B8AD /* HackClub.swift in Sources */,
 				D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */,
+				D01A79312B81630D0024EC91 /* NetworkView.swift in Sources */,
+				D032E6542B8A79DA0006B8AD /* WireGuard.swift in Sources */,
 				D0BCC5FD2A086D4700AD070D /* NetworkExtension+Async.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -568,8 +600,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/realm/SwiftLint.git";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.54.0;
+				branch = main;
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

@@ -7,6 +7,7 @@ public enum Constants {
 
     public static let bundleIdentifier = AppBundleIdentifier
     public static let appGroupIdentifier = AppGroupIdentifier
+    public static let networkExtensionBundleIdentifier = NetworkExtensionBundleIdentifier
 
     public static var groupContainerURL: URL {
         get throws { try _groupContainerURL.get() }

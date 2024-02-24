@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser.git",
       "state" : {
-        "revision" : "fee6933f37fde9a5e12a1e4aeaa93fe60116ff2a",
-        "version" : "1.2.2"
+        "revision" : "8f4d2753f0e4778c76d5f05ad16c74f707390531",
+        "version" : "1.2.3"
       }
     },
     {
@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-syntax.git",
       "state" : {
-        "revision" : "6ad4ea24b01559dde0773e3d091f1b9e36175036",
-        "version" : "509.0.2"
+        "revision" : "64889f0c732f210a935a0ad7cda38f77f876262d",
+        "version" : "509.1.1"
       }
     },
     {
@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/realm/SwiftLint.git",
       "state" : {
-        "revision" : "f17a4f9dfb6a6afb0408426354e4180daaf49cee",
-        "version" : "0.54.0"
+        "branch" : "main",
+        "revision" : "7595ad3fafc1a31086dc40ba01fd898bf6b42d5f"
       }
     },
     {
@@ -68,8 +68,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/drmohundro/SWXMLHash.git",
       "state" : {
-        "revision" : "4d0f62f561458cbe1f732171e625f03195151b60",
-        "version" : "7.0.1"
+        "revision" : "a853604c9e9a83ad9954c7e3d2a565273982471f",
+        "version" : "7.0.2"
       }
     },
     {

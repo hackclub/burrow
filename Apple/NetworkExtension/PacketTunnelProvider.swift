@@ -6,10 +6,16 @@ import os
 class PacketTunnelProvider: NEPacketTunnelProvider {
     private let logger = Logger.logger(for: PacketTunnelProvider.self)
 
-    override func startTunnel(options: [String: NSObject]? = nil) async throws {
+    override init() {
         do {
             libburrow.spawnInProcess(socketPath: try Constants.socketURL.path)
+        } catch {
+            logger.error("Failed to spawn: \(error)")
+        }
+    }
 
+    override func startTunnel(options: [String: NSObject]? = nil) async throws {
+        do {
             let client = try Client()
 
             let command = BurrowRequest(id: 0, command: "ServerConfig")
