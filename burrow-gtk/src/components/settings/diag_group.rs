@@ -52,7 +52,7 @@ impl AsyncComponent for DiagGroup {
 
             adw::ActionRow {
                 #[watch]
-                set_title: &format!("Init System: {}", model.init_system)
+                set_title: &format!("System Type: {}", model.init_system)
             },
             adw::ActionRow {
                 #[watch]
