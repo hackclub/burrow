@@ -15,7 +15,7 @@ use socket2::{Domain, SockAddr, Socket, Type};
 use tracing::{info, instrument};
 
 use super::{ifname_to_string, string_to_ifname};
-use crate::{syscall, TunOptions};
+use crate::TunOptions;
 
 mod sys;
 
