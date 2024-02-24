@@ -1,6 +1,5 @@
 use rusqlite::{Connection, params};
 use anyhow::Result;
-use clap::builder::Str;
 use crate::wireguard::config::{Config, Interface, Peer};
 
 pub fn prepare_db(conn: &Connection) -> Result<()> {
