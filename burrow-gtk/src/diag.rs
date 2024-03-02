@@ -15,7 +15,7 @@ pub enum StatusTernary {
 //  Realistically, we may not explicitly "support" non-systemd platforms which would simply this
 //  code greatly.
 //  Along with replacing [`StatusTernary`] with good old [`bool`].
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SystemSetup {
     Systemd,
     AppImage,

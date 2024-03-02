@@ -3,12 +3,14 @@ use std::process::Command;
 
 #[derive(Debug)]
 pub struct DaemonGroup {
+    system_setup: SystemSetup,
     daemon_client: Arc<Mutex<Option<DaemonClient>>>,
     already_running: bool,
 }
 
 pub struct DaemonGroupInit {
     pub daemon_client: Arc<Mutex<Option<DaemonClient>>>,
+    pub system_setup: SystemSetup,
 }
 
 #[derive(Debug)]
@@ -28,7 +30,9 @@ impl AsyncComponent for DaemonGroup {
         #[name(group)]
         adw::PreferencesGroup {
             #[watch]
-            set_sensitive: diag::is_appimage() && !model.already_running,
+            set_sensitive: 
+                (model.system_setup == SystemSetup::AppImage || model.system_setup == SystemSetup::Other) && 
+                !model.already_running,
             set_title: "Local Daemon",
             set_description: Some("Run Local Daemon"),
 
@@ -46,6 +50,7 @@ impl AsyncComponent for DaemonGroup {
     ) -> AsyncComponentParts<Self> {
         //  Should be impossible to panic here
         let model = DaemonGroup {
+            system_setup: init.system_setup,
             daemon_client: init.daemon_client.clone(),
             already_running: init.daemon_client.lock().await.is_some(),
         };

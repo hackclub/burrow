@@ -1,4 +1,5 @@
 use super::*;
+use diag::SystemSetup;
 
 pub struct SettingsScreen {
     diag_group: AsyncController<settings::DiagGroup>,
@@ -30,8 +31,11 @@ impl SimpleComponent for SettingsScreen {
         root: &Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
+        let system_setup = SystemSetup::new();
+
         let diag_group = settings::DiagGroup::builder()
             .launch(settings::DiagGroupInit {
+                system_setup,
                 daemon_client: Arc::clone(&init.daemon_client),
             })
             .forward(sender.input_sender(), |_| {
@@ -40,6 +44,7 @@ impl SimpleComponent for SettingsScreen {
 
         let daemon_group = settings::DaemonGroup::builder()
             .launch(settings::DaemonGroupInit {
+                system_setup,
                 daemon_client: Arc::clone(&init.daemon_client),
             })
             .forward(sender.input_sender(), |_| {

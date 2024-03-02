@@ -1,4 +1,5 @@
 use super::*;
+use diag::{StatusTernary, SystemSetup};
 
 mod daemon_group;
 mod diag_group;

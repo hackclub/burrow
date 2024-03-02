@@ -1,11 +1,10 @@
 use super::*;
-use diag::{StatusTernary, SystemSetup};
 
 #[derive(Debug)]
 pub struct DiagGroup {
     daemon_client: Arc<Mutex<Option<DaemonClient>>>,
 
-    init_system: SystemSetup,
+    system_setup: SystemSetup,
     service_installed: StatusTernary,
     socket_installed: StatusTernary,
     socket_enabled: StatusTernary,
@@ -14,19 +13,20 @@ pub struct DiagGroup {
 
 pub struct DiagGroupInit {
     pub daemon_client: Arc<Mutex<Option<DaemonClient>>>,
+    pub system_setup: SystemSetup,
 }
 
 impl DiagGroup {
     async fn new(daemon_client: Arc<Mutex<Option<DaemonClient>>>) -> Result<Self> {
-        let setup = SystemSetup::new();
+        let system_setup = SystemSetup::new();
         let daemon_running = daemon_client.lock().await.is_some();
 
         Ok(Self {
-            service_installed: setup.is_service_installed()?,
-            socket_installed: setup.is_socket_installed()?,
-            socket_enabled: setup.is_socket_enabled()?,
+            service_installed: system_setup.is_service_installed()?,
+            socket_installed: system_setup.is_socket_installed()?,
+            socket_enabled: system_setup.is_socket_enabled()?,
             daemon_running,
-            init_system: setup,
+            system_setup,
             daemon_client,
         })
     }
@@ -52,7 +52,7 @@ impl AsyncComponent for DiagGroup {
 
             adw::ActionRow {
                 #[watch]
-                set_title: &format!("System Type: {}", model.init_system)
+                set_title: &format!("System Type: {}", model.system_setup)
             },
             adw::ActionRow {
                 #[watch]
