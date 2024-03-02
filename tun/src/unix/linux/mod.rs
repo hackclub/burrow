@@ -11,6 +11,7 @@ use std::{
 
 use fehler::throws;
 use libc::in6_ifreq;
+use rtnetlink::new_connection;
 use socket2::{Domain, SockAddr, Socket, Type};
 use tracing::{info, instrument};
 
@@ -93,6 +94,15 @@ impl TunInterface {
         let mut iff = self.ifreq()?;
         self.perform(|fd| unsafe { sys::if_get_index(fd, &mut iff) })?;
         unsafe { iff.ifr_ifru.ifru_ifindex }
+    }
+
+    #[throws]
+    #[instrument]
+    pub fn set_up(&self, up: bool) {
+        let connection = new_connection()?;
+        let handle = connection.1;
+        let link = handle.link().set(self.index()? as u32);
+        if up { link.up() } else { link.down() }
     }
 
     #[throws]

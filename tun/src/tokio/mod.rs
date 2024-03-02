@@ -1,6 +1,6 @@
 use std::io;
 
-use tokio::io::unix::AsyncFd;
+use tokio::io::unix::{AsyncFd, TryIoError};
 use tracing::instrument;
 
 #[derive(Debug)]
@@ -13,6 +13,13 @@ impl TunInterface {
     pub fn new(mut tun: crate::TunInterface) -> io::Result<Self> {
         tun.set_nonblocking(true)?;
         Ok(Self { inner: AsyncFd::new(tun)? })
+    }
+
+    #[instrument]
+    pub async fn set_up(&self, up: bool) -> io::Result<()> {
+        let mut guard = self.inner.readable().await?;
+        guard.try_io(|inner| inner.get_ref().set_up(up));
+        Ok(())
     }
 
     #[instrument]
