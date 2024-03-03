@@ -17,9 +17,7 @@ impl TunInterface {
 
     #[instrument]
     pub async fn set_up(&self, up: bool) -> io::Result<()> {
-        let mut guard = self.inner.readable().await?;
-        guard.try_io(|inner| inner.get_ref().set_up(up));
-        Ok(())
+        self.inner.get_ref().set_up(up)
     }
 
     #[instrument]
