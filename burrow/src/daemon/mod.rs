@@ -13,6 +13,7 @@ pub use net::{DaemonClient, Listener};
 pub use response::{DaemonResponse, DaemonResponseData, ServerInfo};
 use tokio::sync::{Notify, RwLock};
 use tracing::{error, info};
+use crate::database::{get_connection, load_interface};
 
 use crate::wireguard::{Config, Interface};
 
@@ -32,7 +33,8 @@ pub async fn daemon_main(path: Option<&Path>, notify_ready: Option<Arc<Notify>>)
     }
     let listener = listener?;
 
-    let config = Config::default();
+    let conn = get_connection()?;
+    let config = load_interface(&conn, "0".into())?;
     let iface: Interface = config.try_into()?;
     let mut instance = DaemonInstance::new(commands_rx, response_tx, Arc::new(RwLock::new(iface)));
 
