@@ -14,6 +14,8 @@ use tun::TunOptions;
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 use crate::daemon::DaemonResponseData;
 
+pub mod database;
+
 #[derive(Parser)]
 #[command(name = "Burrow")]
 #[command(author = "Hack Club <team@hackclub.com>")]

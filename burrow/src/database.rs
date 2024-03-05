@@ -2,6 +2,12 @@ use rusqlite::{Connection, params};
 use anyhow::Result;
 use crate::wireguard::config::{Config, Interface, Peer};
 
+#[cfg(target_vendor = "apple")]
+const DB_PATH: &str = "burrow.db";
+
+#[cfg(not(target_vendor = "apple"))]
+const DB_PATH: &str = "/var/lib/burrow/burrow.db";
+
 pub fn prepare_db(conn: &Connection) -> Result<()> {
     conn.execute("CREATE TABLE IF NOT EXISTS wg_interface (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,6 +24,9 @@ pub fn prepare_db(conn: &Connection) -> Result<()> {
         public_key TEXT NOT NULL,
         allowed_ips TEXT NOT NULL,
         preshared_key TEXT
+    )", [])?;
+    conn.execute("CREATE TABLE IF NOT EXISTS network (
+        interface_id INT REFERENCES wg_interface(id) ON UPDATE CASCADE
     )", [])?;
     Ok(())
 }
@@ -70,13 +79,20 @@ pub fn dump_interface(conn: &Connection, config: &Config) -> Result<()> {
     Ok(())
 }
 
+pub fn get_connection() -> Result<Connection> {
+    let p = std::path::Path::new(DB_PATH);
+    Ok(Connection::open(p)?)
+}
+
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
     use super::*;
 
     #[test]
     fn test_db() {
-        let conn = Connection::open_in_memory().unwrap();
+        let p = Path::new(DB_PATH);
+        let conn = Connection::open(p).unwrap();
         prepare_db(&conn).unwrap();
         let config = Config::default();
         dump_interface(&conn, &config).unwrap();
