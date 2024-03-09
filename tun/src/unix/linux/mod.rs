@@ -11,7 +11,6 @@ use std::{
 
 use fehler::throws;
 use libc::in6_ifreq;
-use rtnetlink::new_connection;
 use socket2::{Domain, SockAddr, Socket, Type};
 use tracing::{info, instrument};
 
@@ -99,10 +98,19 @@ impl TunInterface {
     #[throws]
     #[instrument]
     pub fn set_up(&self, up: bool) {
-        let connection = new_connection()?;
-        let handle = connection.1;
-        let link = handle.link().set(self.index()? as u32);
-        if up { link.up() } else { link.down() }
+        let mut inter = interfaces::Interface::get_by_name(&self.name()?)
+            .unwrap()
+            .unwrap();
+        inter.set_up(up).unwrap();
+    }
+
+    #[throws]
+    #[instrument]
+    pub fn is_up(&self) -> bool {
+        let inter = interfaces::Interface::get_by_name(&self.name()?)
+            .unwrap()
+            .unwrap();
+        inter.is_up()
     }
 
     #[throws]

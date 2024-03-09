@@ -16,8 +16,8 @@ impl TunInterface {
     }
 
     #[instrument]
-    pub async fn set_up(&self, up: bool) -> io::Result<()> {
-        self.inner.get_ref().set_up(up)
+    pub fn set_up(&self, up: bool) -> io::Result<()> {
+        self.inner.get_ref().set_up(up) 
     }
 
     #[instrument]
