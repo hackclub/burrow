@@ -18,3 +18,4 @@ mod settings_screen;
 mod switch_screen;
 
 pub use app::*;
+pub use settings::{DaemonGroupMsg, DiagGroupMsg};

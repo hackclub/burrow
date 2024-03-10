@@ -15,15 +15,18 @@ pub enum StatusTernary {
 //  Realistically, we may not explicitly "support" non-systemd platforms which would simply this
 //  code greatly.
 //  Along with replacing [`StatusTernary`] with good old [`bool`].
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SystemSetup {
     Systemd,
+    AppImage,
     Other,
 }
 
 impl SystemSetup {
     pub fn new() -> Self {
-        if Command::new("systemctl").arg("--version").output().is_ok() {
+        if is_appimage() {
+            SystemSetup::AppImage
+        } else if Command::new("systemctl").arg("--version").output().is_ok() {
             SystemSetup::Systemd
         } else {
             SystemSetup::Other
@@ -33,6 +36,7 @@ impl SystemSetup {
     pub fn is_service_installed(&self) -> Result<StatusTernary> {
         match self {
             SystemSetup::Systemd => Ok(fs::metadata(SYSTEMD_SERVICE_LOC).is_ok().into()),
+            SystemSetup::AppImage => Ok(StatusTernary::NA),
             SystemSetup::Other => Ok(StatusTernary::NA),
         }
     }
@@ -40,6 +44,7 @@ impl SystemSetup {
     pub fn is_socket_installed(&self) -> Result<StatusTernary> {
         match self {
             SystemSetup::Systemd => Ok(fs::metadata(SYSTEMD_SOCKET_LOC).is_ok().into()),
+            SystemSetup::AppImage => Ok(StatusTernary::NA),
             SystemSetup::Other => Ok(StatusTernary::NA),
         }
     }
@@ -55,6 +60,7 @@ impl SystemSetup {
                 let output = String::from_utf8(output)?;
                 Ok((output == "enabled\n").into())
             }
+            SystemSetup::AppImage => Ok(StatusTernary::NA),
             SystemSetup::Other => Ok(StatusTernary::NA),
         }
     }
@@ -74,7 +80,12 @@ impl Display for SystemSetup {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
             SystemSetup::Systemd => "Systemd",
+            SystemSetup::AppImage => "AppImage",
             SystemSetup::Other => "Other",
         })
     }
+}
+
+pub fn is_appimage() -> bool {
+    std::env::vars().any(|(k, _)| k == "APPDIR")
 }
