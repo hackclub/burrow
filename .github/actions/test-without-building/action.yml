@@ -19,19 +19,16 @@ runs:
   using: composite
   steps:
   - shell: bash
-    id: vars
-    run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-  - shell: bash
     working-directory: Apple
     run: |
       xcodebuild test-without-building \
       -scheme '${{ inputs.scheme }}' \
       -destination '${{ inputs.destination }}' \
       ${{ inputs.test-plan && '-testPlan ' }}${{ inputs.test-plan }} \
-      -resultBundlePath "${{ inputs.artifact-prefix }}-${{ steps.vars.outputs.sha_short }}.xcresult"
+      -resultBundlePath "${{ inputs.artifact-prefix }}.xcresult"
   - uses: kishikawakatsumi/xcresulttool@v1
     if: always()
     with:
-      path: Apple/${{ inputs.artifact-prefix }}-${{ steps.vars.outputs.sha_short }}.xcresult
+      path: Apple/${{ inputs.artifact-prefix }}.xcresult
       title: ${{ inputs.check-name }}
       show-passed-tests: false

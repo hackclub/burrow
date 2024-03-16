@@ -1,0 +1,21 @@
+name: Create Release If Needed
+on:
+  workflow_dispatch:
+  schedule:
+  - cron: '0 10 * * *'
+concurrency:
+  group: ${{ github.workflow }}
+jobs:
+  create:
+    name: Create Release If Needed
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - shell: bash
+      run: |
+        if [[ $(Tools/version.sh status) == "dirty" ]]; then
+          gh workflow run release-now.yml
+        fi

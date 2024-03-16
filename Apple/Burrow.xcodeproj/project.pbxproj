@@ -30,7 +30,6 @@
 		D0BCC5FD2A086D4700AD070D /* NetworkExtension+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */; };
 		D0BCC6082A0981FE00AD070D /* Tunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B98FC629FDC5B5004E7149 /* Tunnel.swift */; };
 		D0BCC6092A09A03E00AD070D /* libburrow.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0BCC6032A09535900AD070D /* libburrow.a */; };
-		D0BCC60A2A09A0B800AD070D /* build-rust.sh in Resources */ = {isa = PBXBuildFile; fileRef = D0B98FBF29FD8072004E7149 /* build-rust.sh */; };
 		D0FAB5922B818A5900F6A84B /* NetworkExtensionTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FAB5912B818A5900F6A84B /* NetworkExtensionTunnel.swift */; };
 		D0FAB5962B818B2900F6A84B /* TunnelButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FAB5952B818B2900F6A84B /* TunnelButton.swift */; };
 		D0FAB5982B818B8200F6A84B /* TunnelStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FAB5972B818B8200F6A84B /* TunnelStatusView.swift */; };
@@ -103,6 +102,7 @@
 		D020F66929E4AA74002790F6 /* App-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "App-macOS.entitlements"; sourceTree = "<group>"; };
 		D032E6512B8A79C20006B8AD /* HackClub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HackClub.swift; sourceTree = "<group>"; };
 		D032E6532B8A79DA0006B8AD /* WireGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireGuard.swift; sourceTree = "<group>"; };
+		D04A3E1D2BAF465F0043EC85 /* Version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Version.xcconfig; sourceTree = "<group>"; };
 		D05B9F7229E39EEC008CB1F9 /* Burrow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Burrow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowApp.swift; sourceTree = "<group>"; };
 		D05B9F7729E39EEC008CB1F9 /* BurrowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowView.swift; sourceTree = "<group>"; };
@@ -185,6 +185,7 @@
 				D020F64A29E4A452002790F6 /* App.xcconfig */,
 				D020F66329E4A703002790F6 /* Extension.xcconfig */,
 				D020F64029E4A1FF002790F6 /* Compiler.xcconfig */,
+				D04A3E1D2BAF465F0043EC85 /* Version.xcconfig */,
 				D020F64229E4A1FF002790F6 /* Info.plist */,
 			);
 			path = Configuration;
@@ -318,6 +319,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D05B9F8129E39EED008CB1F9 /* Build configuration list for PBXNativeTarget "App" */;
 			buildPhases = (
+				D04A3E232BAF4AE50043EC85 /* Update Build Number */,
 				D05B9F6E29E39EEC008CB1F9 /* Sources */,
 				D05B9F6F29E39EEC008CB1F9 /* Frameworks */,
 				D05B9F7029E39EEC008CB1F9 /* Resources */,
@@ -384,7 +386,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0BCC60A2A09A0B800AD070D /* build-rust.sh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -400,6 +401,27 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		D04A3E232BAF4AE50043EC85 /* Update Build Number */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(PROJECT_DIR)/../Tools/version.sh",
+				"$(PROJECT_DIR)/../.git",
+			);
+			name = "Update Build Number";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(PROJECT_DIR)/Configuration/Version.xcconfig",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$PROJECT_DIR/../Tools/version.sh\"\n";
+		};
 		D0BCC60B2A09A0C100AD070D /* Compile Rust */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;

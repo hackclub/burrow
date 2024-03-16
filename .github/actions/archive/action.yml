@@ -26,9 +26,12 @@ runs:
     run: |
       echo "${{ inputs.app-store-key }}" > AuthKey_${{ inputs.app-store-key-id }}.p8
 
-      xcodebuild archive \
+      xcodebuild clean archive \
         -allowProvisioningUpdates \
         -allowProvisioningDeviceRegistration \
+        -skipPackagePluginValidation \
+        -skipMacroValidation \
+        -onlyUsePackageVersionsFromResolvedFile \
         -authenticationKeyID ${{ inputs.app-store-key-id }} \
         -authenticationKeyIssuerID ${{ inputs.app-store-key-issuer-id }} \
         -authenticationKeyPath "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8" \
@@ -38,6 +41,4 @@ runs:
         -archivePath '${{ inputs.archive-path }}' \
         -resultBundlePath BuildResults.xcresult
 
-      ./Tools/xcresulttool-github BuildResults.xcresult
-      
       rm -rf AuthKey_${{ inputs.app-store-key-id }}.p8

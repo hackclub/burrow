@@ -1,65 +1,115 @@
-name: Build Apple Release
+name: Release (Apple)
 on:
   release:
     types:
     - created
 jobs:
   build:
-    name: Build ${{ matrix.configuration['platform'] }} Release
-    runs-on: macos-13
+    name: Build ${{ matrix.platform }} Release
+    runs-on: macos-14
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
-        configuration:
-        - scheme: App (iOS)
-          destination: generic/platform=iOS
+        include:
+        - destination: generic/platform=iOS
           platform: iOS
-          method: ad-hoc
-          artifact-file: Apple/Release/Burrow.ipa
-        - scheme: App (macOS)
-          destination: generic/platform=macOS
+          rust-targets:
+          - aarch64-apple-ios
+        - destination: generic/platform=macOS
           platform: macOS
-          method: mac-application
-          artifact-file: Burrow.app.txz
+          rust-targets:
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
     env:
       DEVELOPER_DIR: /Applications/Xcode_15.2.app/Contents/Developer
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
-        ssh-key: ${{ secrets.DEPLOY_KEY }}
-        submodules: recursive
+        fetch-depth: 0
     - name: Import Certificate
       uses: ./.github/actions/import-cert
       with:
         certificate: ${{ secrets.DEVELOPER_CERT }}
         password: ${{ secrets.DEVELOPER_CERT_PASSWORD }}
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ join(matrix.rust-targets, ', ') }}
+    - name: Configure Version
+      shell: bash
+      run: Tools/version.sh
     - name: Archive
       uses: ./.github/actions/archive
       with:
-        scheme: ${{ matrix.configuration['scheme'] }}
-        destination: ${{ matrix.configuration['destination'] }}
+        scheme: App
+        destination: ${{ matrix.destination }}
         app-store-key: ${{ secrets.APPSTORE_KEY }}
         app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
         app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
         archive-path: Burrow.xcarchive
-    - name: Export Locally
+    - name: Notarize (macOS)
+      if: ${{ matrix.platform == 'macOS' }}
+      uses: ./.github/actions/notarize
+      with:
+        app-store-key: ${{ secrets.APPSTORE_KEY }}
+        app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+        app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
+        archive-path: Burrow.xcarchive
+    - name: Export IPA (iOS)
+      if: ${{ matrix.platform == 'iOS' }}
       uses: ./.github/actions/export
       with:
-        method: ${{ matrix.configuration['method'] }}
+        method: ad-hoc
         destination: export
         app-store-key: ${{ secrets.APPSTORE_KEY }}
         app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
         app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
         archive-path: Burrow.xcarchive
         export-path: Release
-    - name: Compress
-      if: ${{ matrix.configuration['platform'] == 'macOS' }}
+    - name: Compress (iOS)
+      if: ${{ matrix.platform == 'iOS' }}
       shell: bash
-      run: tar --options xz:compression-level=9 -C Apple/Release -cJf Burrow.app.txz ./
-    - name: Attach Artifact
-      uses: SierraSoftworks/gh-releases@v1.0.6
+      run: |
+        cp Apple/Release/Burrow.ipa Burrow.ipa
+        aa archive -a lzma -b 8m -d Apple -subdir Burrow.xcarchive -o Burrow-${{ matrix.platform }}.xcarchive.aar
+        rm -rf Apple/Release
+    - name: Compress (macOS)
+      if: ${{ matrix.platform == 'macOS' }}
+      shell: bash
+      run: |
+        aa archive -a lzma -b 8m -d Apple/Release -subdir Burrow.app -o Burrow.app.aar
+        aa archive -a lzma -b 8m -d Apple -subdir Burrow.xcarchive -o Burrow-${{ matrix.platform }}.xcarchive.aar
+        rm -rf Apple/Release
+    - name: Upload to GitHub (iOS)
+      if: ${{ matrix.platform == 'iOS' }}
+      uses: SierraSoftworks/gh-releases@v1.0.7
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        overwrite: 'false'
-        files: ${{ matrix.configuration['artifact-file'] }}
+        release_tag: ${{ github.ref_name }}
+        overwrite: 'true'
+        files: |
+          Burrow.ipa 
+          Burrow-${{ matrix.platform }}.xcarchive.aar
+    - name: Upload to GitHub (macOS)
+      if: ${{ matrix.platform == 'macOS' }}
+      uses: SierraSoftworks/gh-releases@v1.0.7
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        release_tag: ${{ github.ref_name }}
+        overwrite: 'true'
+        files: |
+          Burrow.aap.aar
+          Burrow-${{ matrix.platform }}.xcarchive.aar
+    - name: Upload to App Store Connect
+      uses: ./.github/actions/export
+      with:
+        method: app-store
+        destination: upload
+        app-store-key: ${{ secrets.APPSTORE_KEY }}
+        app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+        app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
+        archive-path: Burrow.xcarchive
+        export-path: Release

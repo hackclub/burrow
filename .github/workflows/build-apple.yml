@@ -1,4 +1,4 @@
-name: Apple Build
+name: Build Apple Apps
 on:
   push:
     branches:  
@@ -12,7 +12,7 @@ concurrency:
 jobs:
   build:
     name: Build App (${{ matrix.platform }})
-    runs-on: macos-13
+    runs-on: macos-14
     strategy:
       fail-fast: false
       matrix:
@@ -53,7 +53,6 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: stable
         targets: ${{ join(matrix.rust-targets, ', ') }}
     - name: Build
       id: build
@@ -64,7 +63,7 @@ jobs:
         app-store-key: ${{ secrets.APPSTORE_KEY }}
         app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
         app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
-    - name: Xcode Unit Test
+    - name: Run Unit Tests
       if: ${{ matrix.xcode-unit-test != '' }}
       continue-on-error: true
       uses: ./.github/actions/test-without-building
@@ -74,7 +73,7 @@ jobs:
         test-plan: ${{ matrix.xcode-unit-test }}
         artifact-prefix: unit-tests-${{ matrix.sdk-name }}
         check-name: Xcode Unit Tests (${{ matrix.platform }})
-    - name: Xcode UI Test
+    - name: Run UI Tests
       if: ${{ matrix.xcode-ui-test != '' }}
       continue-on-error: true
       uses: ./.github/actions/test-without-building

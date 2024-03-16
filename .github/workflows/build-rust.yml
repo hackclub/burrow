@@ -1,4 +1,4 @@
-name: Rust Build
+name: Build Rust Crate
 on:
   push:
     branches:

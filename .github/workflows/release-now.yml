@@ -1,0 +1,17 @@
+name: Create Release
+on: workflow_dispatch
+concurrency:
+  group: ${{ github.workflow }}
+jobs:
+  create:
+    env:
+      GH_TOKEN: ${{ secrets.GH_RELEASE_TOKEN }}
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - shell: bash
+      run: Tools/version.sh increment

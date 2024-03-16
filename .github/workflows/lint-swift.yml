@@ -1,8 +1,5 @@
 name: Swift Lint
 on:
-  push:
-    branches:
-    - main
   pull_request:
     branches:
     - "*"
@@ -14,8 +11,6 @@ jobs:
       image: ghcr.io/realm/swiftlint:latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        ssh-key: ${{ secrets.DEPLOY_KEY }}
+      uses: actions/checkout@v4
     - name: Lint
       run: swiftlint lint --reporter github-actions-logging

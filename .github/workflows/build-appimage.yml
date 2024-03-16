@@ -1,8 +1,11 @@
 name: Build AppImage
 on:
   push:
-    branches: [main]
+    branches:  
+    - main
   pull_request:
+    branches:
+    - "*"
 jobs:
   appimage:
     name: Build AppImage
@@ -17,7 +20,7 @@ jobs:
         docker cp temp:/app/burrow-gtk/build-appimage/Burrow-x86_64.AppImage .
         docker rm temp
     - uses: actions/upload-artifact@v4
+      name: Upload to GitHub
       with:
         name: AppImage
         path: Burrow-x86_64.AppImage
-
