@@ -56,10 +56,10 @@ CARGO_ARGS+=("--lib")
 
 # Pass the configuration (Debug or Release) through to cargo
 if [[ $SWIFT_ACTIVE_COMPILATION_CONDITIONS == *DEBUG* ]]; then
-    CARGO_DIR="debug"
+    CARGO_TARGET_SUBDIR="debug"
 else
     CARGO_ARGS+=("--release")
-    CARGO_DIR="release"
+    CARGO_TARGET_SUBDIR="release"
 fi
 
 if [[ -x "$(command -v rustup)" ]]; then
@@ -70,11 +70,11 @@ fi
 
 # Run cargo without the various environment variables set by Xcode.
 # Those variables can confuse cargo and the build scripts it runs.
-env -i PATH="$CARGO_PATH" cargo build "${CARGO_ARGS[@]}"
+env -i PATH="$CARGO_PATH" CARGO_TARGET_DIR="${CONFIGURATION_TEMP_DIR}/target" cargo build "${CARGO_ARGS[@]}"
 
 mkdir -p "${BUILT_PRODUCTS_DIR}"
 
 # Use `lipo` to merge the architectures together into BUILT_PRODUCTS_DIR
 /usr/bin/xcrun --sdk $PLATFORM_NAME lipo \
-    -create $(printf "${PROJECT_DIR}/../target/%q/${CARGO_DIR}/libburrow.a " "${RUST_TARGETS[@]}") \
+    -create $(printf "${CONFIGURATION_TEMP_DIR}/target/%q/${CARGO_TARGET_SUBDIR}/libburrow.a " "${RUST_TARGETS[@]}") \
     -output "${BUILT_PRODUCTS_DIR}/libburrow.a"

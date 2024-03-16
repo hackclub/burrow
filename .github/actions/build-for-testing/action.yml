@@ -24,6 +24,7 @@ runs:
       path: |
         Apple/PackageCache
         Apple/SourcePackages
+        Apple/DerivedData
       key: ${{ runner.os }}-${{ inputs.scheme }}-${{ hashFiles('**/Package.resolved') }}
       restore-keys: |
         ${{ runner.os }}-${{ inputs.scheme }}-
@@ -33,17 +34,18 @@ runs:
     run: |
       echo "${{ inputs.app-store-key }}" > AuthKey_${{ inputs.app-store-key-id }}.p8
 
-      xcodebuild clean build-for-testing \
+      xcodebuild build-for-testing \
         -allowProvisioningUpdates \
         -allowProvisioningDeviceRegistration \
+        -skipPackagePluginValidation \
+        -skipMacroValidation \
+        -onlyUsePackageVersionsFromResolvedFile \
         -authenticationKeyID ${{ inputs.app-store-key-id }} \
         -authenticationKeyIssuerID ${{ inputs.app-store-key-issuer-id }} \
         -authenticationKeyPath "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8" \
-        -onlyUsePackageVersionsFromResolvedFile \
         -clonedSourcePackagesDirPath SourcePackages \
         -packageCachePath $PWD/PackageCache \
-        -skipPackagePluginValidation \
-        -skipMacroValidation \
+        -derivedDataPath $PWD/DerivedData \
         -scheme '${{ inputs.scheme }}' \
         -destination '${{ inputs.destination }}' \
         -resultBundlePath BuildResults.xcresult
