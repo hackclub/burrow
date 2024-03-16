@@ -1,0 +1,57 @@
+name: Notarize
+inputs:
+  app-store-key:
+    description: App Store key in PEM PKCS#8 format
+    required: true
+  app-store-key-id:
+    description: App Store key ID
+    required: true
+  app-store-key-issuer-id:
+    description: App Store key issuer ID
+    required: true
+  archive-path:
+    description: Xcode archive path
+    required: true
+outputs:
+  notarized-app:
+    description: The compressed and notarized app
+    value: ${{ steps.notarize.outputs.notarized-app }}
+runs:
+  using: composite
+  steps:
+  - id: notarize
+    shell: bash
+    run: |
+      echo "${{ inputs.app-store-key }}" > AuthKey_${{ inputs.app-store-key-id }}.p8
+
+      echo '{"destination":"upload","method":"developer-id"}' \
+        | plutil -convert xml1 -o ExportOptions.plist -
+
+      xcodebuild \
+        -exportArchive \
+        -allowProvisioningUpdates \
+        -allowProvisioningDeviceRegistration \
+        -authenticationKeyID ${{ inputs.app-store-key-id }} \
+        -authenticationKeyIssuerID ${{ inputs.app-store-key-issuer-id }} \
+        -authenticationKeyPath "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8" \
+        -archivePath '${{ inputs.archive-path }}' \
+        -exportOptionsPlist ExportOptions.plist
+
+      until xcodebuild \
+        -exportNotarizedApp \
+        -allowProvisioningUpdates \
+        -allowProvisioningDeviceRegistration \
+        -authenticationKeyID ${{ inputs.app-store-key-id }} \
+        -authenticationKeyIssuerID ${{ inputs.app-store-key-issuer-id }} \
+        -authenticationKeyPath "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8" \
+        -archivePath '${{ inputs.archive-path }}' \
+        -exportPath Release
+      do
+        echo "Failed to export app, trying again in 10s..."
+        sleep 10
+      done
+
+      tar --options xz:compression-level=9 -C Release -cJvf Wallet.txz ./
+      echo "notarized-app=Wallet.txz" >> $GITHUB_OUTPUT
+
+      rm -rf AuthKey_${{ inputs.app-store-key-id }}.p8 Release ExportOptions.plist
