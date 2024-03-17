@@ -141,6 +141,7 @@ async fn try_serverconfig() -> Result<()> {
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
     tracing::initialize();
+    dotenv::dotenv().ok();
 
     let cli = Cli::parse();
     match &cli.command {

@@ -1,68 +1,82 @@
+use std::env::var;
+
 use anyhow::Result;
 use axum::{extract::Query, http::StatusCode, routing::get, Router};
 use reqwest::Url;
 use serde::Deserialize;
 
 pub async fn start_server() -> Result<()> {
-    let app = Router::new().route("/callback", get(callback));
+    let app = Router::new()
+        .route("/", get(root_callback))
+        .route("/callback", get(code_callback));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:4225").await.unwrap();
+    log::info!("Starting auth server on port 4225");
     axum::serve(listener, app).await.unwrap();
 
     Ok(())
+}
+
+async fn root_callback() -> String {
+    String::from("Did you mean /callback?")
 }
 
 #[derive(Deserialize, Debug)]
 struct CallbackQuery {
     code: String,
 }
-async fn callback(query: Query<CallbackQuery>) -> StatusCode {
+async fn code_callback(query: Query<CallbackQuery>) -> StatusCode {
+    match fetch_save_slack_user_data(query).await {
+        Ok(_) => StatusCode::CREATED,
+        Err(err) => {
+            log::error!("{err}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
+}
+async fn fetch_save_slack_user_data(query: Query<CallbackQuery>) -> anyhow::Result<()> {
     let client = reqwest::Client::new();
+    log::trace!("Code was {}", &query.code);
+    let mut url = Url::parse("https://slack.com/api/openid.connect.token")?;
 
-    let mut url = Url::parse("https://slack.com/api/openid.connect.token").unwrap();
     {
         let mut q = url.query_pairs_mut();
-        q.append_pair("client_id", super::client_id);
-        q.append_pair("client_secret", super::client_secret);
+        q.append_pair("client_id", &var("CLIENT_ID")?);
+        q.append_pair("client_secret", &var("CLIENT_SECRET")?);
         q.append_pair("code", &query.code);
         q.append_pair("grant_type", "authorization_code");
         q.append_pair("redirect_uri", "https://burrow.rs/callback");
     }
 
-    let req = client.post(url).send().await;
-    if req.is_err() {
-        println!("{:?}", req.err());
-        return StatusCode::INTERNAL_SERVER_ERROR;
-    }
-    let res = req.unwrap().json::<slack::CodeExchangeResponse>().await;
-    if res.is_err() {
-        println!("{:?}", res.err());
-        return StatusCode::INTERNAL_SERVER_ERROR;
-    }
-    let data = res.unwrap();
+    let data = client
+        .post(url)
+        .send()
+        .await?
+        .json::<slack::CodeExchangeResponse>()
+        .await?;
 
     if !data.ok {
-        println!("not ok!");
-        return StatusCode::INTERNAL_SERVER_ERROR;
+        return Err(anyhow::anyhow!("Slack code exchange response not ok!"));
     }
 
     if let Some(access_token) = data.access_token {
-        // println!("Access token is {access_token}");
-        // let user = slack::fetch_slack_user(&access_token).await;
-        // if user.is_err() {
-        //     println!("failed to fetch {:?}", user.err());
-        //     return StatusCode::INTERNAL_SERVER_ERROR;
-        // }
-        // let user = user.unwrap();
-        // db::store_user(user, access_token, String::new()).expect("failed to store user in db");
+        log::trace!("Access token is {access_token}");
+        let user = slack::fetch_slack_user(&access_token)
+            .await
+            .map_err(|err| anyhow::anyhow!("Failed to fetch Slack user info {:#?}", err))?;
 
-        StatusCode::CREATED
+        db::store_user(user, access_token, String::new())
+            .map_err(|_| anyhow::anyhow!("Failed to store user in db"))?;
+
+        Ok(())
     } else {
-        StatusCode::INTERNAL_SERVER_ERROR
+        Err(anyhow::anyhow!("Access token not found in response"))
     }
 }
 
 mod slack {
+    use anyhow::Result;
+    use reqwest::header::AUTHORIZATION;
     use serde::Deserialize;
 
     #[derive(Deserialize, Debug)]
@@ -78,24 +92,37 @@ mod slack {
         error: Option<String>,
     }
 
-    #[derive(Deserialize)]
+    #[derive(Deserialize, Default, Debug)]
     pub struct User {
         pub sub: String,
         pub name: String,
     }
 
-    pub async fn fetch_slack_user(access_token: &str) -> Result<User, reqwest::Error> {
-        reqwest::get(format!(
-            "https://slack.com/api/openid.connect.userInfo?token={access_token}"
-        ))
-        .await?
-        .json::<User>()
-        .await
+    pub async fn fetch_slack_user(access_token: &str) -> Result<User> {
+        let client = reqwest::Client::new();
+        let res = client
+            .get("https://slack.com/api/openid.connect.userInfo")
+            .header(AUTHORIZATION, format!("Bearer {}", access_token))
+            .send()
+            .await?
+            .json::<serde_json::Value>()
+            .await?;
+
+        let res_ok = res
+            .get("ok")
+            .and_then(|v| v.as_bool())
+            .ok_or(anyhow::anyhow!("Slack user object not ok!"))?;
+
+        if !res_ok {
+            return Err(anyhow::anyhow!("Slack user object not ok!"));
+        }
+
+        Ok(serde_json::from_value(res)?)
     }
 }
 
 mod db {
-    use rusqlite::{params, Connection, Result};
+    use rusqlite::{Connection, Result};
 
     #[derive(Debug)]
     struct User {
@@ -108,14 +135,27 @@ mod db {
         access_token: String,
         refresh_token: String,
     ) -> Result<()> {
-        let conn = Connection::open_in_memory()?;
+        log::debug!("Storing openid user {:#?}", openid_user);
+        let conn = Connection::open_in_memory().unwrap();
 
-        init_db(&conn)?;
+        init_db(&conn).unwrap();
 
         conn.execute(
-            "INSERT INTO person (user_id, openid_provider, openid_user_id, openid_user_name, access_token, refresh_token) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-            (0, "slack", openid_user.sub, openid_user.name, access_token, refresh_token),
-        )?;
+            "INSERT OR IGNORE INTO user (id, created_at) VALUES (?, datetime('now'))",
+            (&openid_user.sub,),
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO user_connection (user_id, openid_provider, openid_user_id, openid_user_name, access_token, refresh_token) VALUES (
+            	(SELECT id FROM user WHERE id = ?),
+             	'slack',
+              	?,
+               	?,
+                ?,
+                ?
+            )",
+            (&openid_user.sub, &openid_user.sub, &openid_user.name, access_token, refresh_token),
+        ).unwrap();
 
         Ok(())
     }
@@ -123,25 +163,26 @@ mod db {
     fn init_db(conn: &rusqlite::Connection) -> Result<()> {
         conn.execute(
             "CREATE TABLE user (
-				id PRIMARY KEY
-				created_at TEXT NOT NULL
-			)",
+            id PRIMARY KEY,
+            created_at TEXT NOT NULL
+        )",
             (),
-        )?;
+        )
+        .unwrap();
 
         conn.execute(
             "CREATE TABLE user_connection (
-			user_id INT REFERENCES user(id) ON DELETE CASCADE
-			openid_provider TEXT NOT NULL
-			openid_user_id TEXT NOT NULL
-			openid_user_name TEXT NOT NULL
-			access_token TEXT NOT NULL
-			refresh_token TEXT NOT NULL
-
-			PRIMARY KEY (openid_provider, openid_user_id)
-		)",
+                user_id INT REFERENCES user(id) ON DELETE CASCADE,
+                openid_provider TEXT NOT NULL,
+                openid_user_id TEXT NOT NULL,
+                openid_user_name TEXT NOT NULL,
+                access_token TEXT NOT NULL,
+                refresh_token TEXT NOT NULL,
+                PRIMARY KEY (openid_provider, openid_user_id)
+            )",
             (),
-        )?;
+        )
+        .unwrap();
 
         Ok(())
     }
