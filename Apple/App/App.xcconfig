@@ -11,7 +11,12 @@ INFOPLIST_KEY_UIStatusBarStyle[sdk=iphone*] = UIStatusBarStyleDefault
 INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad[sdk=iphone*] = UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
 INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone[sdk=iphone*] = UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
 TARGETED_DEVICE_FAMILY[sdk=iphone*] = 1,2
+EXCLUDED_SOURCE_FILE_NAMES = MainMenu.xib
 
+EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*] =
+INFOPLIST_KEY_LSUIElement[sdk=macosx*] = YES
+INFOPLIST_KEY_NSMainNibFile[sdk=macosx*] = MainMenu
+INFOPLIST_KEY_NSPrincipalClass[sdk=macosx*] = NSApplication
 INFOPLIST_KEY_LSApplicationCategoryType[sdk=macosx*] = public.app-category.utilities
 
 CODE_SIGN_ENTITLEMENTS = App/App-iOS.entitlements

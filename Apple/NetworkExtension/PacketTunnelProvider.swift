@@ -6,10 +6,16 @@ import os
 class PacketTunnelProvider: NEPacketTunnelProvider {
     private let logger = Logger.logger(for: PacketTunnelProvider.self)
 
-    override func startTunnel(options: [String: NSObject]? = nil) async throws {
+    override init() {
         do {
             libburrow.spawnInProcess(socketPath: try Constants.socketURL.path)
+        } catch {
+            logger.error("Failed to spawn: \(error)")
+        }
+    }
 
+    override func startTunnel(options: [String: NSObject]? = nil) async throws {
+        do {
             let client = try Client()
 
             let command = BurrowRequest(id: 0, command: "ServerConfig")
@@ -41,6 +47,17 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         } catch {
             self.logger.error("Failed to start tunnel: \(error)")
             throw error
+        }
+    }
+
+    override func stopTunnel(with reason: NEProviderStopReason) async {
+        do {
+            let client = try Client()
+            let command = BurrowRequest(id: 0, command: "Stop")
+            let data = try await client.request(command, type: Response<BurrowResult<String>>.self)
+            self.logger.log("Stopped client.")
+        } catch {
+            self.logger.error("Failed to stop tunnel: \(error)")
         }
     }
 

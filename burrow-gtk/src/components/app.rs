@@ -6,7 +6,7 @@ const RECONNECT_POLL_TIME: Duration = Duration::from_secs(5);
 
 pub struct App {
     daemon_client: Arc<Mutex<Option<DaemonClient>>>,
-    _settings_screen: Controller<settings_screen::SettingsScreen>,
+    settings_screen: Controller<settings_screen::SettingsScreen>,
     switch_screen: AsyncController<switch_screen::SwitchScreen>,
 }
 
@@ -109,7 +109,7 @@ impl AsyncComponent for App {
         let model = App {
             daemon_client,
             switch_screen,
-            _settings_screen: settings_screen,
+            settings_screen,
         };
 
         AsyncComponentParts { model, widgets }
@@ -132,14 +132,23 @@ impl AsyncComponent for App {
                         disconnected_daemon_client = true;
                         self.switch_screen
                             .emit(switch_screen::SwitchScreenMsg::DaemonDisconnect);
+                        self.settings_screen
+                            .emit(settings_screen::SettingsScreenMsg::DaemonStateChange)
                     }
                 }
 
                 if disconnected_daemon_client || daemon_client.is_none() {
-                    *daemon_client = DaemonClient::new().await.ok();
-                    if daemon_client.is_some() {
-                        self.switch_screen
-                            .emit(switch_screen::SwitchScreenMsg::DaemonReconnect);
+                    match DaemonClient::new().await {
+                        Ok(new_daemon_client) => {
+                            *daemon_client = Some(new_daemon_client);
+                            self.switch_screen
+                                .emit(switch_screen::SwitchScreenMsg::DaemonReconnect);
+                            self.settings_screen
+                                .emit(settings_screen::SettingsScreenMsg::DaemonStateChange)
+                        }
+                        Err(_e) => {
+                            //  TODO: Handle Error
+                        }
                     }
                 }
             }

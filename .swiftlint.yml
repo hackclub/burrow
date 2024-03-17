@@ -46,7 +46,6 @@ opt_in_rules:
 - multiline_parameters
 - multiline_parameters_brackets
 - no_extension_access_modifier
-- no_grouping_extension
 - nslocalizedstring_key
 - nslocalizedstring_require_bundle
 - number_separator
@@ -76,9 +75,7 @@ opt_in_rules:
 - sorted_first_last
 - sorted_imports
 - static_operator
-- strict_fileprivate
 - strong_iboutlet
-- switch_case_on_newline
 - test_case_accessibility
 - toggle_bool
 - trailing_closure
@@ -97,3 +94,5 @@ disabled_rules:
 - force_try
 - nesting
 - todo
+- trailing_comma
+- switch_case_on_newline

@@ -1,10 +1,11 @@
 use std::{net::IpAddr, sync::Arc};
+use std::ops::Deref;
 
 use anyhow::Error;
 use fehler::throws;
 use futures::future::join_all;
 use ip_network_table::IpNetworkTable;
-use tokio::sync::RwLock;
+use tokio::sync::{RwLock, Notify};
 use tracing::{debug, error};
 use tun::tokio::TunInterface;
 
@@ -46,9 +47,21 @@ impl FromIterator<PeerPcb> for IndexedPcbs {
     }
 }
 
+enum IfaceStatus {
+    Running,
+    Idle
+}
+
 pub struct Interface {
-    tun: Option<Arc<RwLock<TunInterface>>>,
+    tun: Arc<RwLock<Option<TunInterface>>>,
     pcbs: Arc<IndexedPcbs>,
+    status: Arc<RwLock<IfaceStatus>>,
+    stop_notifier: Arc<Notify>,
+}
+
+async fn is_running(status: Arc<RwLock<IfaceStatus>>) -> bool {
+    let st = status.read().await;
+    matches!(st.deref(), IfaceStatus::Running)
 }
 
 impl Interface {
@@ -60,35 +73,54 @@ impl Interface {
             .collect::<Result<_, _>>()?;
 
         let pcbs = Arc::new(pcbs);
-        Self { pcbs, tun: None }
+        Self { pcbs, tun: Arc::new(RwLock::new(None)), status: Arc::new(RwLock::new(IfaceStatus::Idle)), stop_notifier: Arc::new(Notify::new()) }
     }
 
-    pub fn set_tun(&mut self, tun: Arc<RwLock<TunInterface>>) {
-        self.tun = Some(tun);
+    pub async fn set_tun(&self, tun: TunInterface) {
+        debug!("Setting tun interface");
+        self.tun.write().await.replace(tun);
+        let mut st = self.status.write().await;
+        *st = IfaceStatus::Running;
+    }
+
+    pub fn get_tun(&self) -> Arc<RwLock<Option<TunInterface>>> {
+        self.tun.clone()
+    }
+
+    pub async fn remove_tun(&self){
+        let mut st = self.status.write().await;
+        self.stop_notifier.notify_waiters();
+        *st = IfaceStatus::Idle;
     }
 
     pub async fn run(&self) -> anyhow::Result<()> {
         let pcbs = self.pcbs.clone();
         let tun = self
             .tun
-            .clone()
-            .ok_or(anyhow::anyhow!("tun interface does not exist"))?;
+            .clone();
+        let status = self.status.clone();
+        let stop_notifier = self.stop_notifier.clone();
         log::info!("Starting interface");
 
         let outgoing = async move {
-            loop {
+            while is_running(status.clone()).await {
                 let mut buf = [0u8; 3000];
 
                 let src = {
-                    let src = match tun.read().await.recv(&mut buf[..]).await {
-                        Ok(len) => &buf[..len],
-                        Err(e) => {
-                            error!("Failed to read from interface: {}", e);
-                            continue
-                        }
+                    let t = tun.read().await;
+                    let Some(_tun) = t.as_ref() else {
+                        continue;
                     };
-                    debug!("Read {} bytes from interface", src.len());
-                    src
+                    tokio::select! {
+                        _ = stop_notifier.notified() => continue,
+                        pkg = _tun.recv(&mut buf[..]) => match pkg {
+                            Ok(len) => &buf[..len],
+                            Err(e) => {
+                                error!("Failed to read from interface: {}", e);
+                                continue
+                            }
+                        },
+                    }
                 };
 
                 let dst_addr = match Tunnel::dst_address(src) {
@@ -123,8 +155,7 @@ impl Interface {
         let mut tsks = vec![];
         let tun = self
             .tun
-            .clone()
-            .ok_or(anyhow::anyhow!("tun interface does not exist"))?;
+            .clone();
         let outgoing = tokio::task::spawn(outgoing);
         tsks.push(outgoing);
         debug!("preparing to spawn read tasks");
@@ -149,9 +180,10 @@ impl Interface {
                 };
 
                 let pcb = pcbs.pcbs[i].clone();
+                let status = self.status.clone();
                 let update_timers_tsk = async move {
                     let mut buf = [0u8; 65535];
-                    loop {
+                    while is_running(status.clone()).await {
                         tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
                         match pcb.update_timers(&mut buf).await {
                             Ok(..) => (),
@@ -164,8 +196,9 @@ impl Interface {
                 };
 
                 let pcb = pcbs.pcbs[i].clone();
+                let status = self.status.clone();
                 let reset_rate_limiter_tsk = async move {
-                    loop {
+                    while is_running(status.clone()).await {
                         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                         pcb.reset_rate_limiter().await;
                     }

@@ -8,13 +8,14 @@ Burrow is an open source tool for burrowing through firewalls, built by teenager
 
 ## Contributing
 
-Burrow is fully open source, you can fork the repo and start contributing easily. For more information and in-depth discussions, visit the `#burrow` channel on the [Hack Club Slack](https://hackclub.com/slack/), here you can ask for help and talk with other people interested in burrow! For more information on how to contribute, please see [CONTRIBUTING.md]
+Burrow is fully open source, you can fork the repo and start contributing easily. For more information and in-depth discussions, visit the `#burrow` channel on the [Hack Club Slack](https://hackclub.com/slack/), here you can ask for help and talk with other people interested in burrow! Checkout [GETTING_STARTED.md](./docs/GETTING_STARTED.md) for build instructions and [GTK_APP.md](./docs/GTK_APP.md) for the Linux app.
 
 The project structure is divided in the following folders: 
 
 ```
 Apple/ # Xcode project for burrow on macOS and iOS
 burrow/ # Higher-level API library for tun and tun-async
+burrow-gtk/ # GTK project for burrow on Linux
 tun/ # Low-level interface to OS networking
     src/
         tokio/ # Async/Tokio code

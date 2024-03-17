@@ -12,7 +12,7 @@ concurrency:
 jobs:
   build:
     name: Build App (${{ matrix.platform }})
-    runs-on: macos-13
+    runs-on: macos-14
     strategy:
       fail-fast: false
       matrix:
@@ -53,7 +53,6 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: stable
         targets: ${{ join(matrix.rust-targets, ', ') }}
     - name: Build
       id: build

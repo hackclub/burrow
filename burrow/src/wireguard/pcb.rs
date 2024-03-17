@@ -54,7 +54,7 @@ impl PeerPcb {
         Ok(())
     }
 
-    pub async fn run(&self, tun_interface: Arc<RwLock<TunInterface>>) -> Result<(), Error> {
+    pub async fn run(&self, tun_interface: Arc<RwLock<Option<TunInterface>>>) -> Result<(), Error> {
         tracing::debug!("starting read loop for pcb... for {:?}", &self);
         let rid: i32 = random();
         let mut buf: [u8; 3000] = [0u8; 3000];
@@ -106,12 +106,12 @@ impl PeerPcb {
                     }
                     TunnResult::WriteToTunnelV4(packet, addr) => {
                         tracing::debug!("WriteToTunnelV4: {:?}, {:?}", packet, addr);
-                        tun_interface.read().await.send(packet).await?;
+                        tun_interface.read().await.as_ref().ok_or(anyhow::anyhow!("tun interface does not exist"))?.send(packet).await?;
                         break
                     }
                     TunnResult::WriteToTunnelV6(packet, addr) => {
                         tracing::debug!("WriteToTunnelV6: {:?}, {:?}", packet, addr);
-                        tun_interface.read().await.send(packet).await?;
+                        tun_interface.read().await.as_ref().ok_or(anyhow::anyhow!("tun interface does not exist"))?.send(packet).await?;
                         break
                     }
                 }
