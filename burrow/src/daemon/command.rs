@@ -8,6 +8,7 @@ pub enum DaemonCommand {
     ServerInfo,
     ServerConfig,
     Stop,
+    ReloadConfig(String)
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]

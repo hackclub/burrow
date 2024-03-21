@@ -10,6 +10,7 @@ use crate::{
         command::DaemonCommand,
         response::{DaemonResponse, DaemonResponseData, ServerConfig, ServerInfo},
     },
+    database::{get_connection, load_interface},
     wireguard::Interface,
 };
 
@@ -59,24 +60,13 @@ impl DaemonInstance {
                         self.tun_interface = self.wg_interface.read().await.get_tun();
                         debug!("tun_interface set: {:?}", self.tun_interface);
 
-
                         debug!("Cloning wg_interface");
                         let tmp_wg = self.wg_interface.clone();
-                        debug!("wg_interface cloned");
-
-                        debug!("Spawning run task");
                         let run_task = tokio::spawn(async move {
-                            debug!("Running wg_interface");
                             let twlock = tmp_wg.read().await;
-                            debug!("wg_interface read lock acquired");
                             twlock.run().await
                         });
-                        debug!("Run task spawned: {:?}", run_task);
-
-                        debug!("Setting wg_state to Running");
                         self.wg_state = RunState::Running(run_task);
-                        debug!("wg_state set to Running");
-
                         info!("Daemon started tun interface");
                     }
                 }
@@ -98,6 +88,17 @@ impl DaemonInstance {
             }
             DaemonCommand::ServerConfig => {
                 Ok(DaemonResponseData::ServerConfig(ServerConfig::default()))
+            }
+            DaemonCommand::ReloadConfig(interface_id) => {
+                let conn = get_connection()?;
+                let cfig = load_interface(&conn, &interface_id)?;
+                let iface: Interface = cfig.try_into()?;
+                self.wg_interface
+                    .write()
+                    .await
+                    .set_tun(iface.tun.unwrap().clone());
+                self.wg_interface.write().await.pcbs = iface.pcbs.clone();
+                Ok(DaemonResponseData::None)
             }
         }
     }
