@@ -20,4 +20,9 @@ public enum Constants {
         }
         return .success(groupContainerURL)
     }()
+    public static var socketURL: URL {
+        get throws {
+            try groupContainerURL.appending(component: "burrow.sock", directoryHint: .notDirectory)
+        }
+    }
 }

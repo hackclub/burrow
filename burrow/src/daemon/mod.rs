@@ -34,7 +34,7 @@ pub async fn daemon_main(path: Option<&Path>, notify_ready: Option<Arc<Notify>>)
     let listener = listener?;
 
     let conn = get_connection()?;
-    let config = load_interface(&conn, "0".into())?;
+    let config = load_interface(&conn, "1")?;
     let iface: Interface = config.try_into()?;
     let mut instance = DaemonInstance::new(commands_rx, response_tx, Arc::new(RwLock::new(iface)));
 

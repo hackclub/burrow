@@ -8,7 +8,7 @@ const DB_PATH: &str = "burrow.db";
 #[cfg(not(target_vendor = "apple"))]
 const DB_PATH: &str = "/var/lib/burrow/burrow.db";
 
-pub fn prepare_db(conn: &Connection) -> Result<()> {
+pub fn initialize_tables(conn: &Connection) -> Result<()> {
     conn.execute("CREATE TABLE IF NOT EXISTS wg_interface (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -31,7 +31,7 @@ pub fn prepare_db(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
-pub fn load_interface(conn: &Connection, interface_id: String) -> Result<Config> {
+pub fn load_interface(conn: &Connection, interface_id: &str) -> Result<Config> {
     let iface = conn.query_row("SELECT private_key, dns, address, listen_port, mtu FROM wg_interface WHERE id = ?", [&interface_id], |row| {
         let dns_rw: String = row.get(1)?;
         let dns: Vec<String> = if dns_rw.len()>0 {
@@ -81,6 +81,12 @@ pub fn dump_interface(conn: &Connection, config: &Config) -> Result<()> {
 
 pub fn get_connection() -> Result<Connection> {
     let p = std::path::Path::new(DB_PATH);
+    if !p.exists(){
+        let conn = Connection::open(p)?;
+        initialize_tables(&conn)?;
+        dump_interface(&conn, &Config::default())?;
+        return Ok(conn);
+    }
     Ok(Connection::open(p)?)
 }
 
@@ -93,10 +99,10 @@ mod tests {
     fn test_db() {
         let p = Path::new(DB_PATH);
         let conn = Connection::open(p).unwrap();
-        prepare_db(&conn).unwrap();
+        initialize_tables(&conn).unwrap();
         let config = Config::default();
         dump_interface(&conn, &config).unwrap();
-        let loaded = load_interface(&conn, "1".to_string()).unwrap();
+        let loaded = load_interface(&conn, "1").unwrap();
         assert_eq!(config, loaded);
     }
 }
