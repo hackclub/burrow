@@ -8,7 +8,7 @@ mod rpc;
 use anyhow::Result;
 use instance::DaemonInstance;
 pub use net::{DaemonClient, Listener};
-pub use rpc::{DaemonCommand, DaemonResponse, DaemonResponseData, DaemonStartOptions, ServerInfo};
+pub use rpc::{DaemonCommand, DaemonResponseData, DaemonStartOptions};
 use tokio::sync::{Notify, RwLock};
 use tracing::{error, info};
 

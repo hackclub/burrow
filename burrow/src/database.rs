@@ -34,7 +34,7 @@ pub fn initialize_tables(conn: &Connection) -> Result<()> {
 pub fn load_interface(conn: &Connection, interface_id: &str) -> Result<Config> {
     let iface = conn.query_row("SELECT private_key, dns, address, listen_port, mtu FROM wg_interface WHERE id = ?", [&interface_id], |row| {
         let dns_rw: String = row.get(1)?;
-        let dns: Vec<String> = if dns_rw.len()>0 {
+        let dns: Vec<String> = if !dns_rw.is_empty() {
             dns_rw.split(',').map(|s| s.to_string()).collect()
         } else {
             vec![]

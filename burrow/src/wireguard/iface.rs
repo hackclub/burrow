@@ -15,6 +15,12 @@ pub struct IndexedPcbs {
     allowed_ips: IpNetworkTable<usize>,
 }
 
+impl Default for IndexedPcbs {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl IndexedPcbs {
     pub fn new() -> Self {
         Self {
