@@ -29,7 +29,7 @@ fn get_socket_path() -> String {
     if std::env::var("BURROW_SOCKET_PATH").is_ok() {
         return std::env::var("BURROW_SOCKET_PATH").unwrap();
     }
-    return UNIX_SOCKET_PATH.to_string();
+    UNIX_SOCKET_PATH.to_string()
 }
 
 pub struct Listener {
