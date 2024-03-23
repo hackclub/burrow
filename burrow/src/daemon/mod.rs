@@ -17,12 +17,16 @@ use crate::{
     wireguard::Interface,
 };
 
-pub async fn daemon_main(path: Option<&Path>, notify_ready: Option<Arc<Notify>>) -> Result<()> {
+pub async fn daemon_main(
+    socket_path: Option<&Path>,
+    db_path: Option<&Path>,
+    notify_ready: Option<Arc<Notify>>,
+) -> Result<()> {
     let (commands_tx, commands_rx) = async_channel::unbounded();
     let (response_tx, response_rx) = async_channel::unbounded();
     let (subscribe_tx, subscribe_rx) = async_channel::unbounded();
 
-    let listener = if let Some(path) = path {
+    let listener = if let Some(path) = socket_path {
         info!("Creating listener... {:?}", path);
         Listener::new_with_path(commands_tx, response_rx, subscribe_rx, path)
     } else {
@@ -33,8 +37,7 @@ pub async fn daemon_main(path: Option<&Path>, notify_ready: Option<Arc<Notify>>)
         n.notify_one()
     }
     let listener = listener?;
-
-    let conn = get_connection()?;
+    let conn = get_connection(db_path)?;
     let config = load_interface(&conn, "1")?;
     let iface: Interface = config.clone().try_into()?;
     let mut instance = DaemonInstance::new(
@@ -43,6 +46,7 @@ pub async fn daemon_main(path: Option<&Path>, notify_ready: Option<Arc<Notify>>)
         subscribe_tx,
         Arc::new(RwLock::new(iface)),
         Arc::new(RwLock::new(config)),
+        db_path,
     );
 
     info!("Starting daemon...");

@@ -9,7 +9,10 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
     override init() {
         do {
-            libburrow.spawnInProcess(socketPath: try Constants.socketURL.path)
+            libburrow.spawnInProcess(
+                socketPath: try Constants.socketURL.path(percentEncoded: false),
+                dbPath: try Constants.dbURL.path(percentEncoded: false)
+            )
         } catch {
             logger.error("Failed to spawn: \(error)")
         }
