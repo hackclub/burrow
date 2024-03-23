@@ -7,7 +7,7 @@ public final class Client {
     private let logger = Logger.logger(for: Client.self)
     private var generator = SystemRandomNumberGenerator()
     private var continuations: [UInt: UnsafeContinuation<Data, Error>] = [:]
-    private var eventMap: [String : [(Data) throws -> Void]] = [:]
+    private var eventMap: [NotificationType: [(Data) throws -> Void]] = [:]
     private var task: Task<Void, Error>?
 
     public convenience init() throws {
@@ -45,11 +45,10 @@ public final class Client {
                 case .Notification:
                     let peek = try JSONDecoder().decode(NotificationPeek.self, from: data)
                     guard let handlers = self?.eventMap[peek.method] else { continue }
-                    let _ = try handlers.map{ try $0(data) }
+                    _ = try handlers.map { try $0(data) }
                 default:
                     continue
                 }
-                
             }
         }
     }
@@ -83,21 +82,21 @@ public final class Client {
         return try await send(req)
     }
     public func single_request<U: Decodable>(_ request: String, type: U.Type = U.self) async throws -> U {
-        let req = BurrowSingleCommand(
+        let req = BurrowSimpleRequest(
             id: generator.next(upperBound: UInt.max),
             command: request
         )
         return try await send(req)
     }
-    public func on_event<T: Codable>(eventName: String, callable: @escaping (T) throws -> Void) {
+    public func on_event<T: Codable>(_ event: NotificationType, callable: @escaping (T) throws -> Void) {
         let action = { data in
-            let decoded = try JSONDecoder().decode(T.self, from: data)
-            try callable(decoded)
+            let decoded = try JSONDecoder().decode(Notification<T>.self, from: data)
+            try callable(decoded.params)
         }
-        if eventMap[eventName] != nil {
-            eventMap[eventName]?.append(action)
-        }else {
-            eventMap[eventName] = [action]
+        if eventMap[event] != nil {
+            eventMap[event]?.append(action)
+        } else {
+            eventMap[event] = [action]
         }
     }
 

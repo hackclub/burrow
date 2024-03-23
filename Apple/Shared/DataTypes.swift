@@ -1,6 +1,6 @@
 import Foundation
 
-// swiftlint:disable identifier_name
+// swiftlint:disable identifier_name raw_value_for_camel_cased_codable_enum
 public enum BurrowError: Error {
     case addrDoesntExist
     case resultIsError
@@ -8,7 +8,6 @@ public enum BurrowError: Error {
     case resultIsNone
     case noClient
 }
-
 
 public protocol Request: Codable where Params: Codable {
     associatedtype Params
@@ -31,17 +30,14 @@ public struct MessagePeek: Codable {
     }
 }
 
-
-public struct EmptyParams: Codable {}
-
-public struct BurrowSingleCommand: Request {
+public struct BurrowSimpleRequest: Request {
     public var id: UInt
     public var method: String
-    public var params: EmptyParams?
-    
-    public init(id: UInt, command: String) {
+    public var params: String?
+    public init(id: UInt, command: String, params: String? = nil) {
         self.id = id
         self.method = command
+        self.params = params
     }
 }
 
@@ -72,19 +68,30 @@ public struct ResponsePeek: Codable {
     }
 }
 
+public enum NotificationType: String, Codable {
+    case ConfigChange
+}
+
 public struct Notification<T>: Codable where T: Codable {
-    public var method: String
+    public var method: NotificationType
     public var params: T
-    public init(method: String, params: T) {
+    public init(method: NotificationType, params: T) {
         self.method = method
         self.params = params
     }
 }
 
-public struct NotificationPeek : Codable {
-    public var method: String
-    public init(method: String) {
+public struct NotificationPeek: Codable {
+    public var method: NotificationType
+    public init(method: NotificationType) {
         self.method = method
+    }
+}
+
+public struct AnyResponseData: Codable {
+    public var type: String
+    public init(type: String) {
+        self.type = type
     }
 }
 
@@ -97,15 +104,14 @@ public struct BurrowResult<T>: Codable where T: Codable {
     }
 }
 
-public struct ServerConfigData: Codable {
-    public struct InternalConfig: Codable {
-        public let address: String?
-        public let name: String?
-        public let mtu: Int32?
-    }
-    public let ServerConfig: InternalConfig
-    public init(ServerConfig: InternalConfig) {
-        self.ServerConfig = ServerConfig
+public struct ServerConfig: Codable {
+    public let address: String?
+    public let name: String?
+    public let mtu: Int32?
+    public init(address: String?, name: String?, mtu: Int32?) {
+        self.address = address
+        self.name = name
+        self.mtu = mtu
     }
 }
 
@@ -130,4 +136,4 @@ public struct Start: Codable {
     }
 }
 
-// swiftlint:enable identifier_name
+// swiftlint:enable identifier_name raw_value_for_camel_cased_codable_enum

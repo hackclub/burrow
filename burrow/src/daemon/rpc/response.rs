@@ -87,6 +87,7 @@ impl Default for ServerConfig {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[serde(tag = "type")]
 pub enum DaemonResponseData {
     ServerInfo(ServerInfo),
     ServerConfig(ServerConfig),
