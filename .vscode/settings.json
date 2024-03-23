@@ -1,22 +1,19 @@
 {
-    "files.autoSave": "onFocusChange",
-    "files.defaultLanguage": "rust",
-    "editor.formatOnPaste": true,
-    "editor.formatOnSave": true,
-    "files.trimTrailingWhitespace": true,
-    "editor.suggest.preview": true,
-    "editor.acceptSuggestionOnEnter": "on",
-    "rust-analyzer.restartServerOnConfigChange": true,
-    "rust-analyzer.cargo.features": "all",
-    "rust-analyzer.rustfmt.extraArgs": [
-        "+nightly"
-    ],
-    "[rust]": {
-        "editor.defaultFormatter": "rust-lang.rust-analyzer",
-    },
-    "rust-analyzer.inlayHints.typeHints.enable": false,
-    "rust-analyzer.linkedProjects": [
-        "./burrow/Cargo.toml",
-        "./burrow/Cargo.toml"
-    ]
+  "files.autoSave": "onFocusChange",
+  "files.defaultLanguage": "rust",
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "files.trimTrailingWhitespace": true,
+  "editor.suggest.preview": true,
+  "editor.acceptSuggestionOnEnter": "on",
+  "rust-analyzer.restartServerOnConfigChange": true,
+  "rust-analyzer.cargo.features": "all",
+  "rust-analyzer.rustfmt.extraArgs": ["+nightly"],
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
+  },
+  "rust-analyzer.inlayHints.typeHints.enable": false,
+  "rust-analyzer.linkedProjects": [
+    "./burrow/Cargo.toml"
+  ]
 }
