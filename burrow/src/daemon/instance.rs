@@ -18,7 +18,7 @@ use crate::{
         ServerInfo,
     },
     database::{get_connection, load_interface},
-    wireguard::Interface,
+    wireguard::{Config, Interface},
 };
 
 enum RunState {
@@ -108,12 +108,6 @@ impl DaemonInstance {
             DaemonCommand::ReloadConfig(interface_id) => {
                 let conn = get_connection(self.db_path.as_deref())?;
                 let cfig = load_interface(&conn, &interface_id)?;
-                let iface: Interface = cfig.try_into()?;
-                self.wg_interface
-                    .write()
-                    .await
-                    .set_tun(iface.tun.unwrap().clone());
-                self.wg_interface.write().await.pcbs = iface.pcbs.clone();
                 *self.config.write().await = cfig;
                 self.subx
                     .send(DaemonNotification::ConfigChange(ServerConfig::try_from(
