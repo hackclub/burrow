@@ -1,4 +1,7 @@
-use std::sync::Arc;
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 use anyhow::Result;
 use tokio::{sync::RwLock, task::JoinHandle};
@@ -30,6 +33,7 @@ pub struct DaemonInstance {
     tun_interface: Arc<RwLock<Option<TunInterface>>>,
     wg_interface: Arc<RwLock<Interface>>,
     config: Arc<RwLock<Config>>,
+    db_path: Option<PathBuf>,
     wg_state: RunState,
 }
 
@@ -40,6 +44,7 @@ impl DaemonInstance {
         subx: async_channel::Sender<DaemonNotification>,
         wg_interface: Arc<RwLock<Interface>>,
         config: Arc<RwLock<Config>>,
+        db_path: Option<&Path>,
     ) -> Self {
         Self {
             rx,
@@ -48,6 +53,7 @@ impl DaemonInstance {
             wg_interface,
             tun_interface: Arc::new(RwLock::new(None)),
             config,
+            db_path: db_path.map(|p| p.to_owned()),
             wg_state: RunState::Idle,
         }
     }
@@ -100,7 +106,7 @@ impl DaemonInstance {
                 Ok(DaemonResponseData::ServerConfig(ServerConfig::default()))
             }
             DaemonCommand::ReloadConfig(interface_id) => {
-                let conn = get_connection()?;
+                let conn = get_connection(self.db_path.as_deref())?;
                 let cfig = load_interface(&conn, &interface_id)?;
                 let iface: Interface = cfig.try_into()?;
                 self.wg_interface

@@ -25,4 +25,9 @@ public enum Constants {
             try groupContainerURL.appending(component: "burrow.sock", directoryHint: .notDirectory)
         }
     }
+    public static var dbURL: URL {
+        get throws {
+            try groupContainerURL.appending(component: "burrow.db", directoryHint: .notDirectory)
+        }
+    }
 }

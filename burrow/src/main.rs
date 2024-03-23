@@ -139,7 +139,7 @@ async fn main() -> Result<()> {
     match &cli.command {
         Commands::Start(..) => try_start().await?,
         Commands::Stop => try_stop().await?,
-        Commands::Daemon(_) => daemon::daemon_main(None, None).await?,
+        Commands::Daemon(_) => daemon::daemon_main(None, None, None).await?,
         Commands::ServerInfo => try_serverinfo().await?,
         Commands::ServerConfig => try_serverconfig().await?,
         Commands::ReloadConfig(args) => try_reloadconfig(args.interface_id.clone()).await?,
