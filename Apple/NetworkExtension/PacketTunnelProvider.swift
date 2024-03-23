@@ -24,10 +24,10 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             self.client = client
             register_events(client)
 
-            try await self.loadTunSettings()
+            _ = try await self.loadTunSettings()
             let startRequest = Start(
                 tun: Start.TunOptions(
-                    name: nil, no_pi: false, tun_excl: false, tun_retrieve: true, address: nil
+                    name: nil, no_pi: false, tun_excl: false, tun_retrieve: true, address: []
                 )
             )
             let response = try await client.request(startRequest, type: BurrowResult<AnyResponseData>.self)
@@ -41,14 +41,13 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     override func stopTunnel(with reason: NEProviderStopReason) async {
         do {
             let client = try Client()
-            let command = BurrowRequest(id: 0, command: "Stop")
-            let data = try await client.request(command, type: Response<BurrowResult<String>>.self)
+            _ = try await client.single_request("Stop", type: BurrowResult<AnyResponseData>.self)
             self.logger.log("Stopped client.")
         } catch {
             self.logger.error("Failed to stop tunnel: \(error)")
         }
     }
-    func loadTunSettings() async throws {
+    func loadTunSettings() async throws -> ServerConfig {
         guard let client = self.client else {
             throw BurrowError.noClient
         }
@@ -61,16 +60,14 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         }
         try await self.setTunnelNetworkSettings(tunNs)
         self.logger.info("Set remote tunnel address to \(tunNs.tunnelRemoteAddress)")
+        return serverconfig
     }
     private func generateTunSettings(from: ServerConfig) -> NETunnelNetworkSettings? {
-        guard let addr = from.address else {
-            return nil
-        }
         // Using a makeshift remote tunnel address
         let nst = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "1.1.1.1")
         var v4Addresses = [String]()
         var v6Addresses = [String]()
-        for addr in cfig.address {
+        for addr in from.address {
             if IPv4Address(addr) != nil {
                 v6Addresses.append(addr)
             }
