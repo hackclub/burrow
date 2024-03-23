@@ -44,6 +44,14 @@ enum Commands {
     ServerInfo,
     /// Server config
     ServerConfig,
+    /// Reload Config
+    ReloadConfig(ReloadConfigArgs),
+}
+
+#[derive(Args)]
+struct ReloadConfigArgs {
+    #[clap(long, short)]
+    interface_id: String,
 }
 
 #[derive(Args)]
@@ -70,14 +78,8 @@ async fn try_stop() -> Result<()> {
     Ok(())
 }
 
-#[cfg(any(target_os = "linux", target_vendor = "apple"))]
-async fn try_serverinfo() -> Result<()> {
-    let mut client = DaemonClient::new().await?;
-    let res = client.send_command(DaemonCommand::ServerInfo).await?;
-    match res.result {
-        Ok(DaemonResponseData::ServerInfo(si)) => {
-            println!("Got Result! {:?}", si);
-        }
+fn handle_unexpected(res: Result<DaemonResponseData, String>) {
+    match res {
         Ok(DaemonResponseData::None) => {
             println!("Server not started.")
         }
@@ -87,6 +89,17 @@ async fn try_serverinfo() -> Result<()> {
         Err(e) => {
             println!("Error when retrieving from server: {}", e)
         }
+    }
+}
+
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+async fn try_serverinfo() -> Result<()> {
+    let mut client = DaemonClient::new().await?;
+    let res = client.send_command(DaemonCommand::ServerInfo).await?;
+    if let Ok(DaemonResponseData::ServerInfo(si)) = res.result {
+        println!("Got Result! {:?}", si);
+    } else {
+        handle_unexpected(res.result);
     }
     Ok(())
 }
@@ -95,40 +108,25 @@ async fn try_serverinfo() -> Result<()> {
 async fn try_serverconfig() -> Result<()> {
     let mut client = DaemonClient::new().await?;
     let res = client.send_command(DaemonCommand::ServerConfig).await?;
-    match res.result {
-        Ok(DaemonResponseData::ServerConfig(cfig)) => {
-            println!("Got Result! {:?}", cfig);
-        }
-        Ok(DaemonResponseData::None) => {
-            println!("Server not started.")
-        }
-        Ok(res) => {
-            println!("Unexpected Response: {:?}", res)
-        }
-        Err(e) => {
-            println!("Error when retrieving from server: {}", e)
-        }
+    if let Ok(DaemonResponseData::ServerConfig(cfig)) = res.result {
+        println!("Got Result! {:?}", cfig);
+    } else {
+        handle_unexpected(res.result);
     }
     Ok(())
 }
 
-#[cfg(not(any(target_os = "linux", target_vendor = "apple")))]
-async fn try_start() -> Result<()> {
-    Ok(())
-}
-
-#[cfg(not(any(target_os = "linux", target_vendor = "apple")))]
-async fn try_stop() -> Result<()> {
-    Ok(())
-}
-
-#[cfg(not(any(target_os = "linux", target_vendor = "apple")))]
-async fn try_serverinfo() -> Result<()> {
-    Ok(())
-}
-
-#[cfg(not(any(target_os = "linux", target_vendor = "apple")))]
-async fn try_serverconfig() -> Result<()> {
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+async fn try_reloadconfig(interface_id: String) -> Result<()> {
+    let mut client = DaemonClient::new().await?;
+    let res = client
+        .send_command(DaemonCommand::ReloadConfig(interface_id))
+        .await?;
+    if let Ok(DaemonResponseData::ServerConfig(cfig)) = res.result {
+        println!("Got Result! {:?}", cfig);
+    } else {
+        handle_unexpected(res.result);
+    }
     Ok(())
 }
 
@@ -144,6 +142,7 @@ async fn main() -> Result<()> {
         Commands::Daemon(_) => daemon::daemon_main(None, None).await?,
         Commands::ServerInfo => try_serverinfo().await?,
         Commands::ServerConfig => try_serverconfig().await?,
+        Commands::ReloadConfig(args) => try_reloadconfig(args.interface_id.clone()).await?,
     }
 
     Ok(())

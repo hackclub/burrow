@@ -10,7 +10,6 @@ use tokio::{
 };
 use tracing::{debug, error, info};
 
-
 use crate::daemon::rpc::{
     DaemonCommand,
     DaemonMessage,
@@ -26,7 +25,13 @@ const UNIX_SOCKET_PATH: &str = "/run/burrow.sock";
 #[cfg(target_vendor = "apple")]
 const UNIX_SOCKET_PATH: &str = "burrow.sock";
 
-#[derive(Debug)]
+fn get_socket_path() -> String {
+    if std::env::var("BURROW_SOCKET_PATH").is_ok() {
+        return std::env::var("BURROW_SOCKET_PATH").unwrap();
+    }
+    return UNIX_SOCKET_PATH.to_string();
+}
+
 pub struct Listener {
     cmd_tx: async_channel::Sender<DaemonCommand>,
     rsp_rx: async_channel::Receiver<DaemonResponse>,
@@ -41,7 +46,8 @@ impl Listener {
         rsp_rx: async_channel::Receiver<DaemonResponse>,
         sub_chan: async_channel::Receiver<DaemonNotification>,
     ) -> Self {
-        let path = Path::new(OsStr::new(UNIX_SOCKET_PATH));
+        let socket_path = get_socket_path();
+        let path = Path::new(OsStr::new(&socket_path));
         Self::new_with_path(cmd_tx, rsp_rx, sub_chan, path)?
     }
 
@@ -210,7 +216,8 @@ pub struct DaemonClient {
 
 impl DaemonClient {
     pub async fn new() -> Result<Self> {
-        let path = Path::new(OsStr::new(UNIX_SOCKET_PATH));
+        let socket_path = get_socket_path();
+        let path = Path::new(OsStr::new(&socket_path));
         Self::new_with_path(path).await
     }
 
