@@ -1,4 +1,4 @@
-use std::{path::Path, str::FromStr};
+use std::path::Path;
 
 use anyhow::Result;
 use rusqlite::{params, Connection};
