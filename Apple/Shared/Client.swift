@@ -7,6 +7,7 @@ public final class Client {
     private let logger = Logger.logger(for: Client.self)
     private var generator = SystemRandomNumberGenerator()
     private var continuations: [UInt: UnsafeContinuation<Data, Error>] = [:]
+    private var event_map: [String : [(Data) throws -> Void]] = [:]
     private var task: Task<Void, Error>?
 
     public convenience init() throws {
@@ -70,6 +71,17 @@ public final class Client {
             command: request
         )
         return try await send(req)
+    }
+    public func on_event<T: Codable>(event_name: String, callable: @escaping (T) throws -> Void){
+        let action = { data in
+            let decoded = try JSONDecoder().decode(T.self, from: data)
+            try callable(decoded)
+        }
+        if event_map[event_name] != nil{
+            event_map[event_name]?.append(action)
+        }else{
+            event_map[event_name] = [action]
+        }
     }
 
     deinit {

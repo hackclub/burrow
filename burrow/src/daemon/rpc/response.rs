@@ -2,6 +2,8 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use tun::TunInterface;
 
+use crate::wireguard::Config;
+
 #[derive(Clone, Serialize, Deserialize, Debug, JsonSchema)]
 pub struct DaemonResponse {
     //  Error types can't be serialized, so this is the second best option.
@@ -60,6 +62,18 @@ pub struct ServerConfig {
     pub address: Vec<String>,
     pub name: Option<String>,
     pub mtu: Option<i32>,
+}
+
+impl TryFrom<&Config> for ServerConfig {
+    type Error = anyhow::Error;
+
+    fn try_from(config: &Config) -> anyhow::Result<Self> {
+        Ok(ServerConfig {
+            address: Some(config.interface.address.to_string()),
+            name: None,
+            mtu: config.interface.mtu.map(|mtu| mtu as i32),
+        })
+    }
 }
 
 impl Default for ServerConfig {

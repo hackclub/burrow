@@ -3,8 +3,8 @@ pub mod wireguard;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 mod daemon;
-pub(crate) mod tracing;
 pub mod database;
+pub(crate) mod tracing;
 
 #[cfg(target_vendor = "apple")]
 pub use daemon::apple::spawn_in_process;
