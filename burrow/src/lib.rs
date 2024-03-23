@@ -10,10 +10,10 @@ pub(crate) mod tracing;
 pub use daemon::apple::spawn_in_process;
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 pub use daemon::{
+    rpc::DaemonResponse,
+    rpc::ServerInfo,
     DaemonClient,
     DaemonCommand,
-    DaemonResponse,
     DaemonResponseData,
     DaemonStartOptions,
-    ServerInfo,
 };

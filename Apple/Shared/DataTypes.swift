@@ -9,28 +9,50 @@ public enum BurrowError: Error {
     case noClient
 }
 
-public protocol Request: Codable where Command: Codable {
-    associatedtype Command
+
+public protocol Request: Codable where Params: Codable {
+    associatedtype Params
 
     var id: UInt { get set }
-    var command: Command { get set }
+    var method: String { get set }
+    var params: Params? { get set }
 }
+
+public enum MessageType: String, Codable {
+    case Request
+    case Response
+    case Notification
+}
+
+public struct MessagePeek: Codable {
+    public var type: MessageType
+    public init(type: MessageType) {
+        self.type = type
+    }
+}
+
+
+public struct EmptyParams: Codable {}
 
 public struct BurrowSingleCommand: Request {
     public var id: UInt
-    public var command: String
+    public var method: String
+    public var params: EmptyParams?
+    
     public init(id: UInt, command: String) {
         self.id = id
-        self.command = command
+        self.method = command
     }
 }
 
 public struct BurrowRequest<T>: Request where T: Codable {
     public var id: UInt
-    public var command: T
+    public var method: String
+    public var params: T?
     public init(id: UInt, command: T) {
         self.id = id
-        self.command = command
+        self.method = "\(T.self)"
+        self.params = command
     }
 }
 
@@ -43,10 +65,26 @@ public struct Response<T>: Decodable where T: Decodable {
     }
 }
 
-public struct AnyResponse: Codable {
+public struct ResponsePeek: Codable {
     public var id: UInt
     public init(id: UInt) {
         self.id = id
+    }
+}
+
+public struct Notification<T>: Codable where T: Codable {
+    public var method: String
+    public var params: T
+    public init(method: String, params: T) {
+        self.method = method
+        self.params = params
+    }
+}
+
+public struct NotificationPeek : Codable {
+    public var method: String
+    public init(method: String) {
+        self.method = method
     }
 }
 
@@ -71,7 +109,7 @@ public struct ServerConfigData: Codable {
     }
 }
 
-public struct BurrowStartRequest: Codable {
+public struct Start: Codable {
     public struct TunOptions: Codable {
         public let name: String?
         public let no_pi: Bool
@@ -86,15 +124,9 @@ public struct BurrowStartRequest: Codable {
             self.address = address
         }
     }
-    public struct StartOptions: Codable {
-        public let tun: TunOptions
-        public init(tun: TunOptions) {
-            self.tun = tun
-        }
-    }
-    public let Start: StartOptions
-    public init(Start: StartOptions) {
-        self.Start = Start
+    public let tun: TunOptions
+    public init(tun: TunOptions) {
+        self.tun = tun
     }
 }
 

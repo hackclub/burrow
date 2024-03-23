@@ -21,11 +21,9 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             self.client = client
 
             try await self.loadTunSettings()
-            let startRequest = BurrowStartRequest(
-                Start: BurrowStartRequest.StartOptions(
-                    tun: BurrowStartRequest.TunOptions(
-                        name: nil, no_pi: false, tun_excl: false, tun_retrieve: true, address: nil
-                    )
+            let startRequest = Start(
+                tun: Start.TunOptions(
+                    name: nil, no_pi: false, tun_excl: false, tun_retrieve: true, address: nil
                 )
             )
             let response = try await client.request(startRequest, type: BurrowResult<String>.self)
@@ -50,7 +48,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         guard let client = self.client else {
             throw BurrowError.noClient
         }
-        let srvConfig = try await client.request("ServerConfig", type: BurrowResult<ServerConfigData>.self)
+        let srvConfig = try await client.single_request("ServerConfig", type: BurrowResult<ServerConfigData>.self)
         guard let serverconfig = srvConfig.Ok else {
             throw BurrowError.resultIsError
         }

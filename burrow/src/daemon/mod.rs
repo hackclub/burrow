@@ -3,7 +3,7 @@ use std::{path::Path, sync::Arc};
 pub mod apple;
 mod instance;
 mod net;
-mod rpc;
+pub mod rpc;
 
 use anyhow::Result;
 use instance::DaemonInstance;

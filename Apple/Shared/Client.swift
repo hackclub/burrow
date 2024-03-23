@@ -7,7 +7,7 @@ public final class Client {
     private let logger = Logger.logger(for: Client.self)
     private var generator = SystemRandomNumberGenerator()
     private var continuations: [UInt: UnsafeContinuation<Data, Error>] = [:]
-    private var event_map: [String : [(Data) throws -> Void]] = [:]
+    private var eventMap: [String : [(Data) throws -> Void]] = [:]
     private var task: Task<Void, Error>?
 
     public convenience init() throws {
@@ -32,14 +32,24 @@ public final class Client {
         self.task = Task { [weak self] in
             while true {
                 let (data, _, _) = try await connection.receiveMessage()
-                self?.logger.debug("Received message! \(data)")
-                let response = try JSONDecoder().decode(AnyResponse.self, from: data)
-                self?.logger.info("Received response for \(response.id)")
-                guard let continuations = self?.continuations else {return}
-                self?.logger.debug("All keys in continuation table: \(continuations.keys)")
-                guard let continuation = self?.continuations[response.id] else { return }
-                self?.logger.debug("Got matching continuation")
-                continuation.resume(returning: data)
+                let peek = try JSONDecoder().decode(MessagePeek.self, from: data)
+                switch peek.type {
+                case .Response:
+                    let response = try JSONDecoder().decode(ResponsePeek.self, from: data)
+                    self?.logger.info("Received response for \(response.id)")
+                    guard let continuations = self?.continuations else {return}
+                    self?.logger.debug("All keys in continuation table: \(continuations.keys)")
+                    guard let continuation = self?.continuations[response.id] else { return }
+                    self?.logger.debug("Got matching continuation")
+                    continuation.resume(returning: data)
+                case .Notification:
+                    let peek = try JSONDecoder().decode(NotificationPeek.self, from: data)
+                    guard let handlers = self?.eventMap[peek.method] else { continue }
+                    let _ = try handlers.map{ try $0(data) }
+                default:
+                    continue
+                }
+                
             }
         }
     }
@@ -72,15 +82,22 @@ public final class Client {
         )
         return try await send(req)
     }
-    public func on_event<T: Codable>(event_name: String, callable: @escaping (T) throws -> Void){
+    public func single_request<U: Decodable>(_ request: String, type: U.Type = U.self) async throws -> U {
+        let req = BurrowSingleCommand(
+            id: generator.next(upperBound: UInt.max),
+            command: request
+        )
+        return try await send(req)
+    }
+    public func on_event<T: Codable>(eventName: String, callable: @escaping (T) throws -> Void) {
         let action = { data in
             let decoded = try JSONDecoder().decode(T.self, from: data)
             try callable(decoded)
         }
-        if event_map[event_name] != nil{
-            event_map[event_name]?.append(action)
-        }else{
-            event_map[event_name] = [action]
+        if eventMap[eventName] != nil {
+            eventMap[eventName]?.append(action)
+        }else {
+            eventMap[eventName] = [action]
         }
     }
 
