@@ -105,10 +105,10 @@ public struct BurrowResult<T>: Codable where T: Codable {
 }
 
 public struct ServerConfig: Codable {
-    public let address: String?
+    public let address: [String]
     public let name: String?
     public let mtu: Int32?
-    public init(address: String?, name: String?, mtu: Int32?) {
+    public init(address: [String], name: String?, mtu: Int32?) {
         self.address = address
         self.name = name
         self.mtu = mtu
@@ -121,8 +121,8 @@ public struct Start: Codable {
         public let no_pi: Bool
         public let tun_excl: Bool
         public let tun_retrieve: Bool
-        public let address: String?
-        public init(name: String?, no_pi: Bool, tun_excl: Bool, tun_retrieve: Bool, address: String?) {
+        public let address: [String]
+        public init(name: String?, no_pi: Bool, tun_excl: Bool, tun_retrieve: Bool, address: [String]) {
             self.name = name
             self.no_pi = no_pi
             self.tun_excl = tun_excl
