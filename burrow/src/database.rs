@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, str::FromStr};
 
 use anyhow::Result;
 use rusqlite::{params, Connection};
@@ -40,21 +40,33 @@ pub fn initialize_tables(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+fn parse_lst(s: &str) -> Vec<String> {
+    if s.is_empty() {
+        return vec![];
+    }
+    s.split(',').map(|s| s.to_string()).collect()
+}
+
+fn to_lst<T: ToString>(v: &Vec<T>) -> String {
+    v.iter()
+        .map(|s| s.to_string())
+        .collect::<Vec<String>>()
+        .join(",")
+}
+
 pub fn load_interface(conn: &Connection, interface_id: &str) -> Result<Config> {
     let iface = conn.query_row(
         "SELECT private_key, dns, address, listen_port, mtu FROM wg_interface WHERE id = ?",
         [&interface_id],
         |row| {
             let dns_rw: String = row.get(1)?;
-            let dns: Vec<String> = if !dns_rw.is_empty() {
-                dns_rw.split(',').map(|s| s.to_string()).collect()
-            } else {
-                vec![]
-            };
+            let dns = parse_lst(&dns_rw);
+            let address_rw: String = row.get(2)?;
+            let address = parse_lst(&address_rw);
             Ok(Interface {
                 private_key: row.get(0)?,
                 dns,
-                address: row.get(2)?,
+                address,
                 mtu: row.get(4)?,
                 listen_port: row.get(3)?,
             })
@@ -85,8 +97,8 @@ pub fn dump_interface(conn: &Connection, config: &Config) -> Result<()> {
     let cif = &config.interface;
     stmt.execute(params![
         cif.private_key,
-        cif.dns.join(","),
-        cif.address,
+        to_lst(&cif.dns),
+        to_lst(&cif.address),
         cif.listen_port,
         cif.mtu
     ])?;

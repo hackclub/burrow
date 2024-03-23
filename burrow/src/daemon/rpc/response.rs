@@ -69,7 +69,7 @@ impl TryFrom<&Config> for ServerConfig {
 
     fn try_from(config: &Config) -> anyhow::Result<Self> {
         Ok(ServerConfig {
-            address: Some(config.interface.address.to_string()),
+            address: config.interface.address.clone(),
             name: None,
             mtu: config.interface.mtu.map(|mtu| mtu as i32),
         })
