@@ -14,5 +14,9 @@
     "[rust]": {
         "editor.defaultFormatter": "rust-lang.rust-analyzer",
     },
-    "rust-analyzer.inlayHints.typeHints.enable": false
+    "rust-analyzer.inlayHints.typeHints.enable": false,
+    "rust-analyzer.linkedProjects": [
+        "./burrow/Cargo.toml",
+        "./burrow/Cargo.toml"
+    ]
 }

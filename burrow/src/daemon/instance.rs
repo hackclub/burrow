@@ -6,9 +6,13 @@ use tracing::{debug, info, warn};
 use tun::tokio::TunInterface;
 
 use crate::{
-    daemon::{
-        command::DaemonCommand,
-        response::{DaemonResponse, DaemonResponseData, ServerConfig, ServerInfo},
+    daemon::rpc::{
+        DaemonCommand,
+        DaemonNotification,
+        DaemonResponse,
+        DaemonResponseData,
+        ServerConfig,
+        ServerInfo,
     },
     database::{get_connection, load_interface},
     wireguard::Interface,
@@ -22,8 +26,10 @@ enum RunState {
 pub struct DaemonInstance {
     rx: async_channel::Receiver<DaemonCommand>,
     sx: async_channel::Sender<DaemonResponse>,
+    subx: async_channel::Sender<DaemonNotification>,
     tun_interface: Arc<RwLock<Option<TunInterface>>>,
     wg_interface: Arc<RwLock<Interface>>,
+    config: Arc<RwLock<Config>>,
     wg_state: RunState,
 }
 
@@ -31,13 +37,17 @@ impl DaemonInstance {
     pub fn new(
         rx: async_channel::Receiver<DaemonCommand>,
         sx: async_channel::Sender<DaemonResponse>,
+        subx: async_channel::Sender<DaemonNotification>,
         wg_interface: Arc<RwLock<Interface>>,
+        config: Arc<RwLock<Config>>,
     ) -> Self {
         Self {
             rx,
             sx,
+            subx,
             wg_interface,
             tun_interface: Arc::new(RwLock::new(None)),
+            config,
             wg_state: RunState::Idle,
         }
     }
@@ -98,6 +108,12 @@ impl DaemonInstance {
                     .await
                     .set_tun(iface.tun.unwrap().clone());
                 self.wg_interface.write().await.pcbs = iface.pcbs.clone();
+                *self.config.write().await = cfig;
+                self.subx
+                    .send(DaemonNotification::ConfigChange(ServerConfig::try_from(
+                        &self.config.read().await.to_owned(),
+                    )?))
+                    .await?;
                 Ok(DaemonResponseData::None)
             }
         }
