@@ -1,40 +1,53 @@
 use std::{path::Path, sync::Arc};
 
 pub mod apple;
-mod command;
 mod instance;
 mod net;
-mod response;
+pub mod rpc;
 
 use anyhow::Result;
-pub use command::{DaemonCommand, DaemonStartOptions};
 use instance::DaemonInstance;
 pub use net::{DaemonClient, Listener};
-pub use response::{DaemonResponse, DaemonResponseData, ServerInfo};
+pub use rpc::{DaemonCommand, DaemonResponseData, DaemonStartOptions};
 use tokio::sync::{Notify, RwLock};
 use tracing::{error, info};
 
-use crate::wireguard::{Config, Interface};
+use crate::{
+    database::{get_connection, load_interface},
+    wireguard::Interface,
+};
 
-pub async fn daemon_main(path: Option<&Path>, notify_ready: Option<Arc<Notify>>) -> Result<()> {
+pub async fn daemon_main(
+    socket_path: Option<&Path>,
+    db_path: Option<&Path>,
+    notify_ready: Option<Arc<Notify>>,
+) -> Result<()> {
     let (commands_tx, commands_rx) = async_channel::unbounded();
     let (response_tx, response_rx) = async_channel::unbounded();
+    let (subscribe_tx, subscribe_rx) = async_channel::unbounded();
 
-    let listener = if let Some(path) = path {
+    let listener = if let Some(path) = socket_path {
         info!("Creating listener... {:?}", path);
-        Listener::new_with_path(commands_tx, response_rx, path)
+        Listener::new_with_path(commands_tx, response_rx, subscribe_rx, path)
     } else {
         info!("Creating listener...");
-        Listener::new(commands_tx, response_rx)
+        Listener::new(commands_tx, response_rx, subscribe_rx)
     };
     if let Some(n) = notify_ready {
         n.notify_one()
     }
     let listener = listener?;
-
-    let config = Config::default();
-    let iface: Interface = config.try_into()?;
-    let mut instance = DaemonInstance::new(commands_rx, response_tx, Arc::new(RwLock::new(iface)));
+    let conn = get_connection(db_path)?;
+    let config = load_interface(&conn, "1")?;
+    let iface: Interface = config.clone().try_into()?;
+    let mut instance = DaemonInstance::new(
+        commands_rx,
+        response_tx,
+        subscribe_tx,
+        Arc::new(RwLock::new(iface)),
+        Arc::new(RwLock::new(config)),
+        db_path,
+    );
 
     info!("Starting daemon...");
 

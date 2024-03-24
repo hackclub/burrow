@@ -31,6 +31,7 @@ fn parse_public_key(string: &str) -> PublicKey {
 /// A raw version of Peer Config that can be used later to reflect configuration files.
 /// This should be later converted to a `WgPeer`.
 /// Refers to https://github.com/pirate/wireguard-docs?tab=readme-ov-file#overview
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Peer {
     pub public_key: String,
     pub preshared_key: Option<String>,
@@ -40,6 +41,7 @@ pub struct Peer {
     pub name: Option<String>,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Interface {
     pub private_key: String,
     pub address: Vec<String>,
@@ -48,6 +50,7 @@ pub struct Interface {
     pub mtu: Option<u32>,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Config {
     pub peers: Vec<Peer>,
     pub interface: Interface, // Support for multiple interfaces?

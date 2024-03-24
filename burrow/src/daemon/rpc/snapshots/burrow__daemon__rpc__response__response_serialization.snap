@@ -1,0 +1,5 @@
+---
+source: burrow/src/daemon/rpc/response.rs
+expression: "serde_json::to_string(&DaemonResponse::new(Ok::<DaemonResponseData,\n                        String>(DaemonResponseData::None)))?"
+---
+{"result":{"Ok":"None"},"id":0}
