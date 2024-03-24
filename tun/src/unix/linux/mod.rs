@@ -2,7 +2,7 @@ use std::{
     fs::OpenOptions,
     io::{Error, Write},
     mem,
-    net::{Ipv4Addr, Ipv6Addr, SocketAddrV4},
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddrV4},
     os::{
         fd::RawFd,
         unix::io::{AsRawFd, FromRawFd, IntoRawFd},
@@ -15,7 +15,7 @@ use socket2::{Domain, SockAddr, Socket, Type};
 use tracing::{info, instrument};
 
 use super::{ifname_to_string, string_to_ifname};
-use crate::TunOptions;
+use crate::{syscall, TunOptions};
 
 mod sys;
 
@@ -112,6 +112,25 @@ impl TunInterface {
         self.perform(|fd| unsafe { sys::if_get_addr(fd, &mut iff) })?;
         let addr = unsafe { *(&iff.ifr_ifru.ifru_addr as *const _ as *const sys::sockaddr_in) };
         Ipv4Addr::from(u32::from_be(addr.sin_addr.s_addr))
+    }
+
+    #[throws]
+    #[instrument]
+    pub fn ipv6_addrs(&self) -> Vec<Ipv6Addr> {
+        let ip_addrs = self.ip_addrs()?;
+        let mut ipv6_addrs: Vec<Ipv6Addr> = vec![];
+
+        for ip_addr in ip_addrs.iter() {
+            if ip_addr.is_ipv6() {
+                match ip_addr {
+                    IpAddr::V6(addr) => {
+                        ipv6_addrs.push(*addr);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        ipv6_addrs
     }
 
     #[throws]

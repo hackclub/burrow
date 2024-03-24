@@ -1,10 +1,15 @@
-use std::{io::{Error, IoSlice}, mem, net::{Ipv4Addr, SocketAddrV4}, os::fd::{AsRawFd, FromRawFd, RawFd}, ptr};
-use std::net::{IpAddr, Ipv6Addr, SocketAddrV6};
-use std::ptr::addr_of;
+use std::{
+    io::{Error, IoSlice},
+    mem,
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddrV4, SocketAddrV6},
+    os::fd::{AsRawFd, FromRawFd, RawFd},
+    ptr,
+    ptr::addr_of,
+};
 
 use byteorder::{ByteOrder, NetworkEndian};
 use fehler::throws;
-use libc::{c_char, iovec, writev, AF_INET, AF_INET6, sockaddr_in6};
+use libc::{c_char, iovec, sockaddr_in6, writev, AF_INET, AF_INET6};
 use nix::sys::socket::SockaddrIn6;
 use socket2::{Domain, SockAddr, Socket, Type};
 use tracing::{self, instrument};
@@ -69,11 +74,11 @@ impl TunInterface {
 
     #[throws]
     fn configure(&self, options: TunOptions) {
-        for addr in options.address{
+        for addr in options.address {
             if let Ok(addr) = addr.parse::<IpAddr>() {
                 match addr {
-                    IpAddr::V4(addr) => {self.set_ipv4_addr(addr)?}
-                    IpAddr::V6(addr) => {self.set_ipv6_addr(addr)?}
+                    IpAddr::V4(addr) => self.set_ipv4_addr(addr)?,
+                    IpAddr::V6(addr) => self.set_ipv6_addr(addr)?,
                 }
             }
         }
