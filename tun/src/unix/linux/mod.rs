@@ -97,6 +97,24 @@ impl TunInterface {
 
     #[throws]
     #[instrument]
+    pub fn set_up(&self, up: bool) {
+        let mut inter = interfaces::Interface::get_by_name(&self.name()?)
+            .unwrap()
+            .unwrap();
+        inter.set_up(up).unwrap();
+    }
+
+    #[throws]
+    #[instrument]
+    pub fn is_up(&self) -> bool {
+        let inter = interfaces::Interface::get_by_name(&self.name()?)
+            .unwrap()
+            .unwrap();
+        inter.is_up()
+    }
+
+    #[throws]
+    #[instrument]
     pub fn set_ipv4_addr(&self, addr: Ipv4Addr) {
         let addr = SockAddr::from(SocketAddrV4::new(addr, 0));
         let mut iff = self.ifreq()?;

@@ -16,6 +16,9 @@ serde = { version = "1", features = ["derive"], optional = true }
 schemars = { version = "0.8", optional = true }
 
 futures = { version = "0.3.28", optional = true }
+netlink-packet-route = "0.19.0"
+netlink-packet-core = "0.7.0"
+
 
 [features]
 serde = ["dep:serde", "dep:schemars"]
@@ -23,6 +26,9 @@ tokio = ["tokio/net", "dep:futures"]
 
 [target.'cfg(feature = "tokio")'.dev-dependencies]
 tokio = { features = ["rt", "macros"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+interfaces = "0.0.9"
 
 [target.'cfg(windows)'.dependencies]
 lazy_static = "1.4"

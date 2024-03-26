@@ -26,6 +26,21 @@ fn test_set_get_broadcast_addr() {
 
 #[test]
 #[throws]
+#[cfg(not(any(target_os = "windows", target_vendor = "apple")))]
+fn test_set_get_up() {
+    let tun = TunInterface::new()?;
+    let addr = Ipv4Addr::new(10, 0, 0, 1);
+    tun.set_ipv4_addr(addr)?;
+
+    let broadcast_addr = Ipv4Addr::new(255, 255, 255, 0);
+    tun.set_broadcast_addr(broadcast_addr)?;
+    tun.set_up(true)?;
+
+    assert!(tun.is_up()?);
+}
+
+#[test]
+#[throws]
 #[cfg(not(target_os = "windows"))]
 fn test_set_get_ipv4() {
     let tun = TunInterface::new()?;

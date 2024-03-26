@@ -247,4 +247,10 @@ impl TunInterface {
             .try_into()
             .map_err(|_| Error::new(ErrorKind::Other, "Conversion error"))?
     }
+
+    #[throws]
+    #[instrument]
+    pub fn set_up(&self, up: bool) {
+        tracing::warn!("Setting tun up is not supported yet on apple.");
+    }
 }
