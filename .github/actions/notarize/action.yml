@@ -15,10 +15,6 @@ inputs:
   export-path:
     description: The path to export the archive to
     required: true
-outputs:
-  notarized-app:
-    description: The compressed and notarized app
-    value: ${{ steps.notarize.outputs.notarized-app }}
 runs:
   using: composite
   steps:
@@ -28,31 +24,28 @@ runs:
     run: |
       echo "${{ inputs.app-store-key }}" > AuthKey_${{ inputs.app-store-key-id }}.p8
 
-      echo '{"destination":"upload","method":"developer-id"}' \
+      echo '{"destination":"export","method":"developer-id"}' \
         | plutil -convert xml1 -o ExportOptions.plist -
 
-      xcodebuild \
-        -exportArchive \
+      xcodebuild -exportArchive \
         -allowProvisioningUpdates \
         -allowProvisioningDeviceRegistration \
+        -skipPackagePluginValidation \
+        -skipMacroValidation \
+        -onlyUsePackageVersionsFromResolvedFile \
         -authenticationKeyID ${{ inputs.app-store-key-id }} \
         -authenticationKeyIssuerID ${{ inputs.app-store-key-issuer-id }} \
         -authenticationKeyPath "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8" \
-        -archivePath '${{ inputs.archive-path }}' \
+        -archivePath Wallet.xcarchive \
+        -exportPath Release \
         -exportOptionsPlist ExportOptions.plist
 
-      until xcodebuild \
-        -exportNotarizedApp \
-        -allowProvisioningUpdates \
-        -allowProvisioningDeviceRegistration \
-        -authenticationKeyID ${{ inputs.app-store-key-id }} \
-        -authenticationKeyIssuerID ${{ inputs.app-store-key-issuer-id }} \
-        -authenticationKeyPath "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8" \
-        -archivePath '${{ inputs.archive-path }}' \
-        -exportPath ${{ inputs.export-path }}
-      do
-        echo "Failed to export app, trying again in 10s..."
-        sleep 10
-      done
+      ditto -c -k --keepParent Release/Wallet.app Upload.zip
+      SUBMISSION_ID=$(xcrun notarytool submit --issuer ${{ inputs.app-store-key-issuer-id }} --key-id ${{ inputs.app-store-key-id }} --key "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8" Upload.zip | awk '/ id:/ { print $2; exit }')
 
-      rm -rf AuthKey_${{ inputs.app-store-key-id }}.p8 ExportOptions.plist
+      xcrun notarytool wait $SUBMISSION_ID --issuer ${{ inputs.app-store-key-issuer-id }} --key-id ${{ inputs.app-store-key-id }} --key "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8"
+      xcrun stapler staple Release/Wallet.app
+
+      aa archive -a lzma -b 8m -d Release -subdir Wallet.app -o Wallet.app.aar
+
+      rm -rf Upload.zip Release AuthKey_${{ inputs.app-store-key-id }}.p8 ExportOptions.plist
