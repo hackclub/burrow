@@ -4,16 +4,19 @@ struct TunnelButton: View {
     @Environment(\.tunnel)
     var tunnel: any Tunnel
 
+    private var action: Action? { tunnel.action }
+
     var body: some View {
-        if let action = tunnel.action {
-            Button {
+        Button {
+            if let action {
                 tunnel.perform(action)
-            } label: {
-                Text(action.description)
             }
-            .padding(.horizontal)
-            .buttonStyle(.floating)
+        } label: {
+            Text(action.description)
         }
+        .disabled(action.isDisabled)
+        .padding(.horizontal)
+        .buttonStyle(.floating)
     }
 }
 
@@ -40,12 +43,21 @@ extension TunnelButton {
     }
 }
 
-extension TunnelButton.Action {
+extension TunnelButton.Action? {
     var description: LocalizedStringKey {
         switch self {
         case .enable: "Enable"
         case .start: "Start"
         case .stop: "Stop"
+        case .none: "Start"
+        }
+    }
+
+    var isDisabled: Bool {
+        if case .none = self {
+            true
+        } else {
+            false
         }
     }
 }
