@@ -1,0 +1,21 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "P6PV2R9443.com.hackclub.burrow"
+        ],
+        "components": [
+          {
+            "/": "/callback/*"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "P6PV2R9443.com.hackclub.burrow"
+    ]
+  }
+}
