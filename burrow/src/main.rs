@@ -79,6 +79,7 @@ async fn try_stop() -> Result<()> {
     Ok(())
 }
 
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
 fn handle_unexpected(res: Result<DaemonResponseData, String>) {
     match res {
         Ok(DaemonResponseData::None) => {
