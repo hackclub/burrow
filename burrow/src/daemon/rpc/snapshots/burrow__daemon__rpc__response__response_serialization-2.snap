@@ -1,0 +1,5 @@
+---
+source: burrow/src/daemon/rpc/response.rs
+expression: "serde_json::to_string(&DaemonResponse::new(Ok::<DaemonResponseData,\n                        String>(DaemonResponseData::ServerInfo(ServerInfo {\n                            name: Some(\"burrow\".to_string()),\n                            ip: None,\n                            mtu: Some(1500),\n                        }))))?"
+---
+{"result":{"Ok":{"type":"ServerInfo","name":"burrow","ip":null,"mtu":1500}},"id":0}

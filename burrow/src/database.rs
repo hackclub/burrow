@@ -135,8 +135,7 @@ mod tests {
 
     #[test]
     fn test_db() {
-        let p = Path::new(DB_PATH);
-        let conn = Connection::open(p).unwrap();
+        let conn = Connection::open_in_memory().unwrap();
         initialize_tables(&conn).unwrap();
         let config = Config::default();
         dump_interface(&conn, &config).unwrap();

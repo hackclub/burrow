@@ -2,4 +2,4 @@
 source: burrow/src/daemon/rpc/request.rs
 expression: "serde_json::to_string(&DaemonCommand::Start(DaemonStartOptions::default())).unwrap()"
 ---
-{"method":"Start","params":{"tun":{"name":null,"no_pi":false,"tun_excl":false,"tun_retrieve":false,"address":null}}}
+{"method":"Start","params":{"tun":{"name":null,"no_pi":false,"tun_excl":false,"tun_retrieve":false,"address":[]}}}

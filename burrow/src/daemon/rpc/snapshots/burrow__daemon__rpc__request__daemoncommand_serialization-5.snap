@@ -1,0 +1,5 @@
+---
+source: burrow/src/daemon/rpc/request.rs
+expression: "serde_json::to_string(&DaemonCommand::ServerConfig).unwrap()"
+---
+{"method":"ServerConfig"}
