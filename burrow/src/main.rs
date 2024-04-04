@@ -14,6 +14,7 @@ use tun::TunOptions;
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 use crate::daemon::DaemonResponseData;
 
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
 pub mod database;
 
 #[derive(Parser)]
