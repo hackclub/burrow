@@ -32,7 +32,7 @@ tar xf sqlite-autoconf-$SQLITE_VERSION.tar.gz
 rm sqlite-autoconf-$SQLITE_VERSION.tar.gz
 cd sqlite-autoconf-$SQLITE_VERSION
 ./configure --disable-shared
-    CC="clang-$LLVM_VERSION -target $LLVM_TARGET"
+    CC="clang-$LLVM_VERSION -target $LLVM_TARGET -fPIE"
     CFLAGS="-I/usr/local/include -I/usr/include/$MUSL_TARGET"
     LDFLAGS="-L/usr/local/lib -L/usr/lib/$MUSL_TARGET -L/lib/$MUSL_TARGET"
 make
