@@ -42,7 +42,7 @@ cd ..
 rm -rf sqlite-autoconf-$SQLITE_VERSION
 
 CFLAGS="-I/usr/local/include -I/usr/include/$MUSL_TARGET -fPIE"
-meson setup $BURROW_GTK_BUILD --bindir bin --prefix /usr --buildtype $BURROW_BUILD_TYPE
+meson setup $BURROW_GTK_BUILD --bindir bin --prefix /usr --buildtype $BURROW_BUILD_TYPE Db_pie=true
 meson compile -C $BURROW_GTK_BUILD
 DESTDIR=AppDir meson install -C $BURROW_GTK_BUILD
 cargo b --$BURROW_BUILD_TYPE --manifest-path=../Cargo.toml
