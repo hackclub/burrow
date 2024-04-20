@@ -12,7 +12,7 @@ RUN set -eux && \
     curl --proto '=https' --tlsv1.2 -sSf https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor --output $KEYRINGS/llvm.gpg && \
     echo "deb [signed-by=$KEYRINGS/llvm.gpg] http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm-$LLVM_VERSION main" > /etc/apt/sources.list.d/llvm.list && \
     apt-get update && \
-    apt-get install --no-install-recommends -y clang-$LLVM_VERSION llvm-$LLVM_VERSION lld-$LLVM_VERSION && \
+    apt-get install --no-install-recommends -y clang-$LLVM_VERSION llvm-$LLVM_VERSION lld-$LLVM_VERSION build-essential sqlite3 libsqlite3-dev musl musl-tools musl-dev && \
     ln -s clang-$LLVM_VERSION /usr/bin/clang && \
     ln -s clang /usr/bin/clang++ && \
     ln -s lld-$LLVM_VERSION /usr/bin/ld.lld && \
@@ -24,12 +24,30 @@ RUN set -eux && \
     apt-get remove -y --auto-remove && \
     rm -rf /var/lib/apt/lists/*
 
+ARG SQLITE_VERSION=3400100
+
 RUN case $TARGETPLATFORM in \
-     "linux/arm64") LLVM_TARGET=aarch64-unknown-linux-musl ;; \
-     "linux/amd64") LLVM_TARGET=x86_64-unknown-linux-musl ;; \
+     "linux/arm64") LLVM_TARGET=aarch64-unknown-linux-musl MUSL_TARGET=aarch64-linux-musl ;; \
+     "linux/amd64") LLVM_TARGET=x86_64-unknown-linux-musl MUSL_TARGET=x86_64-linux-musl ;; \
      *) exit 1 ;; \
     esac && \
-    rustup target add $LLVM_TARGET
+    rustup target add $LLVM_TARGET && \
+    curl --proto '=https' --tlsv1.2 -sSfO https://www.sqlite.org/2022/sqlite-autoconf-$SQLITE_VERSION.tar.gz && \
+    tar xf sqlite-autoconf-$SQLITE_VERSION.tar.gz && \
+    rm sqlite-autoconf-$SQLITE_VERSION.tar.gz && \
+    cd sqlite-autoconf-$SQLITE_VERSION && \
+    ./configure --disable-shared \
+        CC="clang-$LLVM_VERSION -target $LLVM_TARGET" \
+        CFLAGS="-I/usr/local/include -I/usr/include/$MUSL_TARGET" \
+        LDFLAGS="-L/usr/local/lib -L/usr/lib/$MUSL_TARGET -L/lib/$MUSL_TARGET" && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf sqlite-autoconf-$SQLITE_VERSION
+
+ENV SQLITE3_STATIC=1 \
+    SQLITE3_INCLUDE_DIR=/usr/local/include \
+    SQLITE3_LIB_DIR=/usr/local/lib
 
 ENV CC_x86_64_unknown_linux_musl=clang-$LLVM_VERSION \
     AR_x86_64_unknown_linux_musl=llvm-ar-$LLVM_VERSION \
