@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0B28F1562ABF463A000D44B0 /* DataTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B28F1552ABF463A000D44B0 /* DataTypes.swift */; };
-		0B46E8E02AC918CA00BA2A3C /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B46E8DF2AC918CA00BA2A3C /* Client.swift */; };
+		0BA6D73B2BA638D900BD4B55 /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B46E8DF2AC918CA00BA2A3C /* Client.swift */; };
+		0BA6D73C2BA6393200BD4B55 /* NWConnection+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */; };
+		0BA6D73D2BA6393B00BD4B55 /* NewlineProtocolFramer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */; };
+		0BA6D73E2BA6394B00BD4B55 /* DataTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B28F1552ABF463A000D44B0 /* DataTypes.swift */; };
 		43AA26D82A10004900F14CE6 /* MenuItemToggleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AA26D72A10004900F14CE6 /* MenuItemToggleView.swift */; };
 		D000363D2BB8928E00E582EC /* NetworkCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D000363C2BB8928E00E582EC /* NetworkCarouselView.swift */; };
 		D000363F2BB895FB00E582EC /* OAuth2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D000363E2BB895FB00E582EC /* OAuth2.swift */; };
-		D00117312B2FFFC900D87C25 /* NWConnection+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */; };
-		D00117332B3001A400D87C25 /* NewlineProtocolFramer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */; };
 		D001173B2B30341C00D87C25 /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D001173A2B30341C00D87C25 /* Logging.swift */; };
 		D00117442B30372900D87C25 /* libBurrowShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D00117382B30341C00D87C25 /* libBurrowShared.a */; };
 		D00117452B30372C00D87C25 /* libBurrowShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D00117382B30341C00D87C25 /* libBurrowShared.a */; };
@@ -158,6 +158,10 @@
 		D00117392B30341C00D87C25 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				0B28F1552ABF463A000D44B0 /* DataTypes.swift */,
+				D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */,
+				D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */,
+				0B46E8DF2AC918CA00BA2A3C /* Client.swift */,
 				D001173A2B30341C00D87C25 /* Logging.swift */,
 				D08252752B5C9FC4005DA378 /* Constants.swift */,
 				D00117422B30348D00D87C25 /* Shared.xcconfig */,
@@ -199,10 +203,6 @@
 			isa = PBXGroup;
 			children = (
 				D020F65729E4A697002790F6 /* PacketTunnelProvider.swift */,
-				0B46E8DF2AC918CA00BA2A3C /* Client.swift */,
-				0B28F1552ABF463A000D44B0 /* DataTypes.swift */,
-				D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */,
-				D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */,
 				D020F65929E4A697002790F6 /* Info.plist */,
 				D020F66729E4A95D002790F6 /* NetworkExtension-iOS.entitlements */,
 				D020F66629E4A95D002790F6 /* NetworkExtension-macOS.entitlements */,
@@ -456,7 +456,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				D001173B2B30341C00D87C25 /* Logging.swift in Sources */,
+				0BA6D73C2BA6393200BD4B55 /* NWConnection+Async.swift in Sources */,
 				D08252762B5C9FC4005DA378 /* Constants.swift in Sources */,
+				0BA6D73E2BA6394B00BD4B55 /* DataTypes.swift in Sources */,
+				0BA6D73B2BA638D900BD4B55 /* Client.swift in Sources */,
+				0BA6D73D2BA6393B00BD4B55 /* NewlineProtocolFramer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -464,10 +468,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D00117332B3001A400D87C25 /* NewlineProtocolFramer.swift in Sources */,
-				0B28F1562ABF463A000D44B0 /* DataTypes.swift in Sources */,
-				D00117312B2FFFC900D87C25 /* NWConnection+Async.swift in Sources */,
-				0B46E8E02AC918CA00BA2A3C /* Client.swift in Sources */,
 				D020F65829E4A697002790F6 /* PacketTunnelProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

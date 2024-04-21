@@ -10,8 +10,14 @@ use tokio::{
 };
 use tracing::{debug, error, info};
 
-use super::*;
-use crate::daemon::{DaemonCommand, DaemonResponse, DaemonResponseData};
+use crate::daemon::rpc::{
+    DaemonCommand,
+    DaemonMessage,
+    DaemonNotification,
+    DaemonRequest,
+    DaemonResponse,
+    DaemonResponseData,
+};
 
 #[cfg(not(target_vendor = "apple"))]
 const UNIX_SOCKET_PATH: &str = "/run/burrow.sock";
@@ -19,10 +25,17 @@ const UNIX_SOCKET_PATH: &str = "/run/burrow.sock";
 #[cfg(target_vendor = "apple")]
 const UNIX_SOCKET_PATH: &str = "burrow.sock";
 
-#[derive(Debug)]
+fn get_socket_path() -> String {
+    if std::env::var("BURROW_SOCKET_PATH").is_ok() {
+        return std::env::var("BURROW_SOCKET_PATH").unwrap();
+    }
+    UNIX_SOCKET_PATH.to_string()
+}
+
 pub struct Listener {
     cmd_tx: async_channel::Sender<DaemonCommand>,
     rsp_rx: async_channel::Receiver<DaemonResponse>,
+    sub_chan: async_channel::Receiver<DaemonNotification>,
     inner: UnixListener,
 }
 
@@ -31,9 +44,11 @@ impl Listener {
     pub fn new(
         cmd_tx: async_channel::Sender<DaemonCommand>,
         rsp_rx: async_channel::Receiver<DaemonResponse>,
+        sub_chan: async_channel::Receiver<DaemonNotification>,
     ) -> Self {
-        let path = Path::new(OsStr::new(UNIX_SOCKET_PATH));
-        Self::new_with_path(cmd_tx, rsp_rx, path)?
+        let socket_path = get_socket_path();
+        let path = Path::new(OsStr::new(&socket_path));
+        Self::new_with_path(cmd_tx, rsp_rx, sub_chan, path)?
     }
 
     #[throws]
@@ -41,10 +56,16 @@ impl Listener {
     pub fn new_with_path(
         cmd_tx: async_channel::Sender<DaemonCommand>,
         rsp_rx: async_channel::Receiver<DaemonResponse>,
+        sub_chan: async_channel::Receiver<DaemonNotification>,
         path: &Path,
     ) -> Self {
         let inner = listener_from_path_or_fd(&path, raw_fd())?;
-        Self { cmd_tx, rsp_rx, inner }
+        Self {
+            cmd_tx,
+            rsp_rx,
+            sub_chan,
+            inner,
+        }
     }
 
     #[throws]
@@ -52,10 +73,16 @@ impl Listener {
     pub fn new_with_path(
         cmd_tx: async_channel::Sender<DaemonCommand>,
         rsp_rx: async_channel::Receiver<DaemonResponse>,
+        sub_chan: async_channel::Receiver<DaemonNotification>,
         path: &Path,
     ) -> Self {
         let inner = listener_from_path(path)?;
-        Self { cmd_tx, rsp_rx, inner }
+        Self {
+            cmd_tx,
+            rsp_rx,
+            inner,
+            sub_chan,
+        }
     }
 
     pub async fn run(&self) -> Result<()> {
@@ -64,9 +91,10 @@ impl Listener {
             let (stream, _) = self.inner.accept().await?;
             let cmd_tx = self.cmd_tx.clone();
             let rsp_rxc = self.rsp_rx.clone();
+            let sub_chan = self.sub_chan.clone();
             tokio::task::spawn(async move {
                 info!("Got connection: {:?}", stream);
-                Self::stream(stream, cmd_tx, rsp_rxc).await;
+                Self::stream(stream, cmd_tx, rsp_rxc, sub_chan).await;
             });
         }
     }
@@ -75,34 +103,46 @@ impl Listener {
         stream: UnixStream,
         cmd_tx: async_channel::Sender<DaemonCommand>,
         rsp_rxc: async_channel::Receiver<DaemonResponse>,
+        sub_chan: async_channel::Receiver<DaemonNotification>,
     ) {
         let mut stream = stream;
         let (mut read_stream, mut write_stream) = stream.split();
         let buf_reader = BufReader::new(&mut read_stream);
         let mut lines = buf_reader.lines();
-        while let Ok(Some(line)) = lines.next_line().await {
-            info!("Line: {}", line);
-            let mut res: DaemonResponse = DaemonResponseData::None.into();
-            let req = match serde_json::from_str::<DaemonRequest>(&line) {
-                Ok(req) => Some(req),
-                Err(e) => {
-                    res.result = Err(e.to_string());
-                    error!("Failed to parse request: {}", e);
-                    None
-                }
-            };
-            let mut res = serde_json::to_string(&res).unwrap();
-            res.push('\n');
+        loop {
+            tokio::select! {
+                Ok(Some(line)) = lines.next_line() => {
+                    info!("Line: {}", line);
+                    let mut res: DaemonResponse = DaemonResponseData::None.into();
+                    let req = match serde_json::from_str::<DaemonRequest>(&line) {
+                        Ok(req) => Some(req),
+                        Err(e) => {
+                            res.result = Err(e.to_string());
+                            error!("Failed to parse request: {}", e);
+                            None
+                        }
+                    };
 
-            if let Some(req) = req {
-                cmd_tx.send(req.command).await.unwrap();
-                let res = rsp_rxc.recv().await.unwrap().with_id(req.id);
-                let mut retres = serde_json::to_string(&res).unwrap();
-                retres.push('\n');
-                info!("Sending response: {}", retres);
-                write_stream.write_all(retres.as_bytes()).await.unwrap();
-            } else {
-                write_stream.write_all(res.as_bytes()).await.unwrap();
+                    let res = serde_json::to_string(&DaemonMessage::from(res)).unwrap();
+
+                    if let Some(req) = req {
+                        cmd_tx.send(req.command).await.unwrap();
+                        let res = rsp_rxc.recv().await.unwrap().with_id(req.id);
+                        let mut payload = serde_json::to_string(&DaemonMessage::from(res)).unwrap();
+                        payload.push('\n');
+                        info!("Sending response: {}", payload);
+                        write_stream.write_all(payload.as_bytes()).await.unwrap();
+                    } else {
+                        write_stream.write_all(res.as_bytes()).await.unwrap();
+                    }
+                }
+                Ok(cmd) = sub_chan.recv() => {
+                    info!("Got subscription command: {:?}", cmd);
+                    let msg = DaemonMessage::from(cmd);
+                    let mut payload = serde_json::to_string(&msg).unwrap();
+                    payload.push('\n');
+                    write_stream.write_all(payload.as_bytes()).await.unwrap();
+                }
             }
         }
     }
@@ -176,7 +216,8 @@ pub struct DaemonClient {
 
 impl DaemonClient {
     pub async fn new() -> Result<Self> {
-        let path = Path::new(OsStr::new(UNIX_SOCKET_PATH));
+        let socket_path = get_socket_path();
+        let path = Path::new(OsStr::new(&socket_path));
         Self::new_with_path(path).await
     }
 

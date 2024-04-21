@@ -1,4 +1,7 @@
-use std::sync::Arc;
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 use anyhow::Result;
 use tokio::{sync::RwLock, task::JoinHandle};
@@ -6,11 +9,16 @@ use tracing::{debug, info, warn};
 use tun::tokio::TunInterface;
 
 use crate::{
-    daemon::{
-        command::DaemonCommand,
-        response::{DaemonResponse, DaemonResponseData, ServerConfig, ServerInfo},
+    daemon::rpc::{
+        DaemonCommand,
+        DaemonNotification,
+        DaemonResponse,
+        DaemonResponseData,
+        ServerConfig,
+        ServerInfo,
     },
-    wireguard::Interface,
+    database::{get_connection, load_interface},
+    wireguard::{Config, Interface},
 };
 
 enum RunState {
@@ -21,8 +29,11 @@ enum RunState {
 pub struct DaemonInstance {
     rx: async_channel::Receiver<DaemonCommand>,
     sx: async_channel::Sender<DaemonResponse>,
+    subx: async_channel::Sender<DaemonNotification>,
     tun_interface: Arc<RwLock<Option<TunInterface>>>,
     wg_interface: Arc<RwLock<Interface>>,
+    config: Arc<RwLock<Config>>,
+    db_path: Option<PathBuf>,
     wg_state: RunState,
 }
 
@@ -30,13 +41,19 @@ impl DaemonInstance {
     pub fn new(
         rx: async_channel::Receiver<DaemonCommand>,
         sx: async_channel::Sender<DaemonResponse>,
+        subx: async_channel::Sender<DaemonNotification>,
         wg_interface: Arc<RwLock<Interface>>,
+        config: Arc<RwLock<Config>>,
+        db_path: Option<&Path>,
     ) -> Self {
         Self {
             rx,
             sx,
+            subx,
             wg_interface,
             tun_interface: Arc::new(RwLock::new(None)),
+            config,
+            db_path: db_path.map(|p| p.to_owned()),
             wg_state: RunState::Idle,
         }
     }
@@ -59,24 +76,13 @@ impl DaemonInstance {
                         self.tun_interface = self.wg_interface.read().await.get_tun();
                         debug!("tun_interface set: {:?}", self.tun_interface);
 
-
                         debug!("Cloning wg_interface");
                         let tmp_wg = self.wg_interface.clone();
-                        debug!("wg_interface cloned");
-
-                        debug!("Spawning run task");
                         let run_task = tokio::spawn(async move {
-                            debug!("Running wg_interface");
                             let twlock = tmp_wg.read().await;
-                            debug!("wg_interface read lock acquired");
                             twlock.run().await
                         });
-                        debug!("Run task spawned: {:?}", run_task);
-
-                        debug!("Setting wg_state to Running");
                         self.wg_state = RunState::Running(run_task);
-                        debug!("wg_state set to Running");
-
                         info!("Daemon started tun interface");
                     }
                 }
@@ -98,6 +104,17 @@ impl DaemonInstance {
             }
             DaemonCommand::ServerConfig => {
                 Ok(DaemonResponseData::ServerConfig(ServerConfig::default()))
+            }
+            DaemonCommand::ReloadConfig(interface_id) => {
+                let conn = get_connection(self.db_path.as_deref())?;
+                let cfig = load_interface(&conn, &interface_id)?;
+                *self.config.write().await = cfig;
+                self.subx
+                    .send(DaemonNotification::ConfigChange(ServerConfig::try_from(
+                        &self.config.read().await.to_owned(),
+                    )?))
+                    .await?;
+                Ok(DaemonResponseData::None)
             }
         }
     }

@@ -1,19 +1,24 @@
-use std::{net::IpAddr, sync::Arc};
-use std::ops::Deref;
+use std::{net::IpAddr, ops::Deref, sync::Arc};
 
 use anyhow::Error;
 use fehler::throws;
 use futures::future::join_all;
 use ip_network_table::IpNetworkTable;
-use tokio::sync::{RwLock, Notify};
+use tokio::sync::{Notify, RwLock};
 use tracing::{debug, error};
 use tun::tokio::TunInterface;
 
 use super::{noise::Tunnel, Peer, PeerPcb};
 
-struct IndexedPcbs {
+pub struct IndexedPcbs {
     pcbs: Vec<Arc<PeerPcb>>,
     allowed_ips: IpNetworkTable<usize>,
+}
+
+impl Default for IndexedPcbs {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl IndexedPcbs {
@@ -49,12 +54,12 @@ impl FromIterator<PeerPcb> for IndexedPcbs {
 
 enum IfaceStatus {
     Running,
-    Idle
+    Idle,
 }
 
 pub struct Interface {
-    tun: Arc<RwLock<Option<TunInterface>>>,
-    pcbs: Arc<IndexedPcbs>,
+    pub tun: Arc<RwLock<Option<TunInterface>>>,
+    pub pcbs: Arc<IndexedPcbs>,
     status: Arc<RwLock<IfaceStatus>>,
     stop_notifier: Arc<Notify>,
 }
@@ -73,7 +78,12 @@ impl Interface {
             .collect::<Result<_, _>>()?;
 
         let pcbs = Arc::new(pcbs);
-        Self { pcbs, tun: Arc::new(RwLock::new(None)), status: Arc::new(RwLock::new(IfaceStatus::Idle)), stop_notifier: Arc::new(Notify::new()) }
+        Self {
+            pcbs,
+            tun: Arc::new(RwLock::new(None)),
+            status: Arc::new(RwLock::new(IfaceStatus::Idle)),
+            stop_notifier: Arc::new(Notify::new()),
+        }
     }
 
     pub async fn set_tun(&self, tun: TunInterface) {
@@ -87,7 +97,7 @@ impl Interface {
         self.tun.clone()
     }
 
-    pub async fn remove_tun(&self){
+    pub async fn remove_tun(&self) {
         let mut st = self.status.write().await;
         self.stop_notifier.notify_waiters();
         *st = IfaceStatus::Idle;
@@ -95,9 +105,7 @@ impl Interface {
 
     pub async fn run(&self) -> anyhow::Result<()> {
         let pcbs = self.pcbs.clone();
-        let tun = self
-            .tun
-            .clone();
+        let tun = self.tun.clone();
         let status = self.status.clone();
         let stop_notifier = self.stop_notifier.clone();
         log::info!("Starting interface");
@@ -153,9 +161,7 @@ impl Interface {
         };
 
         let mut tsks = vec![];
-        let tun = self
-            .tun
-            .clone();
+        let tun = self.tun.clone();
         let outgoing = tokio::task::spawn(outgoing);
         tsks.push(outgoing);
         debug!("preparing to spawn read tasks");

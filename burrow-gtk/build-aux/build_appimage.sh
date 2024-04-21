@@ -22,6 +22,8 @@ elif [ "$ARCHITECTURE" == "aarch64" ]; then
     chmod a+x /tmp/linuxdeploy
 fi
 
+
+CFLAGS="-I/usr/local/include -I/usr/include/$MUSL_TARGET -fPIE"
 meson setup $BURROW_GTK_BUILD --bindir bin --prefix /usr --buildtype $BURROW_BUILD_TYPE
 meson compile -C $BURROW_GTK_BUILD
 DESTDIR=AppDir meson install -C $BURROW_GTK_BUILD
