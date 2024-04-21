@@ -17,32 +17,14 @@ ARCHITECTURE=$(lscpu | grep Architecture | awk '{print $2}')
 if [ "$ARCHITECTURE" == "x86_64" ]; then
     wget "https://github.com/linuxdeploy/linuxdeploy/releases/download/$LINUXDEPLOY_VERSION/linuxdeploy-x86_64.AppImage" -o /dev/null -O /tmp/linuxdeploy
     chmod a+x /tmp/linuxdeploy
-    LLVM_TARGET=aarch64-unknown-linux-musl
-    MUSL_TARGET=aarch64-linux-musl
 elif [ "$ARCHITECTURE" == "aarch64" ]; then
     wget "https://github.com/linuxdeploy/linuxdeploy/releases/download/$LINUXDEPLOY_VERSION/linuxdeploy-aarch64.AppImage" -o /dev/null -O /tmp/linuxdeploy
     chmod a+x /tmp/linuxdeploy
-    LLVM_TARGET=x86_64-unknown-linux-musl
-    MUSL_TARGET=x86_64-linux-musl
 fi
 
-rustup target add $LLVM_TARGET
-curl --proto '=https' --tlsv1.2 -sSfO https://www.sqlite.org/2022/sqlite-autoconf-$SQLITE_VERSION.tar.gz
-tar xf sqlite-autoconf-$SQLITE_VERSION.tar.gz
-rm sqlite-autoconf-$SQLITE_VERSION.tar.gz
-cd sqlite-autoconf-$SQLITE_VERSION
-./configure --disable-shared
-    CC="clang-$LLVM_VERSION -target $LLVM_TARGET"
-    CFLAGS="-I/usr/local/include -I/usr/include/$MUSL_TARGET -fPIE"
-    LDFLAGS="-L/usr/local/lib -L/usr/lib/$MUSL_TARGET -L/lib/$MUSL_TARGET"
-make
-make install
-make clean
-cd ..
-rm -rf sqlite-autoconf-$SQLITE_VERSION
 
 CFLAGS="-I/usr/local/include -I/usr/include/$MUSL_TARGET -fPIE"
-meson setup $BURROW_GTK_BUILD --bindir bin --prefix /usr --buildtype $BURROW_BUILD_TYPE Db_pie=true
+meson setup $BURROW_GTK_BUILD --bindir bin --prefix /usr --buildtype $BURROW_BUILD_TYPE
 meson compile -C $BURROW_GTK_BUILD
 DESTDIR=AppDir meson install -C $BURROW_GTK_BUILD
 cargo b --$BURROW_BUILD_TYPE --manifest-path=../Cargo.toml
