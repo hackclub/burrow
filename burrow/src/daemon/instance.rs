@@ -68,6 +68,8 @@ impl DaemonInstance {
                     }
                     RunState::Idle => {
                         let tun_if = st.tun.open()?;
+                        tun_if.set_up(true)?;
+
                         debug!("Setting tun on wg_interface");
                         self.wg_interface.read().await.set_tun(tun_if).await;
                         debug!("tun set on wg_interface");
