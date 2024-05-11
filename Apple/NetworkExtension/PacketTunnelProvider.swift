@@ -41,7 +41,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     override func stopTunnel(with reason: NEProviderStopReason) async {
         do {
             let client = try Client()
-            _ = try await client.single_request("Stop", type: BurrowResult<AnyResponseData>.self)
+            _ = try await client.single_request("Stop", params:nil, type: BurrowResult<AnyResponseData>.self)
             self.logger.log("Stopped client.")
         } catch {
             self.logger.error("Failed to stop tunnel: \(error)")
@@ -51,7 +51,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         guard let client = self.client else {
             throw BurrowError.noClient
         }
-        let srvConfig = try await client.single_request("ServerConfig", type: BurrowResult<ServerConfig>.self)
+        let srvConfig = try await client.single_request("ServerConfig", params: nil, type: BurrowResult<ServerConfig>.self)
         guard let serverconfig = srvConfig.Ok else {
             throw BurrowError.resultIsError
         }

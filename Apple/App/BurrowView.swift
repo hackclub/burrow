@@ -1,10 +1,13 @@
 import AuthenticationServices
 import SwiftUI
+import BurrowShared
 
 #if !os(macOS)
 struct BurrowView: View {
     @Environment(\.webAuthenticationSession)
     private var webAuthenticationSession
+    @State private var rpcClient: Client? = nil
+    @State private var showAlert = false
 
     var body: some View {
         NavigationStack {
@@ -17,6 +20,7 @@ struct BurrowView: View {
                     Menu {
                         Button("Hack Club", action: addHackClubNetwork)
                         Button("WireGuard", action: addWireGuardNetwork)
+                        Button("Custom", action: sncAddCustomnetwork)
                     } label: {
                         Image(systemName: "plus.circle.fill")
                             .font(.title)
@@ -34,7 +38,7 @@ struct BurrowView: View {
             .handleOAuth2Callback()
         }
     }
-
+    
     private func addHackClubNetwork() {
         Task {
             try await authenticateWithSlack()
@@ -42,7 +46,31 @@ struct BurrowView: View {
     }
 
     private func addWireGuardNetwork() {
-        
+    }
+    private func getClient() throws -> Client {
+        if self.rpcClient == nil {
+            let client = try Client()
+            self.rpcClient = client
+        }
+        return self.rpcClient!
+    }
+    private func sncAddCustomnetwork() {
+        Task {
+            try await addCustomnetwork()
+        }
+    }
+    private func addCustomnetwork() async {
+        do {
+            let networkToml = ""
+            let client = try getClient()
+            try await client.single_request("AddConfigToml", params: networkToml, type: BurrowResult<AnyResponseData>.self)
+            alert("Successs!", isPresented: $showAlert){
+                Button("OK", role: .cancel) {}
+            }
+            
+        } catch {
+            
+        }
     }
 
     private func authenticateWithSlack() async throws {

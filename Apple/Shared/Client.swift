@@ -81,10 +81,11 @@ public final class Client {
         )
         return try await send(req)
     }
-    public func single_request<U: Decodable>(_ request: String, type: U.Type = U.self) async throws -> U {
+    public func single_request<U: Decodable>(_ request: String, params: String? = nil, type: U.Type = U.self)  async throws -> U {
         let req = BurrowSimpleRequest(
             id: generator.next(upperBound: UInt.max),
-            command: request
+            command: request,
+            params:params
         )
         return try await send(req)
     }
