@@ -116,6 +116,9 @@ impl DaemonInstance {
                     .await?;
                 Ok(DaemonResponseData::None)
             }
+            DaemonCommand::AddConfigToml(interface_id, config_toml) => {
+                Ok(DaemonResponseData::None)
+            }
         }
     }
 

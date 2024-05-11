@@ -4,6 +4,7 @@ use anyhow::{anyhow, Error, Result};
 use base64::{engine::general_purpose, Engine};
 use fehler::throws;
 use ip_network::IpNetwork;
+use serde::{Deserialize, Serialize};
 use x25519_dalek::{PublicKey, StaticSecret};
 
 use crate::wireguard::{Interface as WgInterface, Peer as WgPeer};
@@ -31,7 +32,7 @@ fn parse_public_key(string: &str) -> PublicKey {
 /// A raw version of Peer Config that can be used later to reflect configuration files.
 /// This should be later converted to a `WgPeer`.
 /// Refers to https://github.com/pirate/wireguard-docs?tab=readme-ov-file#overview
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Peer {
     pub public_key: String,
     pub preshared_key: Option<String>,
@@ -41,7 +42,7 @@ pub struct Peer {
     pub name: Option<String>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Interface {
     pub private_key: String,
     pub address: Vec<String>,
@@ -50,7 +51,7 @@ pub struct Interface {
     pub mtu: Option<u32>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Config {
     pub peers: Vec<Peer>,
     pub interface: Interface, // Support for multiple interfaces?
@@ -111,5 +112,19 @@ impl Default for Config {
                 name: Default::default(),
             }],
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tst_config_toml() {
+        let cfig = Config::default();
+        let toml = toml::to_string(&cfig).unwrap();
+        insta::assert_snapshot!(toml);
+        let cfig2: Config = toml::from_str(&toml).unwrap();
+        assert_eq!(cfig, cfig2);
     }
 }

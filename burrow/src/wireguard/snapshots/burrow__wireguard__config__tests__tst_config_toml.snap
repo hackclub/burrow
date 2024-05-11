@@ -1,0 +1,16 @@
+---
+source: burrow/src/wireguard/config.rs
+expression: toml
+---
+[[peers]]
+public_key = "8GaFjVO6c4luCHG4ONO+1bFG8tO+Zz5/Gy+Geht1USM="
+preshared_key = "ha7j4BjD49sIzyF9SNlbueK0AMHghlj6+u0G3bzC698="
+allowed_ips = ["8.8.8.8/32", "0.0.0.0/0"]
+endpoint = "wg.burrow.rs:51820"
+
+[interface]
+private_key = "OEPVdomeLTxTIBvv3TYsJRge0Hp9NMiY0sIrhT8OWG8="
+address = ["10.13.13.2/24"]
+listen_port = 51820
+dns = []
+
