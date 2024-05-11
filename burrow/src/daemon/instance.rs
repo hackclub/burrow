@@ -17,7 +17,7 @@ use crate::{
         ServerConfig,
         ServerInfo,
     },
-    database::{get_connection, load_interface},
+    database::{get_connection, load_interface, dump_interface},
     wireguard::{Config, Interface},
 };
 
@@ -116,7 +116,10 @@ impl DaemonInstance {
                     .await?;
                 Ok(DaemonResponseData::None)
             }
-            DaemonCommand::AddConfigToml(interface_id, config_toml) => {
+            DaemonCommand::AddConfigToml(config_toml) => {
+                let conn = get_connection(self.db_path.as_deref())?;
+                let cfig = Config::from_toml(&config_toml)?;
+                let _if_id = dump_interface(&conn, &cfig)?;
                 Ok(DaemonResponseData::None)
             }
         }

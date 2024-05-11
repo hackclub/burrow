@@ -10,7 +10,7 @@ pub enum DaemonCommand {
     ServerConfig,
     Stop,
     ReloadConfig(String),
-    AddConfigToml(String, String),
+    AddConfigToml(String),
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]

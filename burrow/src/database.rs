@@ -92,7 +92,7 @@ pub fn load_interface(conn: &Connection, interface_id: &str) -> Result<Config> {
     Ok(Config { interface: iface, peers })
 }
 
-pub fn dump_interface(conn: &Connection, config: &Config) -> Result<()> {
+pub fn dump_interface(conn: &Connection, config: &Config) -> Result<i64> {
     let mut stmt = conn.prepare("INSERT INTO wg_interface (private_key, dns, address, listen_port, mtu) VALUES (?, ?, ?, ?, ?)")?;
     let cif = &config.interface;
     stmt.execute(params![
@@ -113,7 +113,7 @@ pub fn dump_interface(conn: &Connection, config: &Config) -> Result<()> {
             &peer.endpoint
         ])?;
     }
-    Ok(())
+    Ok(interface_id)
 }
 
 pub fn get_connection(path: Option<&Path>) -> Result<Connection> {

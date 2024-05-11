@@ -115,6 +115,12 @@ impl Default for Config {
     }
 }
 
+impl Config {
+    pub fn from_toml(toml: &str) -> Result<Self> {
+        toml::from_str(toml).map_err(Into::into)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
