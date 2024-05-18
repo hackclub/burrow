@@ -11,6 +11,7 @@
 		0BA6D73C2BA6393200BD4B55 /* NWConnection+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */; };
 		0BA6D73D2BA6393B00BD4B55 /* NewlineProtocolFramer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */; };
 		0BA6D73E2BA6394B00BD4B55 /* DataTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B28F1552ABF463A000D44B0 /* DataTypes.swift */; };
+		0BE456612BF90752005E4D47 /* RpcOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE456602BF90752005E4D47 /* RpcOperations.swift */; };
 		43AA26D82A10004900F14CE6 /* MenuItemToggleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AA26D72A10004900F14CE6 /* MenuItemToggleView.swift */; };
 		D000363D2BB8928E00E582EC /* NetworkCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D000363C2BB8928E00E582EC /* NetworkCarouselView.swift */; };
 		D000363F2BB895FB00E582EC /* OAuth2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D000363E2BB895FB00E582EC /* OAuth2.swift */; };
@@ -79,6 +80,7 @@
 /* Begin PBXFileReference section */
 		0B28F1552ABF463A000D44B0 /* DataTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTypes.swift; sourceTree = "<group>"; };
 		0B46E8DF2AC918CA00BA2A3C /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
+		0BE456602BF90752005E4D47 /* RpcOperations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RpcOperations.swift; sourceTree = "<group>"; };
 		43AA26D72A10004900F14CE6 /* MenuItemToggleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuItemToggleView.swift; sourceTree = "<group>"; };
 		D000363C2BB8928E00E582EC /* NetworkCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkCarouselView.swift; sourceTree = "<group>"; };
 		D000363E2BB895FB00E582EC /* OAuth2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuth2.swift; sourceTree = "<group>"; };
@@ -259,6 +261,7 @@
 				D0FAB5952B818B2900F6A84B /* TunnelButton.swift */,
 				D0B98FC629FDC5B5004E7149 /* Tunnel.swift */,
 				D0FAB5912B818A5900F6A84B /* NetworkExtensionTunnel.swift */,
+				0BE456602BF90752005E4D47 /* RpcOperations.swift */,
 				D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */,
 				D05EF8C72B81818D0017AB4F /* FloatingButtonStyle.swift */,
 				D05B9F7929E39EED008CB1F9 /* Assets.xcassets */,
@@ -485,6 +488,7 @@
 				D000363F2BB895FB00E582EC /* OAuth2.swift in Sources */,
 				D0FAB5962B818B2900F6A84B /* TunnelButton.swift in Sources */,
 				D00AA8972A4669BC005C8102 /* AppDelegate.swift in Sources */,
+				0BE456612BF90752005E4D47 /* RpcOperations.swift in Sources */,
 				D05EF8C82B81818D0017AB4F /* FloatingButtonStyle.swift in Sources */,
 				D032E6522B8A79C20006B8AD /* HackClub.swift in Sources */,
 				D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */,

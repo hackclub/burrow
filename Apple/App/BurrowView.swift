@@ -6,7 +6,7 @@ import BurrowShared
 struct BurrowView: View {
     @Environment(\.webAuthenticationSession)
     private var webAuthenticationSession
-    @State private var rpcClient: Client? = nil
+    @State private var rpcClient: Client?
     @State private var showAlert = false
 
     var body: some View {

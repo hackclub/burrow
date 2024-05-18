@@ -129,6 +129,7 @@ mod tests {
     fn tst_config_toml() {
         let cfig = Config::default();
         let toml = toml::to_string(&cfig).unwrap();
+        println!("{}", &toml);
         insta::assert_snapshot!(toml);
         let cfig2: Config = toml::from_str(&toml).unwrap();
         assert_eq!(cfig, cfig2);
