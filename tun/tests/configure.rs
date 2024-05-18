@@ -47,8 +47,7 @@ fn test_set_get_ipv6() {
 
     let addr = Ipv6Addr::new(1, 1, 1, 1, 1, 1, 1, 1);
     tun.set_ipv6_addr(addr)?;
-
-    let result = tun.ipv6_addr()?;
+    let result = tun.ipv6_addrs()?[0];
     assert_eq!(addr, result);
 }
 
