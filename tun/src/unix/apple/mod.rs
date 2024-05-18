@@ -1,13 +1,11 @@
-use std::{
-    io::{Error, IoSlice},
-    mem,
-    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddrV4},
-    os::fd::{AsRawFd, FromRawFd, RawFd},
-};
+use std::{io::{Error, IoSlice}, mem, net::{Ipv4Addr, SocketAddrV4}, os::fd::{AsRawFd, FromRawFd, RawFd}, ptr};
+use std::net::{IpAddr, Ipv6Addr, SocketAddrV6};
+use std::ptr::addr_of;
 
 use byteorder::{ByteOrder, NetworkEndian};
 use fehler::throws;
-use libc::{c_char, iovec, writev, AF_INET, AF_INET6};
+use libc::{c_char, iovec, sockaddr_in6, writev, AF_INET, AF_INET6};
+use nix::sys::socket::SockaddrIn6;
 use socket2::{Domain, SockAddr, Socket, Type};
 use tracing::{self, instrument};
 
