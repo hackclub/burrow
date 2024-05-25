@@ -8,7 +8,6 @@ pub struct App {
     daemon_client: Arc<Mutex<Option<DaemonClient>>>,
     settings_screen: Controller<settings_screen::SettingsScreen>,
     switch_screen: AsyncController<switch_screen::SwitchScreen>,
-    auth_screen: AsyncController<auth_screen::AuthScreen>,
 }
 
 #[derive(Debug)]
@@ -73,16 +72,11 @@ impl AsyncComponent for App {
             })
             .forward(sender.input_sender(), |_| AppMsg::None);
 
-        let auth_screen = auth_screen::AuthScreen::builder()
-            .launch(auth_screen::AuthScreenInit {})
-            .forward(sender.input_sender(), |_| AppMsg::None);
-
         let widgets = view_output!();
 
         let view_stack = adw::ViewStack::new();
         view_stack.add_titled(switch_screen.widget(), None, "Switch");
         view_stack.add_titled(settings_screen.widget(), None, "Settings");
-        view_stack.add_titled(auth_screen.widget(), None, "Auth Test");
 
         let view_switcher_bar = adw::ViewSwitcherBar::builder().stack(&view_stack).build();
         view_switcher_bar.set_reveal(true);
@@ -116,7 +110,6 @@ impl AsyncComponent for App {
             daemon_client,
             switch_screen,
             settings_screen,
-            auth_screen,
         };
 
         AsyncComponentParts { model, widgets }

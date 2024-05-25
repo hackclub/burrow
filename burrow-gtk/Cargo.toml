@@ -9,7 +9,7 @@ edition = "2021"
 anyhow = "1.0"
 relm4 = { version = "0.6", features = ["libadwaita", "gnome_44"]}
 burrow = { version = "*", path = "../burrow/" }
-tokio = { version = "1.35.0", features = ["time", "sync"] }
+tokio = { version = "1.35.0", features = ["time", "sync", "net"] }
 gettext-rs = { version = "0.7.0", features = ["gettext-system"] }
 serde = { version = "1", features = ["derive"] }
 url = "2.5.0"

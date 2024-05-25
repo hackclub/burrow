@@ -35,6 +35,7 @@ impl DiagGroup {
 #[derive(Debug)]
 pub enum DiagGroupMsg {
     Refresh,
+    TestSlackAuth,
 }
 
 #[relm4::component(pub, async)]
@@ -85,7 +86,11 @@ impl AsyncComponent for DiagGroup {
             gtk::Button {
                 set_label: "Refresh",
                 connect_clicked => DiagGroupMsg::Refresh
-            }
+            },
+            gtk::Button {
+                set_label: "Authenticate with Slack",
+                connect_clicked => DiagGroupMsg::TestSlackAuth,
+            },
         }
     }
 
@@ -112,6 +117,9 @@ impl AsyncComponent for DiagGroup {
             DiagGroupMsg::Refresh => {
                 //  Should be impossible to panic here
                 *self = Self::new(Arc::clone(&self.daemon_client)).await.unwrap();
+            }
+            DiagGroupMsg::TestSlackAuth => {
+                auth::slack_auth().await;
             }
         }
     }
