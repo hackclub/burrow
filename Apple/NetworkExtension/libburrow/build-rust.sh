@@ -70,7 +70,7 @@ fi
 
 # Run cargo without the various environment variables set by Xcode.
 # Those variables can confuse cargo and the build scripts it runs.
-env -i PATH="$CARGO_PATH" CARGO_TARGET_DIR="${CONFIGURATION_TEMP_DIR}/target" cargo build "${CARGO_ARGS[@]}"
+env -i PATH="$CARGO_PATH" CARGO_TARGET_DIR="${CONFIGURATION_TEMP_DIR}/target" IPHONEOS_DEPLOYMENT_TARGET="$IPHONEOS_DEPLOYMENT_TARGET" MACOSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET" cargo build "${CARGO_ARGS[@]}"
 
 mkdir -p "${BUILT_PRODUCTS_DIR}"
 

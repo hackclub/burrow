@@ -8,7 +8,7 @@ libc = "0.2"
 fehler = "1.0"
 nix = { version = "0.26", features = ["ioctl"] }
 socket2 = "0.5"
-tokio = { version = "1.28", features = [] }
+tokio = { version = "1.37", default-features = false, optional = true }
 byteorder = "1.4"
 tracing = "0.1"
 log = "0.4"
@@ -19,10 +19,7 @@ futures = { version = "0.3.28", optional = true }
 
 [features]
 serde = ["dep:serde", "dep:schemars"]
-tokio = ["tokio/net", "dep:futures"]
-
-[target.'cfg(feature = "tokio")'.dev-dependencies]
-tokio = { features = ["rt", "macros"] }
+tokio = ["tokio/net", "dep:tokio", "dep:futures"]
 
 [target.'cfg(windows)'.dependencies]
 lazy_static = "1.4"
@@ -37,7 +34,7 @@ windows = { version = "0.48", features = [
 [target.'cfg(windows)'.build-dependencies]
 anyhow = "1.0"
 bindgen = "0.65"
-reqwest = { version = "0.11", features = ["native-tls"] }
+reqwest = { version = "0.11" }
 ssri = { version = "9.0", default-features = false }
 tokio = { version = "1.28", features = ["rt", "macros"] }
 zip = { version = "0.6", features = ["deflate"] }

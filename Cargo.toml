@@ -2,3 +2,8 @@
 members = ["burrow", "tun"]
 resolver = "2"
 exclude = ["burrow-gtk"]
+
+[profile.release]
+lto = true
+panic = "abort"
+opt-level = "z"

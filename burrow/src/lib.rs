@@ -5,6 +5,8 @@ pub mod wireguard;
 mod daemon;
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 pub mod database;
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+mod auth;
 pub(crate) mod tracing;
 
 #[cfg(target_vendor = "apple")]

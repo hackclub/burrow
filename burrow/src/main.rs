@@ -8,6 +8,9 @@ pub(crate) mod tracing;
 mod wireguard;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
+mod auth;
+
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
 use daemon::{DaemonClient, DaemonCommand, DaemonStartOptions};
 use tun::TunOptions;
 
@@ -47,12 +50,15 @@ enum Commands {
     ServerConfig,
     /// Reload Config
     ReloadConfig(ReloadConfigArgs),
+    /// Authentication server
+    AuthServer,
 }
 
 #[derive(Args)]
 struct ReloadConfigArgs {
     #[clap(long, short)]
     interface_id: String,
+
 }
 
 #[derive(Args)]
@@ -133,9 +139,10 @@ async fn try_reloadconfig(interface_id: String) -> Result<()> {
 }
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
-#[tokio::main(flavor = "current_thread")]
+#[tokio::main]
 async fn main() -> Result<()> {
     tracing::initialize();
+    dotenv::dotenv().ok();
 
     let cli = Cli::parse();
     match &cli.command {
@@ -145,6 +152,7 @@ async fn main() -> Result<()> {
         Commands::ServerInfo => try_serverinfo().await?,
         Commands::ServerConfig => try_serverconfig().await?,
         Commands::ReloadConfig(args) => try_reloadconfig(args.interface_id.clone()).await?,
+        Commands::AuthServer => crate::auth::server::serve().await?,
     }
 
     Ok(())
@@ -152,5 +160,5 @@ async fn main() -> Result<()> {
 
 #[cfg(not(any(target_os = "linux", target_vendor = "apple")))]
 pub fn main() {
-    eprintln!("This platform is not supported currently.")
+    eprintln!("This platform is not supported")
 }
