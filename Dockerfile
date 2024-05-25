@@ -1,4 +1,4 @@
-FROM docker.io/library/rust:1.76.0-slim-bookworm AS builder
+FROM docker.io/library/rust:1.77-slim-bookworm AS builder
 
 ARG TARGETPLATFORM
 ARG LLVM_VERSION=16
@@ -8,7 +8,7 @@ ENV KEYRINGS /etc/apt/keyrings
 RUN set -eux && \
     mkdir -p $KEYRINGS && \
     apt-get update && \
-    apt-get install --no-install-recommends -y gpg curl musl-dev && \
+    apt-get install --no-install-recommends -y gpg curl busybox make musl-dev && \
     curl --proto '=https' --tlsv1.2 -sSf https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor --output $KEYRINGS/llvm.gpg && \
     echo "deb [signed-by=$KEYRINGS/llvm.gpg] http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm-$LLVM_VERSION main" > /etc/apt/sources.list.d/llvm.list && \
     apt-get update && \
@@ -24,30 +24,31 @@ RUN set -eux && \
     apt-get remove -y --auto-remove && \
     rm -rf /var/lib/apt/lists/*
 
-ARG SQLITE_VERSION=3400100
+RUN case $TARGETPLATFORM in \
+    "linux/arm64") LLVM_TARGET=aarch64-unknown-linux-musl ;; \
+    "linux/amd64") LLVM_TARGET=x86_64-unknown-linux-musl ;; \
+    *) exit 1 ;; \
+    esac && \
+    rustup target add $LLVM_TARGET
+
+ARG SQLITE_VERSION=3460000
 
 RUN case $TARGETPLATFORM in \
-     "linux/arm64") LLVM_TARGET=aarch64-unknown-linux-musl MUSL_TARGET=aarch64-linux-musl ;; \
-     "linux/amd64") LLVM_TARGET=x86_64-unknown-linux-musl MUSL_TARGET=x86_64-linux-musl ;; \
-     *) exit 1 ;; \
+    "linux/arm64") LLVM_TARGET=aarch64-unknown-linux-musl MUSL_TARGET=aarch64-linux-musl ;; \
+    "linux/amd64") LLVM_TARGET=x86_64-unknown-linux-musl MUSL_TARGET=x86_64-linux-musl ;; \
+    *) exit 1 ;; \
     esac && \
-    rustup target add $LLVM_TARGET && \
-    curl --proto '=https' --tlsv1.2 -sSfO https://www.sqlite.org/2022/sqlite-autoconf-$SQLITE_VERSION.tar.gz && \
+    curl --proto '=https' --tlsv1.2 -sSfO https://www.sqlite.org/2024/sqlite-autoconf-$SQLITE_VERSION.tar.gz && \
     tar xf sqlite-autoconf-$SQLITE_VERSION.tar.gz && \
-    rm sqlite-autoconf-$SQLITE_VERSION.tar.gz && \
     cd sqlite-autoconf-$SQLITE_VERSION && \
-    ./configure --disable-shared \
-        CC="clang-$LLVM_VERSION -target $LLVM_TARGET" \
-        CFLAGS="-I/usr/local/include -I/usr/include/$MUSL_TARGET" \
-        LDFLAGS="-L/usr/local/lib -L/usr/lib/$MUSL_TARGET -L/lib/$MUSL_TARGET" && \
+    ./configure --disable-shared --disable-dependency-tracking \
+    CC="clang-$LLVM_VERSION -target $LLVM_TARGET" \
+    CFLAGS="-I/usr/local/include -I/usr/include/$MUSL_TARGET" \
+    LDFLAGS="-L/usr/local/lib -L/usr/lib/$MUSL_TARGET -L/lib/$MUSL_TARGET" && \
     make && \
     make install && \
     cd .. && \
-    rm -rf sqlite-autoconf-$SQLITE_VERSION
-
-ENV SQLITE3_STATIC=1 \
-    SQLITE3_INCLUDE_DIR=/usr/local/include \
-    SQLITE3_LIB_DIR=/usr/local/lib
+    rm -rf sqlite-autoconf-$SQLITE_VERSION sqlite-autoconf-$SQLITE_VERSION.tar.gz
 
 ENV CC_x86_64_unknown_linux_musl=clang-$LLVM_VERSION \
     AR_x86_64_unknown_linux_musl=llvm-ar-$LLVM_VERSION \
@@ -55,14 +56,17 @@ ENV CC_x86_64_unknown_linux_musl=clang-$LLVM_VERSION \
     AR_aarch64_unknown_linux_musl=llvm-ar-$LLVM_VERSION \
     CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-L/usr/lib/x86_64-linux-musl -L/lib/x86_64-linux-musl -C linker=rust-lld" \
     CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-L/usr/lib/aarch64-linux-musl -L/lib/aarch64-linux-musl -C linker=rust-lld" \
-    CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
+    CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse \
+    SQLITE3_STATIC=1 \
+    SQLITE3_INCLUDE_DIR=/usr/local/include \
+    SQLITE3_LIB_DIR=/usr/local/lib
 
 COPY . .
 
 RUN case $TARGETPLATFORM in \
-     "linux/arm64") LLVM_TARGET=aarch64-unknown-linux-musl ;; \
-     "linux/amd64") LLVM_TARGET=x86_64-unknown-linux-musl ;; \
-     *) exit 1 ;; \
+    "linux/arm64") LLVM_TARGET=aarch64-unknown-linux-musl ;; \
+    "linux/amd64") LLVM_TARGET=x86_64-unknown-linux-musl ;; \
+    *) exit 1 ;; \
     esac && \
     cargo install --path burrow --target $LLVM_TARGET
 
@@ -71,7 +75,8 @@ WORKDIR /tmp/rootfs
 RUN set -eux && \
     mkdir -p ./bin ./etc ./tmp ./data && \
     mv /usr/local/cargo/bin/burrow ./bin/burrow && \
-    echo 'burrow:x:10001:10001::/tmp:/sbin/nologin' > ./etc/passwd && \
+    cp /bin/busybox ./bin/busybox && \
+    echo 'burrow:x:10001:10001::/tmp:/bin/busybox' > ./etc/passwd && \
     echo 'burrow:x:10001:' > ./etc/group && \
     chown -R 10001:10001 ./tmp ./data && \
     chmod 0777 ./tmp
@@ -90,4 +95,6 @@ USER 10001:10001
 COPY --from=builder /tmp/rootfs /
 WORKDIR /data
 
-ENTRYPOINT ["/bin/burrow"]
+EXPOSE 8080
+
+CMD ["/bin/burrow", "auth-server"]
