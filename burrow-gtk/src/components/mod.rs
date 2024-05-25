@@ -13,6 +13,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 mod app;
+mod auth_screen;
 mod settings;
 mod settings_screen;
 mod switch_screen;

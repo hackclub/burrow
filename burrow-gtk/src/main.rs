@@ -1,5 +1,6 @@
 use anyhow::Result;
 
+mod auth;
 pub mod components;
 mod diag;
 
