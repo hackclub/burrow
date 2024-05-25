@@ -49,7 +49,7 @@ enum Commands {
     /// Server config
     ServerConfig,
     /// Reload Config
-    ReloadConfig(ReloadConfigArgs),=
+    ReloadConfig(ReloadConfigArgs),
     /// Authentication server
     AuthServer,
 }
@@ -139,7 +139,7 @@ async fn try_reloadconfig(interface_id: String) -> Result<()> {
 }
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
-#[tokio::main(flavor = "current_thread")]
+#[tokio::main]
 async fn main() -> Result<()> {
     tracing::initialize();
     dotenv::dotenv().ok();
@@ -160,5 +160,5 @@ async fn main() -> Result<()> {
 
 #[cfg(not(any(target_os = "linux", target_vendor = "apple")))]
 pub fn main() {
-    eprintln!("This platform is not supported currently.")
+    eprintln!("This platform is not supported")
 }
