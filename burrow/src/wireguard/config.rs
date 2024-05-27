@@ -3,10 +3,12 @@ use std::{net::ToSocketAddrs, str::FromStr};
 use anyhow::{anyhow, Error, Result};
 use base64::{engine::general_purpose, Engine};
 use fehler::throws;
+use ini::{Ini, Properties};
 use ip_network::IpNetwork;
 use serde::{Deserialize, Serialize};
 use x25519_dalek::{PublicKey, StaticSecret};
 
+use super::inifield::IniField;
 use crate::wireguard::{Interface as WgInterface, Peer as WgPeer};
 
 #[throws]
@@ -53,6 +55,7 @@ pub struct Interface {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Config {
+    #[serde(rename = "Peer")]
     pub peers: Vec<Peer>,
     pub interface: Interface, // Support for multiple interfaces?
 }
@@ -115,9 +118,68 @@ impl Default for Config {
     }
 }
 
+fn props_get<T>(props: &Properties, key: &str) -> T
+where
+    T: From<IniField>,
+{
+    IniField::from(props.get(key)).into()
+}
+
+impl TryFrom<&Properties> for Interface {
+    type Error = anyhow::Error;
+
+    fn try_from(props: &Properties) -> Result<Self, Error> {
+        Ok(Self {
+            private_key: props_get(props, "PrivateKey"),
+            address: props_get(props, "Address"),
+            listen_port: props_get(props, "ListenPort"),
+            dns: props_get(props, "DNS"),
+            mtu: props_get(props, "MTU"),
+        })
+    }
+}
+
+impl TryFrom<&Properties> for Peer {
+    type Error = anyhow::Error;
+
+    fn try_from(props: &Properties) -> Result<Self, Error> {
+        Ok(Self {
+            public_key: props_get(props, "PublicKey"),
+            preshared_key: props_get(props, "PresharedKey"),
+            allowed_ips: props_get(props, "AllowedIPs"),
+            endpoint: props_get(props, "Endpoint"),
+            persistent_keepalive: props_get(props, "PersistentKeepalive"),
+            name: props_get(props, "Name"),
+        })
+    }
+}
+
 impl Config {
     pub fn from_toml(toml: &str) -> Result<Self> {
         toml::from_str(toml).map_err(Into::into)
+    }
+
+    pub fn from_ini(ini: &str) -> Result<Self> {
+        let ini = Ini::load_from_str(ini)?;
+        let interface = ini
+            .section(Some("Interface"))
+            .ok_or(anyhow!("Interface section not found"))?;
+        let peers = ini.section_all(Some("Peer"));
+        Ok(Self {
+            interface: Interface::try_from(interface)?,
+            peers: peers
+                .into_iter()
+                .map(|v| Peer::try_from(v))
+                .collect::<Result<Vec<Peer>>>()?,
+        })
+    }
+
+    pub fn from_content_fmt(content: &str, fmt: &str) -> Result<Self> {
+        match fmt {
+            "toml" => Self::from_toml(content),
+            "ini" | "conf" => Self::from_ini(content),
+            _ => Err(anyhow::anyhow!("Unsupported format: {}", fmt)),
+        }
     }
 }
 

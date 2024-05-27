@@ -6,3 +6,7 @@ target/
 
 .DS_STORE
 .idea/
+
+burrow.sock
+burrow.db
+tmp/

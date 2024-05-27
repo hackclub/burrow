@@ -92,17 +92,36 @@ pub fn load_interface(conn: &Connection, interface_id: &str) -> Result<Config> {
     Ok(Config { interface: iface, peers })
 }
 
-pub fn dump_interface(conn: &Connection, config: &Config) -> Result<i64> {
-    let mut stmt = conn.prepare("INSERT INTO wg_interface (private_key, dns, address, listen_port, mtu) VALUES (?, ?, ?, ?, ?)")?;
-    let cif = &config.interface;
-    stmt.execute(params![
-        cif.private_key,
-        to_lst(&cif.dns),
-        to_lst(&cif.address),
-        cif.listen_port,
-        cif.mtu
-    ])?;
-    let interface_id = conn.last_insert_rowid();
+pub fn dump_interface(
+    conn: &Connection,
+    config: &Config,
+    interface_id: Option<i64>,
+) -> Result<i64> {
+    let interface_id = if let Some(id) = interface_id {
+        let mut stmt = conn.prepare("INSERT INTO wg_interface (private_key, dns, address, listen_port, mtu, id) VALUES (?, ?, ?, ?, ?, ?)")?;
+        let cif = &config.interface;
+        stmt.execute(params![
+            cif.private_key,
+            to_lst(&cif.dns),
+            to_lst(&cif.address),
+            cif.listen_port,
+            cif.mtu,
+            id
+        ])?;
+        id
+    } else {
+        let mut stmt = conn.prepare("INSERT INTO wg_interface (private_key, dns, address, listen_port, mtu) VALUES (?, ?, ?, ?, ?)")?;
+        let cif = &config.interface;
+        stmt.execute(params![
+            cif.private_key,
+            to_lst(&cif.dns),
+            to_lst(&cif.address),
+            cif.listen_port,
+            cif.mtu
+        ])?;
+        conn.last_insert_rowid()
+    };
+
     let mut stmt = conn.prepare("INSERT INTO wg_peer (interface_id, public_key, preshared_key, allowed_ips, endpoint) VALUES (?, ?, ?, ?, ?)")?;
     for peer in &config.peers {
         stmt.execute(params![
@@ -121,7 +140,7 @@ pub fn get_connection(path: Option<&Path>) -> Result<Connection> {
     if !p.exists() {
         let conn = Connection::open(p)?;
         initialize_tables(&conn)?;
-        dump_interface(&conn, &Config::default())?;
+        dump_interface(&conn, &Config::default(), None)?;
         return Ok(conn);
     }
     Ok(Connection::open(p)?)
@@ -129,8 +148,6 @@ pub fn get_connection(path: Option<&Path>) -> Result<Connection> {
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
-
     use super::*;
 
     #[test]
@@ -138,7 +155,7 @@ mod tests {
         let conn = Connection::open_in_memory().unwrap();
         initialize_tables(&conn).unwrap();
         let config = Config::default();
-        dump_interface(&conn, &config).unwrap();
+        dump_interface(&conn, &config, None).unwrap();
         let loaded = load_interface(&conn, "1").unwrap();
         assert_eq!(config, loaded);
     }

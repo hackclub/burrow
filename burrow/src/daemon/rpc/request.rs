@@ -3,19 +3,26 @@ use serde::{Deserialize, Serialize};
 use tun::TunOptions;
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-#[serde(tag="method", content="params")]
+#[serde(tag = "method", content = "params")]
 pub enum DaemonCommand {
     Start(DaemonStartOptions),
     ServerInfo,
     ServerConfig,
     Stop,
     ReloadConfig(String),
-    AddConfigToml(String),
+    AddConfig(AddConfigOptions),
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
 pub struct DaemonStartOptions {
     pub tun: TunOptions,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+pub struct AddConfigOptions {
+    pub content: String,
+    pub fmt: String,
+    pub interface_id: Option<i64>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]

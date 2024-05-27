@@ -1,5 +1,9 @@
+use std::{borrow::Cow, path::PathBuf};
+
 use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
+
+use crate::daemon::rpc::request::AddConfigOptions;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 mod daemon;
@@ -47,6 +51,16 @@ enum Commands {
     ServerConfig,
     /// Reload Config
     ReloadConfig(ReloadConfigArgs),
+    /// Add Server Config
+    AddConfig(AddServerConfigArgs),
+}
+
+#[derive(Args)]
+struct AddServerConfigArgs {
+    #[clap(short, long)]
+    path: PathBuf,
+    #[clap(short, long)]
+    interface_id: Option<i64>,
 }
 
 #[derive(Args)]
@@ -59,7 +73,12 @@ struct ReloadConfigArgs {
 struct StartArgs {}
 
 #[derive(Args)]
-struct DaemonArgs {}
+struct DaemonArgs {
+    #[clap(long, short)]
+    socket_path: Option<PathBuf>,
+    #[clap(long, short)]
+    db_path: Option<PathBuf>,
+}
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 async fn try_start() -> Result<()> {
@@ -133,18 +152,44 @@ async fn try_reloadconfig(interface_id: String) -> Result<()> {
 }
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
+async fn try_add_server_config(path: &PathBuf, interface_id: Option<i64>) -> Result<()> {
+    let mut client = DaemonClient::new().await?;
+    let ext = path
+        .extension()
+        .map(|e| e.to_string_lossy())
+        .unwrap_or_else(|| Cow::Borrowed("toml"));
+    let content = std::fs::read_to_string(path)?;
+    let res = client
+        .send_command(DaemonCommand::AddConfig(AddConfigOptions {
+            content,
+            fmt: ext.to_string(),
+            interface_id,
+        }))
+        .await?;
+    Ok(())
+}
+
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
     tracing::initialize();
 
     let cli = Cli::parse();
     match &cli.command {
-        Commands::Start(..) => try_start().await?,
+        Commands::Start(_) => try_start().await?,
         Commands::Stop => try_stop().await?,
-        Commands::Daemon(_) => daemon::daemon_main(None, None, None).await?,
+        Commands::Daemon(daemon_args) => {
+            daemon::daemon_main(
+                daemon_args.socket_path.as_ref().map(|p| p.as_path()),
+                daemon_args.db_path.as_ref().map(|p| p.as_path()),
+                None,
+            )
+            .await?
+        }
         Commands::ServerInfo => try_serverinfo().await?,
         Commands::ServerConfig => try_serverconfig().await?,
         Commands::ReloadConfig(args) => try_reloadconfig(args.interface_id.clone()).await?,
+        Commands::AddConfig(args) => try_add_server_config(&args.path, args.interface_id).await?,
     }
 
     Ok(())
