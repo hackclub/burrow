@@ -9,12 +9,6 @@ inputs:
   app-store-key-issuer-id:
     description: App Store key issuer ID
     required: true
-  archive-path:
-    description: Xcode archive path
-    required: true
-  export-path:
-    description: The path to export the archive to
-    required: true
 runs:
   using: composite
   steps:
@@ -24,28 +18,8 @@ runs:
     run: |
       echo "${{ inputs.app-store-key }}" > AuthKey_${{ inputs.app-store-key-id }}.p8
 
-      echo '{"destination":"export","method":"developer-id"}' \
-        | plutil -convert xml1 -o ExportOptions.plist -
+      ditto -c -k --keepParent Release/Burrow.app Upload.zip
+      xcrun notarytool submit --wait --issuer ${{ inputs.app-store-key-issuer-id }} --key-id ${{ inputs.app-store-key-id }} --key "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8" Upload.zip
+      xcrun stapler staple Release/Burrow.app
 
-      xcodebuild -exportArchive \
-        -allowProvisioningUpdates \
-        -allowProvisioningDeviceRegistration \
-        -skipPackagePluginValidation \
-        -skipMacroValidation \
-        -onlyUsePackageVersionsFromResolvedFile \
-        -authenticationKeyID ${{ inputs.app-store-key-id }} \
-        -authenticationKeyIssuerID ${{ inputs.app-store-key-issuer-id }} \
-        -authenticationKeyPath "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8" \
-        -archivePath Wallet.xcarchive \
-        -exportPath Release \
-        -exportOptionsPlist ExportOptions.plist
-
-      ditto -c -k --keepParent Release/Wallet.app Upload.zip
-      SUBMISSION_ID=$(xcrun notarytool submit --issuer ${{ inputs.app-store-key-issuer-id }} --key-id ${{ inputs.app-store-key-id }} --key "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8" Upload.zip | awk '/ id:/ { print $2; exit }')
-
-      xcrun notarytool wait $SUBMISSION_ID --issuer ${{ inputs.app-store-key-issuer-id }} --key-id ${{ inputs.app-store-key-id }} --key "${PWD}/AuthKey_${{ inputs.app-store-key-id }}.p8"
-      xcrun stapler staple Release/Wallet.app
-
-      aa archive -a lzma -b 8m -d Release -subdir Wallet.app -o Wallet.app.aar
-
-      rm -rf Upload.zip Release AuthKey_${{ inputs.app-store-key-id }}.p8 ExportOptions.plist
+      rm -rf AuthKey_${{ inputs.app-store-key-id }}.p8 Release

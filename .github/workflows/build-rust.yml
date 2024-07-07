@@ -22,14 +22,18 @@ jobs:
           targets:
           - aarch64-unknown-linux-gnu
         - os: macos-12
-          platform: macOS
+          platform: macOS (Intel)
           test-targets:
           - x86_64-apple-darwin
           targets:
+          - x86_64-apple-ios
+        - os: macos-14
+          platform: macOS
+          test-targets:
           - aarch64-apple-darwin
+          targets:
           - aarch64-apple-ios
           - aarch64-apple-ios-sim
-          - x86_64-apple-ios
         - os: windows-2022
           platform: Windows
           test-targets:
@@ -38,7 +42,7 @@ jobs:
           - aarch64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
     env:
-      DEVELOPER_DIR: /Applications/Xcode_14.2.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_15.4.app/Contents/Developer
       CARGO_INCREMENTAL: 0
       CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
       RUST_BACKTRACE: short

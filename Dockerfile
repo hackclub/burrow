@@ -1,4 +1,4 @@
-FROM docker.io/library/rust:1.77-slim-bookworm AS builder
+FROM docker.io/library/rust:1.79-slim-bookworm AS builder
 
 ARG TARGETPLATFORM
 ARG LLVM_VERSION=16
@@ -56,7 +56,6 @@ ENV CC_x86_64_unknown_linux_musl=clang-$LLVM_VERSION \
     AR_aarch64_unknown_linux_musl=llvm-ar-$LLVM_VERSION \
     CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-L/usr/lib/x86_64-linux-musl -L/lib/x86_64-linux-musl -C linker=rust-lld" \
     CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-L/usr/lib/aarch64-linux-musl -L/lib/aarch64-linux-musl -C linker=rust-lld" \
-    CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse \
     SQLITE3_STATIC=1 \
     SQLITE3_INCLUDE_DIR=/usr/local/include \
     SQLITE3_LIB_DIR=/usr/local/lib

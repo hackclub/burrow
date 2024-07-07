@@ -13,7 +13,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - destination: generic/platform=iOS
+        - 
+          destination: generic/platform=iOS
           platform: iOS
           rust-targets:
           - aarch64-apple-ios
@@ -23,7 +24,7 @@ jobs:
           - x86_64-apple-darwin
           - aarch64-apple-darwin
     env:
-      DEVELOPER_DIR: /Applications/Xcode_15.2.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_15.4.app/Contents/Developer
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -50,25 +51,23 @@ jobs:
         app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
         app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
         archive-path: Burrow.xcarchive
-    - name: Notarize (macOS)
-      if: ${{ matrix.platform == 'macOS' }}
-      uses: ./.github/actions/notarize
-      with:
-        app-store-key: ${{ secrets.APPSTORE_KEY }}
-        app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
-        app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
-        archive-path: Burrow.xcarchive
-    - name: Export IPA (iOS)
-      if: ${{ matrix.platform == 'iOS' }}
+    - name: Export
       uses: ./.github/actions/export
       with:
-        method: ad-hoc
+        method: ${{ matrix.platform == 'macOS' && 'developer-id' || 'ad-hoc' }}
         destination: export
         app-store-key: ${{ secrets.APPSTORE_KEY }}
         app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
         app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
         archive-path: Burrow.xcarchive
         export-path: Release
+    - name: Notarize
+      if: ${{ matrix.platform == 'macOS' }}
+      uses: ./.github/actions/notarize
+      with:
+        app-store-key: ${{ secrets.APPSTORE_KEY }}
+        app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+        app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
     - name: Compress (iOS)
       if: ${{ matrix.platform == 'iOS' }}
       shell: bash
@@ -83,27 +82,17 @@ jobs:
         aa archive -a lzma -b 8m -d Apple/Release -subdir Burrow.app -o Burrow.app.aar
         aa archive -a lzma -b 8m -d Apple -subdir Burrow.xcarchive -o Burrow-${{ matrix.platform }}.xcarchive.aar
         rm -rf Apple/Release
-    - name: Upload to GitHub (iOS)
-      if: ${{ matrix.platform == 'iOS' }}
+    - name: Upload to GitHub
       uses: SierraSoftworks/gh-releases@v1.0.7
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         release_tag: ${{ github.ref_name }}
         overwrite: 'true'
         files: |
-          Burrow.ipa 
-          Burrow-${{ matrix.platform }}.xcarchive.aar
-    - name: Upload to GitHub (macOS)
-      if: ${{ matrix.platform == 'macOS' }}
-      uses: SierraSoftworks/gh-releases@v1.0.7
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        release_tag: ${{ github.ref_name }}
-        overwrite: 'true'
-        files: |
-          Burrow.aap.aar
+          ${{ matrix.platform == 'macOS' && 'Burrow.aap.aar' || 'Burrow.ipa' }}
           Burrow-${{ matrix.platform }}.xcarchive.aar
     - name: Upload to App Store Connect
+      if: ${{ matrix.platform == 'iOS' }}
       uses: ./.github/actions/export
       with:
         method: app-store
