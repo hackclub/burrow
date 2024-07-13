@@ -1,6 +1,6 @@
 FROM fedora:39
 
-ARG ARCHITECTURE
+ARG TARGET_ARCHITECTURE
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -17,6 +17,6 @@ COPY . /app
 ENV SQLITE3_STATIC=1
 
 RUN cd /app/burrow-gtk/ && \
-    ARCHITECTURE=$ARCHITECTURE ./build-aux/build_appimage.sh
+    TARGET_ARCHITECTURE=$TARGET_ARCHITECTURE ./build-aux/build_appimage.sh
 
 
