@@ -4,12 +4,12 @@ use std::process::Command;
 #[derive(Debug)]
 pub struct DaemonGroup {
     system_setup: SystemSetup,
-    daemon_client: Arc<Mutex<Option<DaemonClient>>>,
+    daemon_client: Arc<Mutex<Option<Channel>>>,
     already_running: bool,
 }
 
 pub struct DaemonGroupInit {
-    pub daemon_client: Arc<Mutex<Option<DaemonClient>>>,
+    pub daemon_client: Arc<Mutex<Option<Channel>>>,
     pub system_setup: SystemSetup,
 }
 
