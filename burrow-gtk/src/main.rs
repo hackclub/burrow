@@ -1,6 +1,7 @@
 use anyhow::Result;
 
 pub mod components;
+mod daemon;
 mod diag;
 
 //  Generated using meson
