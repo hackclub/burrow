@@ -1,13 +1,7 @@
 use super::*;
 use anyhow::Context;
-use anyhow::Result;
-use hyper_util::rt::TokioIo;
 use std::time::Duration;
-use tokio::net::UnixStream;
-use tonic::transport::{Channel, Endpoint, Uri};
-use tower::service_fn;
 
-const BURROW_RPC_SOCKET_PATH: &str = "/run/burrow.sock";
 const RECONNECT_POLL_TIME: Duration = Duration::from_secs(5);
 
 pub struct App {
@@ -65,7 +59,7 @@ impl AsyncComponent for App {
         sender: AsyncComponentSender<Self>,
     ) -> AsyncComponentParts<Self> {
         // TODO: RPC REFACTOR (Handle Error)
-        let daemon_client = Arc::new(Mutex::new(Some(daemon_connect().await.unwrap())));
+        let daemon_client = Arc::new(Mutex::new(Some(daemon::daemon_connect().await.unwrap())));
 
         let switch_screen = switch_screen::SwitchScreen::builder()
             .launch(switch_screen::SwitchScreenInit {
@@ -146,7 +140,7 @@ impl AsyncComponent for App {
                 }
 
                 if disconnected_daemon_client || daemon_client.is_none() {
-                    match daemon_connect().await {
+                    match daemon::daemon_connect().await {
                         Ok(new_daemon_client) => {
                             *daemon_client = Some(new_daemon_client);
                             self.switch_screen
@@ -162,14 +156,4 @@ impl AsyncComponent for App {
             }
         }
     }
-}
-
-pub async fn daemon_connect() -> Result<Channel> {
-    Ok(Endpoint::try_from("http://[::]:50051")?
-        .connect_with_connector(service_fn(|_: Uri| async {
-            Ok::<_, std::io::Error>(TokioIo::new(
-                UnixStream::connect(BURROW_RPC_SOCKET_PATH).await?,
-            ))
-        }))
-        .await?)
 }

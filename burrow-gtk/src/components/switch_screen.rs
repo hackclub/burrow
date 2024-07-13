@@ -1,10 +1,15 @@
 use super::*;
+use std::time::Duration;
+
+const RECONNECT_POLL_TIME: Duration = Duration::from_secs(3);
 
 pub struct SwitchScreen {
     daemon_client: Arc<Mutex<Option<Channel>>>,
     switch: gtk::Switch,
     switch_screen: gtk::Box,
     disconnected_banner: adw::Banner,
+
+    _tunnel_state_worker: WorkerController<AsyncTunnelStateHandler>,
 }
 
 pub struct SwitchScreenInit {
@@ -13,10 +18,13 @@ pub struct SwitchScreenInit {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum SwitchScreenMsg {
+    None,
     DaemonReconnect,
     DaemonDisconnect,
     Start,
     Stop,
+    SwitchSetStart,
+    SwitchSetStop,
 }
 
 #[relm4::component(pub, async)]
@@ -24,7 +32,7 @@ impl AsyncComponent for SwitchScreen {
     type Init = SwitchScreenInit;
     type Input = SwitchScreenMsg;
     type Output = ();
-    type CommandOutput = ();
+    type CommandOutput = SwitchScreenMsg;
 
     view! {
         gtk::Box {
@@ -61,7 +69,7 @@ impl AsyncComponent for SwitchScreen {
                     set_hexpand: false,
                     set_vexpand: false,
                     connect_active_notify => move |switch|
-                        sender.input(if switch.is_active() { SwitchScreenMsg::Start } else { SwitchScreenMsg::Stop })
+                        switch_sender.input(if switch.is_active() { SwitchScreenMsg::Start } else { SwitchScreenMsg::Stop })
                 },
             }
         }
@@ -72,28 +80,24 @@ impl AsyncComponent for SwitchScreen {
         root: Self::Root,
         sender: AsyncComponentSender<Self>,
     ) -> AsyncComponentParts<Self> {
-        let mut initial_switch_status = false;
         let mut initial_daemon_server_down = false;
 
         if let Some(daemon_client) = init.daemon_client.lock().await.as_mut() {
             let mut client = tunnel_client::TunnelClient::new(daemon_client);
-            if let Ok(res) = client.tunnel_status(burrow_rpc::Empty {}).await.as_mut() {
-                // TODO: RPC REFACTOR (Handle Error)
-                let res = res.get_mut().message().await.unwrap().unwrap();
-                initial_switch_status = match res.state() {
-                    burrow_rpc::State::Running => true,
-                    burrow_rpc::State::Stopped => false,
-                };
-            } else {
+            if client
+                .tunnel_status(burrow_rpc::Empty {})
+                .await
+                .as_mut()
+                .is_err()
+            {
                 initial_daemon_server_down = true;
             }
         } else {
             initial_daemon_server_down = true;
         }
 
+        let switch_sender = sender.clone();
         let widgets = view_output!();
-
-        widgets.switch.set_active(initial_switch_status);
 
         if initial_daemon_server_down {
             *init.daemon_client.lock().await = None;
@@ -107,7 +111,12 @@ impl AsyncComponent for SwitchScreen {
             switch: widgets.switch.clone(),
             switch_screen: widgets.switch_screen.clone(),
             disconnected_banner: widgets.setup_banner.clone(),
+            _tunnel_state_worker: AsyncTunnelStateHandler::builder()
+                .detach_worker(())
+                .forward(sender.input_sender(), |_| SwitchScreenMsg::None),
         };
+
+        widgets.switch.set_active(false);
 
         AsyncComponentParts { model, widgets }
     }
@@ -133,6 +142,12 @@ impl AsyncComponent for SwitchScreen {
                         disconnected_daemon_client = true;
                     }
                 }
+                Self::Input::SwitchSetStart => {
+                    self.switch.set_active(true);
+                }
+                Self::Input::SwitchSetStop => {
+                    self.switch.set_active(false);
+                }
                 _ => {}
             }
         } else {
@@ -146,9 +161,44 @@ impl AsyncComponent for SwitchScreen {
 
         if disconnected_daemon_client || msg == Self::Input::DaemonDisconnect {
             *self.daemon_client.lock().await = None;
-            self.switch.set_active(false);
             self.switch_screen.set_sensitive(false);
             self.disconnected_banner.set_revealed(true);
         }
+    }
+}
+struct AsyncTunnelStateHandler;
+
+impl Worker for AsyncTunnelStateHandler {
+    type Init = ();
+    type Input = ();
+    type Output = SwitchScreenMsg;
+
+    fn init(_: Self::Init, _sender: ComponentSender<Self>) -> Self {
+        Self
+    }
+
+    fn update(&mut self, _: (), sender: ComponentSender<Self>) {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let task = rt.spawn(async move {
+            loop {
+                let conn = daemon::daemon_connect().await;
+                if let Ok(conn) = conn {
+                    let mut client = tunnel_client::TunnelClient::new(conn);
+                    if let Ok(mut res) = client.tunnel_status(burrow_rpc::Empty {}).await {
+                        let stream = res.get_mut();
+                        while let Ok(Some(msg)) = stream.message().await {
+                            sender
+                                .output(match msg.state() {
+                                    burrow_rpc::State::Running => SwitchScreenMsg::SwitchSetStart,
+                                    burrow_rpc::State::Stopped => SwitchScreenMsg::SwitchSetStop,
+                                })
+                                .unwrap();
+                        }
+                    }
+                }
+                tokio::time::sleep(RECONNECT_POLL_TIME).await;
+            }
+        });
+        rt.block_on(task).unwrap();
     }
 }
