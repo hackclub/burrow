@@ -9,13 +9,24 @@ on:
 jobs:
   appimage:
     name: Build AppImage
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     container: docker
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - os: ubuntu-latest
+          platform: Linux
+          arch:
+            - x86_64
+        - os: ubuntu-latest
+          arch:
+            - aarch64
     steps:
     - uses: actions/checkout@v4
     - name: Build AppImage
       run: |
-        docker build -t appimage-builder . -f burrow-gtk/build-aux/Dockerfile
+        docker build -t appimage-builder --build-arg="ARCHITECTURE=${{ matrix.arch }}" . -f burrow-gtk/build-aux/Dockerfile
         docker create --name temp appimage-builder
         docker cp temp:/app/burrow-gtk/build-appimage/Burrow-x86_64.AppImage .
         docker rm temp
@@ -23,4 +34,4 @@ jobs:
       name: Upload to GitHub
       with:
         name: AppImage
-        path: Burrow-x86_64.AppImage
+        path: Burrow-${{ matrix.arch }}.AppImage
