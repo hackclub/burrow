@@ -14,7 +14,7 @@ if [ "$BURROW_GTK_ROOT" != $(pwd) ]; then
 fi
 
 HOST_ARCHITECTURE=$(lscpu | grep Architecture | awk '{print $2}')
-TARGET_ARCHITECTURE=""
+TARGET_ARCHITECTURE="x86_64"
 
 if [ "$HOST_ARCHITECTURE" == "x86_64" ]; then
     wget "https://github.com/linuxdeploy/linuxdeploy/releases/download/$LINUXDEPLOY_VERSION/linuxdeploy-x86_64.AppImage" -o /dev/null -O /tmp/linuxdeploy
@@ -36,4 +36,4 @@ meson compile -C $BURROW_GTK_BUILD
 DESTDIR=AppDir meson install -C $BURROW_GTK_BUILD
 CARGO_FLAGS=$CARGO_FLAGS cargo b --$BURROW_BUILD_TYPE --manifest-path=../Cargo.toml
 /tmp/linuxdeploy --appimage-extract-and-run --appdir $BURROW_GTK_BUILD/AppDir -e $BURROW_GTK_BUILD/../../target/$BURROW_BUILD_TYPE/burrow --output appimage
-mv *.AppImage $BURROW_GTK_BUILD
+mv *.AppImage $BURROW_GTK_BUILD/Burrow_${TARGET_ARCHITECTURE}
