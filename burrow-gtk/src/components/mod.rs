@@ -1,6 +1,5 @@
 use super::*;
 use adw::prelude::*;
-use burrow::{DaemonClient, DaemonCommand, DaemonResponseData};
 use gtk::Align;
 use relm4::{
     component::{
@@ -11,6 +10,12 @@ use relm4::{
 };
 use std::sync::Arc;
 use tokio::sync::Mutex;
+
+pub mod burrow_rpc {
+    tonic::include_proto!("burrow");
+}
+use burrow_rpc::tunnel_client;
+use tonic::transport::Channel;
 
 mod app;
 mod settings;

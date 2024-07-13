@@ -2,7 +2,7 @@ use super::*;
 
 #[derive(Debug)]
 pub struct DiagGroup {
-    daemon_client: Arc<Mutex<Option<DaemonClient>>>,
+    daemon_client: Arc<Mutex<Option<Channel>>>,
 
     system_setup: SystemSetup,
     service_installed: StatusTernary,
@@ -12,12 +12,12 @@ pub struct DiagGroup {
 }
 
 pub struct DiagGroupInit {
-    pub daemon_client: Arc<Mutex<Option<DaemonClient>>>,
+    pub daemon_client: Arc<Mutex<Option<Channel>>>,
     pub system_setup: SystemSetup,
 }
 
 impl DiagGroup {
-    async fn new(daemon_client: Arc<Mutex<Option<DaemonClient>>>) -> Result<Self> {
+    async fn new(daemon_client: Arc<Mutex<Option<Channel>>>) -> Result<Self> {
         let system_setup = SystemSetup::new();
         let daemon_running = daemon_client.lock().await.is_some();
 

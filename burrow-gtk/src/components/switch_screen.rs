@@ -1,14 +1,14 @@
 use super::*;
 
 pub struct SwitchScreen {
-    daemon_client: Arc<Mutex<Option<DaemonClient>>>,
+    daemon_client: Arc<Mutex<Option<Channel>>>,
     switch: gtk::Switch,
     switch_screen: gtk::Box,
     disconnected_banner: adw::Banner,
 }
 
 pub struct SwitchScreenInit {
-    pub daemon_client: Arc<Mutex<Option<DaemonClient>>>,
+    pub daemon_client: Arc<Mutex<Option<Channel>>>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -76,15 +76,13 @@ impl AsyncComponent for SwitchScreen {
         let mut initial_daemon_server_down = false;
 
         if let Some(daemon_client) = init.daemon_client.lock().await.as_mut() {
-            if let Ok(res) = daemon_client
-                .send_command(DaemonCommand::ServerInfo)
-                .await
-                .as_ref()
-            {
-                initial_switch_status = match res.result.as_ref() {
-                    Ok(DaemonResponseData::None) => false,
-                    Ok(DaemonResponseData::ServerInfo(_)) => true,
-                    _ => false,
+            let mut client = tunnel_client::TunnelClient::new(daemon_client);
+            if let Ok(res) = client.tunnel_status(burrow_rpc::Empty {}).await.as_mut() {
+                // TODO: RPC REFACTOR (Handle Error)
+                let res = res.get_mut().message().await.unwrap().unwrap();
+                initial_switch_status = match res.state() {
+                    burrow_rpc::State::Running => true,
+                    burrow_rpc::State::Stopped => false,
                 };
             } else {
                 initial_daemon_server_down = true;
@@ -123,17 +121,15 @@ impl AsyncComponent for SwitchScreen {
         let mut disconnected_daemon_client = false;
 
         if let Some(daemon_client) = self.daemon_client.lock().await.as_mut() {
+            let mut client = tunnel_client::TunnelClient::new(daemon_client);
             match msg {
                 Self::Input::Start => {
-                    if let Err(_e) = daemon_client
-                        .send_command(DaemonCommand::Start(Default::default()))
-                        .await
-                    {
+                    if let Err(_e) = client.tunnel_start(burrow_rpc::Empty {}).await {
                         disconnected_daemon_client = true;
                     }
                 }
                 Self::Input::Stop => {
-                    if let Err(_e) = daemon_client.send_command(DaemonCommand::Stop).await {
+                    if let Err(_e) = client.tunnel_stop(burrow_rpc::Empty {}).await {
                         disconnected_daemon_client = true;
                     }
                 }

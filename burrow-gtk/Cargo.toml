@@ -8,10 +8,15 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0"
 relm4 = { version = "0.6", features = ["libadwaita", "gnome_44"]}
-burrow = { version = "*", path = "../burrow/" }
 tokio = { version = "1.35.0", features = ["time", "sync"] }
 gettext-rs = { version = "0.7.0", features = ["gettext-system"] }
+tonic = "0.12"
+prost = "0.13"
+prost-types = "0.13"
+hyper-util = "0.1.6"
+tower = "0.4.13"
 
 [build-dependencies]
 anyhow = "1.0"
 glib-build-tools = "0.18.0"
+tonic-build = "0.12"
