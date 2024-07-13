@@ -1,5 +1,5 @@
 use reqwest::{Client, Method};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::process::Command;
 use tokio::{
     io::AsyncWriteExt,
@@ -85,5 +85,22 @@ pub async fn slack_auth() {
         .await
         .unwrap();
 
-    eprintln!("{:?}", res);
+    #[derive(Debug, Clone, Serialize)]
+    struct SlackAuthReq {
+        slack_token: String,
+    }
+
+    let res = client
+        .post("https://burrow-hidden-pine-3298.fly.dev/slack-auth")
+        .json(&SlackAuthReq {
+            slack_token: res.id_token.unwrap(),
+        })
+        .send()
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap();
+
+    println!("{:?}", res);
 }
