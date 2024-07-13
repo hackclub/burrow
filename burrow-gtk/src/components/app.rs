@@ -1,11 +1,17 @@
 use super::*;
 use anyhow::Context;
+use anyhow::Result;
+use hyper_util::rt::TokioIo;
 use std::time::Duration;
+use tokio::net::UnixStream;
+use tonic::transport::{Channel, Endpoint, Uri};
+use tower::service_fn;
 
+const BURROW_RPC_SOCKET_PATH: &str = "/run/burrow.sock";
 const RECONNECT_POLL_TIME: Duration = Duration::from_secs(5);
 
 pub struct App {
-    daemon_client: Arc<Mutex<Option<DaemonClient>>>,
+    daemon_client: Arc<Mutex<Option<Channel>>>,
     settings_screen: Controller<settings_screen::SettingsScreen>,
     switch_screen: AsyncController<switch_screen::SwitchScreen>,
 }
@@ -58,7 +64,8 @@ impl AsyncComponent for App {
         root: Self::Root,
         sender: AsyncComponentSender<Self>,
     ) -> AsyncComponentParts<Self> {
-        let daemon_client = Arc::new(Mutex::new(DaemonClient::new().await.ok()));
+        // TODO: RPC REFACTOR (Handle Error)
+        let daemon_client = Arc::new(Mutex::new(Some(daemon_connect().await.unwrap())));
 
         let switch_screen = switch_screen::SwitchScreen::builder()
             .launch(switch_screen::SwitchScreenInit {
@@ -128,7 +135,8 @@ impl AsyncComponent for App {
                 let mut disconnected_daemon_client = false;
 
                 if let Some(daemon_client) = daemon_client.as_mut() {
-                    if let Err(_e) = daemon_client.send_command(DaemonCommand::ServerInfo).await {
+                    let mut client = tunnel_client::TunnelClient::new(daemon_client);
+                    if let Err(_e) = client.tunnel_status(burrow_rpc::Empty {}).await {
                         disconnected_daemon_client = true;
                         self.switch_screen
                             .emit(switch_screen::SwitchScreenMsg::DaemonDisconnect);
@@ -138,7 +146,7 @@ impl AsyncComponent for App {
                 }
 
                 if disconnected_daemon_client || daemon_client.is_none() {
-                    match DaemonClient::new().await {
+                    match daemon_connect().await {
                         Ok(new_daemon_client) => {
                             *daemon_client = Some(new_daemon_client);
                             self.switch_screen
@@ -154,4 +162,14 @@ impl AsyncComponent for App {
             }
         }
     }
+}
+
+pub async fn daemon_connect() -> Result<Channel> {
+    Ok(Endpoint::try_from("http://[::]:50051")?
+        .connect_with_connector(service_fn(|_: Uri| async {
+            Ok::<_, std::io::Error>(TokioIo::new(
+                UnixStream::connect(BURROW_RPC_SOCKET_PATH).await?,
+            ))
+        }))
+        .await?)
 }
