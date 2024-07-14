@@ -5,11 +5,18 @@ mod instance;
 mod net;
 pub mod rpc;
 
+use crate::daemon::rpc::grpc_defs::tunnel_server::TunnelServer;
+use anyhow::Error as AhError;
 use anyhow::Result;
-use instance::DaemonInstance;
+use instance::{DaemonInstance, DaemonRPCServer};
 pub use net::{DaemonClient, Listener};
 pub use rpc::{DaemonCommand, DaemonResponseData, DaemonStartOptions};
-use tokio::sync::{Notify, RwLock};
+use tokio::{
+    net::UnixListener,
+    sync::{Notify, RwLock},
+};
+use tokio_stream::wrappers::UnixListenerStream;
+use tonic::transport::Server;
 use tracing::{error, info};
 
 use crate::{
@@ -45,9 +52,25 @@ pub async fn daemon_main(
         response_tx,
         subscribe_tx,
         Arc::new(RwLock::new(iface)),
-        Arc::new(RwLock::new(config)),
-        db_path,
+        Arc::new(RwLock::new(config.clone())),
+        db_path.clone(),
     );
+    let dbp = db_path.clone();
+    let burrow_server = DaemonRPCServer::new(
+        Arc::new(RwLock::new(config.clone().try_into()?)),
+        Arc::new(RwLock::new(config)),
+        dbp,
+    );
+    let spp = socket_path.clone();
+    let uds = UnixListener::bind(spp.unwrap())?;
+    let serve_job = tokio::spawn(async move {
+        let uds_stream = UnixListenerStream::new(uds);
+        let srv = Server::builder()
+            .add_service(TunnelServer::new(burrow_server))
+            .serve_with_incoming(uds_stream)
+            .await?;
+        Ok::<(), AhError>(())
+    });
 
     info!("Starting daemon...");
 
@@ -67,7 +90,7 @@ pub async fn daemon_main(
         result
     });
 
-    tokio::try_join!(main_job, listener_job)
+    tokio::try_join!(main_job, listener_job, serve_job)
         .map(|_| ())
         .map_err(|e| e.into())
 }

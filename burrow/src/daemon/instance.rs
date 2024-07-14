@@ -10,19 +10,24 @@ use tun::tokio::TunInterface;
 
 use crate::{
     daemon::rpc::{
-        DaemonCommand,
-        DaemonNotification,
-        DaemonResponse,
-        DaemonResponseData,
-        ServerConfig,
+        DaemonCommand, DaemonNotification, DaemonResponse, DaemonResponseData, ServerConfig,
         ServerInfo,
     },
     database::{get_connection, load_interface},
     wireguard::{Config, Interface},
 };
 
+use tonic::{Request, Response, Status as RspStatus};
+
+use super::rpc::grpc_defs::{
+    tunnel_server::Tunnel, Empty, TunnelConfigurationResponse, TunnelStatusResponse,
+    WireGuardNetwork, WireGuardPeer,
+};
+use tokio_stream::{wrappers::ReceiverStream, Stream};
+
+#[derive(Debug, Clone)]
 enum RunState {
-    Running(JoinHandle<Result<()>>),
+    Running,
     Idle,
 }
 
@@ -63,7 +68,7 @@ impl DaemonInstance {
         match command {
             DaemonCommand::Start(st) => {
                 match self.wg_state {
-                    RunState::Running(_) => {
+                    RunState::Running => {
                         warn!("Got start, but tun interface already up.");
                     }
                     RunState::Idle => {
@@ -82,7 +87,7 @@ impl DaemonInstance {
                             let twlock = tmp_wg.read().await;
                             twlock.run().await
                         });
-                        self.wg_state = RunState::Running(run_task);
+                        self.wg_state = RunState::Running;
                         info!("Daemon started tun interface");
                     }
                 }
@@ -126,5 +131,57 @@ impl DaemonInstance {
             self.sx.send(DaemonResponse::new(response)).await?;
         }
         Ok(())
+    }
+}
+
+#[derive(Clone)]
+pub struct DaemonRPCServer {
+    tun_interface: Arc<RwLock<Option<TunInterface>>>,
+    wg_interface: Arc<RwLock<Interface>>,
+    config: Arc<RwLock<Config>>,
+    db_path: Option<PathBuf>,
+    wg_state: RunState,
+}
+
+impl DaemonRPCServer {
+    pub fn new(
+        wg_interface: Arc<RwLock<Interface>>,
+        config: Arc<RwLock<Config>>,
+        db_path: Option<&Path>,
+    ) -> Self {
+        Self {
+            tun_interface: Arc::new(RwLock::new(None)),
+            wg_interface,
+            config,
+            db_path: db_path.map(|p| p.to_owned()),
+            wg_state: RunState::Idle,
+        }
+    }
+}
+
+#[tonic::async_trait]
+impl Tunnel for DaemonRPCServer {
+    async fn tunnel_configuration(
+        &self,
+        _request: Request<Empty>,
+    ) -> Result<Response<TunnelConfigurationResponse>, RspStatus> {
+        unimplemented!()
+    }
+
+    async fn tunnel_start(&self, _request: Request<Empty>) -> Result<Response<Empty>, RspStatus> {
+        return Ok(Response::new(Empty {}));
+    }
+
+    async fn tunnel_stop(&self, _request: Request<Empty>) -> Result<Response<Empty>, RspStatus> {
+        return Ok(Response::new(Empty {}));
+    }
+
+    type TunnelStatusStream = ReceiverStream<Result<TunnelStatusResponse, RspStatus>>;
+
+    async fn tunnel_status(
+        &self,
+        _request: Request<Empty>,
+    ) -> Result<Response<Self::TunnelStatusStream>, RspStatus> {
+        unimplemented!()
     }
 }

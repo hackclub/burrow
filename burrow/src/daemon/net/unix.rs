@@ -11,11 +11,7 @@ use tokio::{
 use tracing::{debug, error, info};
 
 use crate::daemon::rpc::{
-    DaemonCommand,
-    DaemonMessage,
-    DaemonNotification,
-    DaemonRequest,
-    DaemonResponse,
+    DaemonCommand, DaemonMessage, DaemonNotification, DaemonRequest, DaemonResponse,
     DaemonResponseData,
 };
 
@@ -36,7 +32,7 @@ pub struct Listener {
     cmd_tx: async_channel::Sender<DaemonCommand>,
     rsp_rx: async_channel::Receiver<DaemonResponse>,
     sub_chan: async_channel::Receiver<DaemonNotification>,
-    inner: UnixListener,
+    pub inner: UnixListener,
 }
 
 impl Listener {
