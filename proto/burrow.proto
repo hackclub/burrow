@@ -4,7 +4,7 @@ package burrow;
 import "google/protobuf/timestamp.proto";
 
 service Tunnel {
-    rpc TunnelConfiguration (Empty) returns (TunnelConfigurationResponse);
+    rpc TunnelConfiguration (Empty) returns (stream TunnelConfigurationResponse);
     rpc TunnelStart (Empty) returns (Empty);
     rpc TunnelStop (Empty) returns (Empty);
     rpc TunnelStatus (Empty) returns (stream TunnelStatusResponse);
