@@ -1,6 +1,7 @@
 import AuthenticationServices
 import SwiftUI
 import Foundation
+import os
 
 enum OAuth2 {
     enum Error: Swift.Error {
@@ -25,11 +26,14 @@ enum OAuth2 {
         var clientID: String
         var clientSecret: String
 
-        fileprivate static var queue: [Int: CheckedContinuation<URL, Swift.Error>] = [:]
+        fileprivate static let queue: OSAllocatedUnfairLock<[Int: CheckedContinuation<URL, Swift.Error>]> = .init(initialState: [:])
 
         fileprivate static func handle(url: URL) {
-            let continuations = queue
-            queue.removeAll()
+            let continuations = queue.withLock { continuations in
+                let copy = continuations
+                continuations.removeAll()
+                return copy
+            }
             for (_, continuation) in continuations {
                 continuation.resume(returning: url)
             }
@@ -202,6 +206,10 @@ enum OAuth2 {
     }
 }
 
+extension WebAuthenticationSession: @unchecked @retroactive Sendable {
+    
+}
+
 extension WebAuthenticationSession {
     func start(url: URL, redirectURI: URL) async throws -> URL {
         #if canImport(BrowserEngineKit)
@@ -222,12 +230,12 @@ extension WebAuthenticationSession {
             let id = Int.random(in: 0..<Int.max)
             group.addTask {
                 return try await withCheckedThrowingContinuation { continuation in
-                    OAuth2.Session.queue[id] = continuation
+                    OAuth2.Session.queue.withLock { $0[id] = continuation }
                 }
             }
             guard let url = try await group.next() else { throw OAuth2.Error.invalidCallbackURL }
             group.cancelAll()
-            OAuth2.Session.queue[id] = nil
+            OAuth2.Session.queue.withLock { $0[id] = nil }
             return url
         }
     }

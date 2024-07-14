@@ -1,9 +1,14 @@
+import BurrowClient
 import SwiftUI
 
 struct HackClub: Network {
-    var id: String
+    static let type: Burrow_NetworkType = .hackClub
+    typealias NetworkType = Burrow_WireGuardNetwork
+
+    var id: Int32
     var backgroundColor: Color { .init("HackClub") }
 
+    @MainActor
     var label: some View {
         GeometryReader { reader in
             VStack(alignment: .leading) {

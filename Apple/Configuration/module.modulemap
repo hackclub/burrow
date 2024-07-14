@@ -1,4 +1,4 @@
-module Constants {
+module CConstants {
     header "Constants.h"
     export *
 }
