@@ -1,6 +1,9 @@
 # Xcode
 xcuserdata
 
+# Swift
+Apple/Package/.swiftpm/
+
 # Rust
 target/
 .env

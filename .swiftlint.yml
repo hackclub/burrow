@@ -30,7 +30,6 @@ opt_in_rules:
 - function_default_parameter_at_end
 - ibinspectable_in_extension
 - identical_operands
-- implicitly_unwrapped_optional
 - indentation_width
 - joined_default_parameter
 - last_where

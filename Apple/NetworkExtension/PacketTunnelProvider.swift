@@ -1,92 +1,74 @@
-import BurrowShared
+import AsyncAlgorithms
+import BurrowConfiguration
+import BurrowCore
 import libburrow
 import NetworkExtension
 import os
 
 class PacketTunnelProvider: NEPacketTunnelProvider {
+    enum Error: Swift.Error {
+        case missingTunnelConfiguration
+    }
+
     private let logger = Logger.logger(for: PacketTunnelProvider.self)
-    private var client: Client?
+
+    private var client: TunnelClient {
+        get throws { try _client.get() }
+    }
+    private let _client: Result<TunnelClient, Swift.Error> = Result {
+        try TunnelClient.unix(socketURL: Constants.socketURL)
+    }
 
     override init() {
         do {
             libburrow.spawnInProcess(
                 socketPath: try Constants.socketURL.path(percentEncoded: false),
-                dbPath: try Constants.dbURL.path(percentEncoded: false)
+                databasePath: try Constants.databaseURL.path(percentEncoded: false)
             )
         } catch {
-            logger.error("Failed to spawn: \(error)")
+            logger.error("Failed to spawn networking thread: \(error)")
         }
     }
 
     override func startTunnel(options: [String: NSObject]? = nil) async throws {
         do {
-            let client = try Client()
-            self.client = client
-            register_events(client)
-
-            _ = try await self.loadTunSettings()
-            let startRequest = Start(
-                tun: Start.TunOptions(
-                    name: nil, no_pi: false, tun_excl: false, tun_retrieve: true, address: []
-                )
-            )
-            let response = try await client.request(startRequest, type: BurrowResult<AnyResponseData>.self)
-            self.logger.log("Received start server response: \(String(describing: response))")
+            let configuration = try await Array(client.tunnelConfiguration(.init()).prefix(1)).first
+            guard let settings = configuration?.settings else {
+                throw Error.missingTunnelConfiguration
+            }
+            try await setTunnelNetworkSettings(settings)
+            _ = try await client.tunnelStart(.init())
+            logger.log("Started tunnel with network settings: \(settings)")
         } catch {
-            self.logger.error("Failed to start tunnel: \(error)")
+            logger.error("Failed to start tunnel: \(error)")
             throw error
         }
     }
 
     override func stopTunnel(with reason: NEProviderStopReason) async {
         do {
-            let client = try Client()
-            _ = try await client.single_request("Stop", type: BurrowResult<AnyResponseData>.self)
-            self.logger.log("Stopped client.")
+            _ = try await client.tunnelStop(.init())
+            logger.log("Stopped client")
         } catch {
-            self.logger.error("Failed to stop tunnel: \(error)")
+            logger.error("Failed to stop tunnel: \(error)")
         }
     }
-    func loadTunSettings() async throws -> ServerConfig {
-        guard let client = self.client else {
-            throw BurrowError.noClient
-        }
-        let srvConfig = try await client.single_request("ServerConfig", type: BurrowResult<ServerConfig>.self)
-        guard let serverconfig = srvConfig.Ok else {
-            throw BurrowError.resultIsError
-        }
-        guard let tunNs = generateTunSettings(from: serverconfig) else {
-            throw BurrowError.addrDoesntExist
-        }
-        try await self.setTunnelNetworkSettings(tunNs)
-        self.logger.info("Set remote tunnel address to \(tunNs.tunnelRemoteAddress)")
-        return serverconfig
-    }
-    private func generateTunSettings(from: ServerConfig) -> NETunnelNetworkSettings? {
-        // Using a makeshift remote tunnel address
-        let nst = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "1.1.1.1")
-        var v4Addresses = [String]()
-        var v6Addresses = [String]()
-        for addr in from.address {
-            if IPv4Address(addr) != nil {
-                v6Addresses.append(addr)
-            }
-            if IPv6Address(addr) != nil {
-                v4Addresses.append(addr)
-            }
-        }
-        nst.ipv4Settings = NEIPv4Settings(addresses: v4Addresses, subnetMasks: v4Addresses.map { _ in
-            "255.255.255.0"
-        })
-        nst.ipv6Settings = NEIPv6Settings(addresses: v6Addresses, networkPrefixLengths: v6Addresses.map { _ in 64 })
-        logger.log("Initialized ipv4 settings: \(nst.ipv4Settings)")
-        return nst
-    }
-    func register_events(_ client: Client) {
-        client.on_event(.ConfigChange) { (cfig: ServerConfig) in
-            self.logger.info("Config Change Notification: \(String(describing: cfig))")
-            self.setTunnelNetworkSettings(self.generateTunSettings(from: cfig))
-            self.logger.info("Updated Tunnel Network Settings.")
-        }
+}
+
+extension Burrow_TunnelConfigurationResponse {
+    fileprivate var settings: NEPacketTunnelNetworkSettings {
+        let ipv6Addresses = addresses.filter { IPv6Address($0) != nil }
+
+        let settings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "1.1.1.1")
+        settings.mtu = NSNumber(value: mtu)
+        settings.ipv4Settings = NEIPv4Settings(
+            addresses: addresses.filter { IPv4Address($0) != nil },
+            subnetMasks: ["255.255.255.0"]
+        )
+        settings.ipv6Settings = NEIPv6Settings(
+            addresses: ipv6Addresses,
+            networkPrefixLengths: ipv6Addresses.map { _ in 64 }
+        )
+        return settings
     }
 }

@@ -2,10 +2,10 @@ import SwiftUI
 
 struct NetworkCarouselView: View {
     var networks: [any Network] = [
-        HackClub(id: "1"),
-        HackClub(id: "2"),
-        WireGuard(id: "4"),
-        HackClub(id: "5"),
+        HackClub(id: 1),
+        HackClub(id: 2),
+        WireGuard(id: 4),
+        HackClub(id: 5)
     ]
 
     var body: some View {

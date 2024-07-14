@@ -1,10 +1,14 @@
+import BurrowCore
 import SwiftUI
 
 struct WireGuard: Network {
-    var id: String
+    typealias NetworkType = Burrow_WireGuardNetwork
+    static let type: BurrowCore.Burrow_NetworkType = .wireGuard
+
+    var id: Int32
     var backgroundColor: Color { .init("WireGuard") }
 
-    var label: some View {
+    @MainActor var label: some View {
         GeometryReader { reader in
             VStack(alignment: .leading) {
                 HStack {

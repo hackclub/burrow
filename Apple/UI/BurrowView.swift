@@ -2,11 +2,11 @@ import AuthenticationServices
 import SwiftUI
 
 #if !os(macOS)
-struct BurrowView: View {
+public struct BurrowView: View {
     @Environment(\.webAuthenticationSession)
     private var webAuthenticationSession
 
-    var body: some View {
+    public var body: some View {
         NavigationStack {
             VStack {
                 HStack {
@@ -33,6 +33,9 @@ struct BurrowView: View {
             .padding()
             .handleOAuth2Callback()
         }
+    }
+
+    public init() {
     }
 
     private func addHackClubNetwork() {

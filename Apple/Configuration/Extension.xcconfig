@@ -1,4 +1,6 @@
-MERGED_BINARY_TYPE = manual
+LD_EXPORT_SYMBOLS = NO
+
+OTHER_SWIFT_FLAGS = $(inherited) -Xfrontend -disable-autolink-framework -Xfrontend UIKit -Xfrontend -disable-autolink-framework -Xfrontend AppKit -Xfrontend -disable-autolink-framework -Xfrontend SwiftUI
 
 LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks @executable_path/../../Frameworks
-LD_RUNPATH_SEARCH_PATHS[sdk=macos*] = $(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks
+LD_RUNPATH_SEARCH_PATHS[sdk=macosx*] = $(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks

@@ -39,7 +39,7 @@ jobs:
           - aarch64-apple-darwin
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.0.app/Contents/Developer
-      PROTOC_VERSION: 3.25.1
+      PROTOC_PATH: /opt/homebrew/bin/protoc
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -55,10 +55,9 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
       with:
         targets: ${{ join(matrix.rust-targets, ', ') }}
-    - name: Install protoc
-      uses: taiki-e/install-action@v2
-      with:
-        tool: protoc@${{ env.PROTOC_VERSION }}
+    - name: Install Protobuf
+      shell: bash
+      run: brew install protobuf
     - name: Build
       id: build
       uses: ./.github/actions/build-for-testing
