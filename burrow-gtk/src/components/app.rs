@@ -58,7 +58,6 @@ impl AsyncComponent for App {
         root: Self::Root,
         sender: AsyncComponentSender<Self>,
     ) -> AsyncComponentParts<Self> {
-        // TODO: RPC REFACTOR (Handle Error)
         let daemon_client = Arc::new(Mutex::new(daemon::daemon_connect().await.ok()));
 
         let switch_screen = switch_screen::SwitchScreen::builder()
