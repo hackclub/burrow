@@ -7,3 +7,8 @@ target/
 
 .DS_STORE
 .idea/
+
+tmp/
+
+*.db
+*.sock

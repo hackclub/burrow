@@ -12,7 +12,7 @@ RUN set -eux && \
     curl --proto '=https' --tlsv1.2 -sSf https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor --output $KEYRINGS/llvm.gpg && \
     echo "deb [signed-by=$KEYRINGS/llvm.gpg] http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm-$LLVM_VERSION main" > /etc/apt/sources.list.d/llvm.list && \
     apt-get update && \
-    apt-get install --no-install-recommends -y clang-$LLVM_VERSION llvm-$LLVM_VERSION lld-$LLVM_VERSION build-essential sqlite3 libsqlite3-dev musl musl-tools musl-dev && \
+    apt-get install --no-install-recommends -y clang-$LLVM_VERSION llvm-$LLVM_VERSION lld-$LLVM_VERSION build-essential sqlite3 libsqlite3-dev musl musl-tools musl-dev protobuf-compiler libprotobuf-dev && \
     ln -s clang-$LLVM_VERSION /usr/bin/clang && \
     ln -s clang /usr/bin/clang++ && \
     ln -s lld-$LLVM_VERSION /usr/bin/ld.lld && \
