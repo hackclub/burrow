@@ -7,7 +7,7 @@ const RECONNECT_POLL_TIME: Duration = Duration::from_secs(5);
 pub struct App {
     daemon_client: Arc<Mutex<Option<Channel>>>,
     settings_screen: Controller<settings_screen::SettingsScreen>,
-    switch_screen: AsyncController<switch_screen::SwitchScreen>,
+    main_screen: AsyncController<main_screen::MainScreen>,
 }
 
 #[derive(Debug)]
@@ -60,8 +60,8 @@ impl AsyncComponent for App {
     ) -> AsyncComponentParts<Self> {
         let daemon_client = Arc::new(Mutex::new(daemon::daemon_connect().await.ok()));
 
-        let switch_screen = switch_screen::SwitchScreen::builder()
-            .launch(switch_screen::SwitchScreenInit {
+        let main_screen = main_screen::MainScreen::builder()
+            .launch(main_screen::MainScreenInit {
                 daemon_client: Arc::clone(&daemon_client),
             })
             .forward(sender.input_sender(), |_| AppMsg::None);
@@ -75,7 +75,7 @@ impl AsyncComponent for App {
         let widgets = view_output!();
 
         let view_stack = adw::ViewStack::new();
-        view_stack.add_titled(switch_screen.widget(), None, "Switch");
+        view_stack.add_titled(main_screen.widget(), None, "Burrow");
         view_stack.add_titled(settings_screen.widget(), None, "Settings");
 
         let view_switcher_bar = adw::ViewSwitcherBar::builder().stack(&view_stack).build();
@@ -108,7 +108,7 @@ impl AsyncComponent for App {
 
         let model = App {
             daemon_client,
-            switch_screen,
+            main_screen,
             settings_screen,
         };
 
@@ -130,8 +130,8 @@ impl AsyncComponent for App {
                     let mut client = tunnel_client::TunnelClient::new(daemon_client);
                     if let Err(_e) = client.tunnel_status(burrow_rpc::Empty {}).await {
                         disconnected_daemon_client = true;
-                        self.switch_screen
-                            .emit(switch_screen::SwitchScreenMsg::DaemonDisconnect);
+                        self.main_screen
+                            .emit(main_screen::MainScreenMsg::DaemonDisconnect);
                         self.settings_screen
                             .emit(settings_screen::SettingsScreenMsg::DaemonStateChange)
                     }
@@ -141,8 +141,8 @@ impl AsyncComponent for App {
                     match daemon::daemon_connect().await {
                         Ok(new_daemon_client) => {
                             *daemon_client = Some(new_daemon_client);
-                            self.switch_screen
-                                .emit(switch_screen::SwitchScreenMsg::DaemonReconnect);
+                            self.main_screen
+                                .emit(main_screen::MainScreenMsg::DaemonReconnect);
                             self.settings_screen
                                 .emit(settings_screen::SettingsScreenMsg::DaemonStateChange)
                         }
