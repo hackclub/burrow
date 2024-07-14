@@ -1,6 +1,6 @@
 import NetworkExtension
 
-extension NEVPNManager {
+extension NEVPNManager: @unchecked @retroactive Sendable {
     func remove() async throws {
         _ = try await withUnsafeThrowingContinuation { continuation in
             removeFromPreferences(completionHandler: completion(continuation))
@@ -14,7 +14,7 @@ extension NEVPNManager {
     }
 }
 
-extension NETunnelProviderManager {
+extension NETunnelProviderManager: @unchecked @retroactive Sendable {
     class var managers: [NETunnelProviderManager] {
         get async throws {
             try await withUnsafeThrowingContinuation { continuation in
@@ -34,7 +34,7 @@ private func completion(_ continuation: UnsafeContinuation<Void, Error>) -> (Err
     }
 }
 
-private func completion<T>(_ continuation: UnsafeContinuation<T, Error>) -> (T?, Error?) -> Void {
+private func completion<T: Sendable>(_ continuation: UnsafeContinuation<T, Error>) -> (T?, Error?) -> Void {
     return { value, error in
         if let error {
             continuation.resume(throwing: error)

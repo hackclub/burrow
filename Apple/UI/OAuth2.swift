@@ -1,5 +1,6 @@
 import AuthenticationServices
 import Foundation
+import os
 import SwiftUI
 
 enum OAuth2 {
@@ -25,11 +26,16 @@ enum OAuth2 {
         var clientID: String
         var clientSecret: String
 
-        fileprivate static var queue: [Int: CheckedContinuation<URL, Swift.Error>] = [:]
+        fileprivate static let queue: OSAllocatedUnfairLock<[Int: CheckedContinuation<URL, Swift.Error>]> = {
+            .init(initialState: [:])
+        }()
 
         fileprivate static func handle(url: URL) {
-            let continuations = queue
-            queue.removeAll()
+            let continuations = queue.withLock { continuations in
+                let copy = continuations
+                continuations.removeAll()
+                return copy
+            }
             for (_, continuation) in continuations {
                 continuation.resume(returning: url)
             }
@@ -56,7 +62,7 @@ enum OAuth2 {
                 var queryItems: [URLQueryItem] = [
                     .init(name: "client_id", value: clientID),
                     .init(name: "response_type", value: responseType.rawValue),
-                    .init(name: "redirect_uri", value: redirectURI.absoluteString),
+                    .init(name: "redirect_uri", value: redirectURI.absoluteString)
                 ]
                 if !scopes.isEmpty {
                     queryItems.append(.init(name: "scope", value: scopes.joined(separator: ",")))
@@ -206,6 +212,9 @@ enum OAuth2 {
     }
 }
 
+extension WebAuthenticationSession: @unchecked @retroactive Sendable {
+}
+
 extension WebAuthenticationSession {
 #if canImport(BrowserEngineKit)
     @available(iOS 17.4, macOS 14.4, tvOS 17.4, watchOS 10.4, *)
@@ -243,12 +252,12 @@ extension WebAuthenticationSession {
             let id = Int.random(in: 0..<Int.max)
             group.addTask {
                 return try await withCheckedThrowingContinuation { continuation in
-                    OAuth2.Session.queue[id] = continuation
+                    OAuth2.Session.queue.withLock { $0[id] = continuation }
                 }
             }
             guard let url = try await group.next() else { throw OAuth2.Error.invalidCallbackURL }
             group.cancelAll()
-            OAuth2.Session.queue[id] = nil
+            OAuth2.Session.queue.withLock { $0[id] = nil }
             return url
         }
     }

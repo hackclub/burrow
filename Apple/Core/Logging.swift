@@ -4,7 +4,7 @@ import os
 extension Logger {
     private static let loggers: OSAllocatedUnfairLock<[String: Logger]> = OSAllocatedUnfairLock(initialState: [:])
 
-    public static let subsystem = Constants.bundleIdentifier
+    public dynamic static var subsystem: String { "com.hackclub.burrow" }
 
     public static func logger(for type: Any.Type) -> Logger {
         let category = String(describing: type)

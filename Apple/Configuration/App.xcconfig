@@ -1,10 +1,8 @@
+LD_EXPORT_SYMBOLS = NO
 SKIP_INSTALL = NO
-MERGED_BINARY_TYPE = manual
 
-LD_RUNPATH_SEARCH_PATHS[sdk=iphone*] = $(inherited) @executable_path/Frameworks
+LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks
 LD_RUNPATH_SEARCH_PATHS[sdk=macosx*] = $(inherited) @executable_path/../Frameworks
 
 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
 ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor
-
-ENABLE_PREVIEWS = YES

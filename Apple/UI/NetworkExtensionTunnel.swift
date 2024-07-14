@@ -1,22 +1,23 @@
-import BurrowShared
+import BurrowCore
 import NetworkExtension
 
 @Observable
-class NetworkExtensionTunnel: Tunnel {
-    @MainActor private(set) var status: TunnelStatus = .unknown
-    private var error: NEVPNError?
+public final class NetworkExtensionTunnel: Tunnel {
+    @MainActor public private(set) var status: TunnelStatus = .unknown
+    @MainActor private var error: NEVPNError?
 
     private let logger = Logger.logger(for: Tunnel.self)
     private let bundleIdentifier: String
-    private var tasks: [Task<Void, Error>] = []
+    private let configurationChanged: Task<Void, Error>
+    private let statusChanged: Task<Void, Error>
 
     // Each manager corresponds to one entry in the Settings app.
     // Our goal is to maintain a single manager, so we create one if none exist and delete any extra.
-    private var managers: [NEVPNManager]? {
+    @MainActor private var managers: [NEVPNManager]? {
         didSet { Task { await updateStatus() } }
     }
 
-    private var currentStatus: TunnelStatus {
+    @MainActor private var currentStatus: TunnelStatus {
         guard let managers = managers else {
             guard let error = error else {
                 return .unknown
@@ -41,35 +42,40 @@ class NetworkExtensionTunnel: Tunnel {
         return manager.connection.tunnelStatus
     }
 
-    convenience init() {
-        self.init(Constants.networkExtensionBundleIdentifier)
-    }
-
-    init(_ bundleIdentifier: String) {
+    public init(bundleIdentifier: String) {
         self.bundleIdentifier = bundleIdentifier
 
         let center = NotificationCenter.default
-        let configurationChanged = Task { [weak self] in
-            for try await _ in center.notifications(named: .NEVPNConfigurationChange).map({ _ in () }) {
-                await self?.update()
+        let tunnel: OSAllocatedUnfairLock<NetworkExtensionTunnel?> = .init(initialState: .none)
+        configurationChanged = Task {
+            for try await _ in center.notifications(named: .NEVPNConfigurationChange) {
+                try Task.checkCancellation()
+                await tunnel.withLock { $0 }?.update()
             }
         }
-        let statusChanged = Task { [weak self] in
-            for try await _ in center.notifications(named: .NEVPNStatusDidChange).map({ _ in () }) {
-                await self?.updateStatus()
+        statusChanged = Task {
+            for try await _ in center.notifications(named: .NEVPNStatusDidChange) {
+                try Task.checkCancellation()
+                await tunnel.withLock { $0 }?.updateStatus()
             }
         }
-        tasks = [configurationChanged, statusChanged]
+        tunnel.withLock { $0 = self }
 
         Task { await update() }
     }
 
     private func update() async {
         do {
-            managers = try await NETunnelProviderManager.managers
+            let result = try await NETunnelProviderManager.managers
+            await MainActor.run {
+                managers = result
+                status = currentStatus
+            }
             await self.updateStatus()
         } catch let vpnError as NEVPNError {
-            error = vpnError
+            await MainActor.run {
+                error = vpnError
+            }
         } catch {
             logger.error("Failed to update VPN configurations: \(error)")
         }
@@ -82,12 +88,7 @@ class NetworkExtensionTunnel: Tunnel {
     }
 
     func configure() async throws {
-        if managers == nil {
-            await update()
-        }
-
-        guard let managers = managers else { return }
-
+        let managers = try await NETunnelProviderManager.managers
         if managers.count > 1 {
             try await withThrowingTaskGroup(of: Void.self, returning: Void.self) { group in
                 for manager in managers.suffix(from: 1) {
@@ -110,9 +111,9 @@ class NetworkExtensionTunnel: Tunnel {
         try await manager.save()
     }
 
-    func start() {
-        guard let manager = managers?.first else { return }
+    public func start() {
         Task {
+            guard let manager = try await NETunnelProviderManager.managers.first else { return }
             do {
                 if !manager.isEnabled {
                     manager.isEnabled = true
@@ -125,12 +126,14 @@ class NetworkExtensionTunnel: Tunnel {
         }
     }
 
-    func stop() {
-        guard let manager = managers?.first else { return }
-        manager.connection.stopVPNTunnel()
+    public func stop() {
+        Task {
+            guard let manager = try await NETunnelProviderManager.managers.first else { return }
+            manager.connection.stopVPNTunnel()
+        }
     }
 
-    func enable() {
+    public func enable() {
         Task {
             do {
                 try await configure()
@@ -141,7 +144,8 @@ class NetworkExtensionTunnel: Tunnel {
     }
 
     deinit {
-        tasks.forEach { $0.cancel() }
+        configurationChanged.cancel()
+        statusChanged.cancel()
     }
 }
 

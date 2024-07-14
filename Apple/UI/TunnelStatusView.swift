@@ -10,7 +10,7 @@ struct TunnelStatusView: View {
 }
 
 extension TunnelStatus: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         switch self {
         case .unknown:
             "Unknown"

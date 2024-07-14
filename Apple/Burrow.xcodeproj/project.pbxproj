@@ -7,58 +7,98 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0BA6D73B2BA638D900BD4B55 /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B46E8DF2AC918CA00BA2A3C /* Client.swift */; };
-		0BA6D73C2BA6393200BD4B55 /* NWConnection+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */; };
-		0BA6D73D2BA6393B00BD4B55 /* NewlineProtocolFramer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */; };
-		0BA6D73E2BA6394B00BD4B55 /* DataTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B28F1552ABF463A000D44B0 /* DataTypes.swift */; };
-		43AA26D82A10004900F14CE6 /* MenuItemToggleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AA26D72A10004900F14CE6 /* MenuItemToggleView.swift */; };
-		D000363D2BB8928E00E582EC /* NetworkCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D000363C2BB8928E00E582EC /* NetworkCarouselView.swift */; };
-		D000363F2BB895FB00E582EC /* OAuth2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D000363E2BB895FB00E582EC /* OAuth2.swift */; };
-		D001173B2B30341C00D87C25 /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D001173A2B30341C00D87C25 /* Logging.swift */; };
-		D00117442B30372900D87C25 /* libBurrowShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D00117382B30341C00D87C25 /* libBurrowShared.a */; };
-		D00117452B30372C00D87C25 /* libBurrowShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D00117382B30341C00D87C25 /* libBurrowShared.a */; };
 		D00AA8972A4669BC005C8102 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00AA8962A4669BC005C8102 /* AppDelegate.swift */; };
-		D01A79312B81630D0024EC91 /* NetworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01A79302B81630D0024EC91 /* NetworkView.swift */; };
 		D020F65829E4A697002790F6 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D020F65729E4A697002790F6 /* PacketTunnelProvider.swift */; };
 		D020F65D29E4A697002790F6 /* BurrowNetworkExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D020F65329E4A697002790F6 /* BurrowNetworkExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		D032E6522B8A79C20006B8AD /* HackClub.swift in Sources */ = {isa = PBXBuildFile; fileRef = D032E6512B8A79C20006B8AD /* HackClub.swift */; };
-		D032E6542B8A79DA0006B8AD /* WireGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D032E6532B8A79DA0006B8AD /* WireGuard.swift */; };
+		D03383AD2C8E67E300F7C44E /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = D078F7E22C8DA375008A8CEC /* SwiftProtobuf */; };
+		D03383AE2C8E67E300F7C44E /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = D044EE902C8DAB2000778185 /* NIO */; };
+		D03383AF2C8E67E300F7C44E /* NIOConcurrencyHelpers in Frameworks */ = {isa = PBXBuildFile; productRef = D044EE922C8DAB2000778185 /* NIOConcurrencyHelpers */; };
+		D03383B02C8E67E300F7C44E /* NIOTransportServices in Frameworks */ = {isa = PBXBuildFile; productRef = D044EE952C8DAB2800778185 /* NIOTransportServices */; };
 		D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */; };
-		D05B9F7829E39EEC008CB1F9 /* BurrowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7729E39EEC008CB1F9 /* BurrowView.swift */; };
-		D05B9F7A29E39EED008CB1F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D05B9F7929E39EED008CB1F9 /* Assets.xcassets */; };
-		D05EF8C82B81818D0017AB4F /* FloatingButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05EF8C72B81818D0017AB4F /* FloatingButtonStyle.swift */; };
-		D08252762B5C9FC4005DA378 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08252752B5C9FC4005DA378 /* Constants.swift */; };
-		D09150422B9D2AF700BE3CB0 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = D09150412B9D2AF700BE3CB0 /* MainMenu.xib */; };
-		D0BCC5FD2A086D4700AD070D /* NetworkExtension+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */; };
-		D0BCC6082A0981FE00AD070D /* Tunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B98FC629FDC5B5004E7149 /* Tunnel.swift */; };
+		D09150422B9D2AF700BE3CB0 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = D09150412B9D2AF700BE3CB0 /* MainMenu.xib */; platformFilters = (macos, ); };
+		D0B1D1102C436152004B7823 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = D0B1D10F2C436152004B7823 /* AsyncAlgorithms */; };
 		D0BCC6092A09A03E00AD070D /* libburrow.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0BCC6032A09535900AD070D /* libburrow.a */; };
-		D0FAB5922B818A5900F6A84B /* NetworkExtensionTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FAB5912B818A5900F6A84B /* NetworkExtensionTunnel.swift */; };
-		D0FAB5962B818B2900F6A84B /* TunnelButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FAB5952B818B2900F6A84B /* TunnelButton.swift */; };
-		D0FAB5982B818B8200F6A84B /* TunnelStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FAB5972B818B8200F6A84B /* TunnelStatusView.swift */; };
-		D0FAB59A2B818B9600F6A84B /* Network.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FAB5992B818B9600F6A84B /* Network.swift */; };
+		D0BF09522C8E66F6000D8DEC /* BurrowConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D4E5622C8D9BF4007F820A /* BurrowConfiguration.framework */; };
+		D0BF09552C8E66FD000D8DEC /* BurrowConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D4E5622C8D9BF4007F820A /* BurrowConfiguration.framework */; };
+		D0D4E53A2C8D996F007F820A /* BurrowCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D0D4E5312C8D996F007F820A /* BurrowCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D0D4E56B2C8D9C2F007F820A /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E49A2C8D921A007F820A /* Logging.swift */; };
+		D0D4E5702C8D9C62007F820A /* BurrowCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D4E5312C8D996F007F820A /* BurrowCore.framework */; };
+		D0D4E5712C8D9C6F007F820A /* HackClub.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E49D2C8D921A007F820A /* HackClub.swift */; };
+		D0D4E5722C8D9C6F007F820A /* Network.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E49E2C8D921A007F820A /* Network.swift */; };
+		D0D4E5732C8D9C6F007F820A /* WireGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E49F2C8D921A007F820A /* WireGuard.swift */; };
+		D0D4E5742C8D9C6F007F820A /* BurrowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4A22C8D921A007F820A /* BurrowView.swift */; };
+		D0D4E5752C8D9C6F007F820A /* FloatingButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4A32C8D921A007F820A /* FloatingButtonStyle.swift */; };
+		D0D4E5762C8D9C6F007F820A /* MenuItemToggleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4A42C8D921A007F820A /* MenuItemToggleView.swift */; };
+		D0D4E5772C8D9C6F007F820A /* NetworkCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4A52C8D921A007F820A /* NetworkCarouselView.swift */; };
+		D0D4E5782C8D9C6F007F820A /* NetworkExtension+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4A62C8D921A007F820A /* NetworkExtension+Async.swift */; };
+		D0D4E5792C8D9C6F007F820A /* NetworkExtensionTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4A72C8D921A007F820A /* NetworkExtensionTunnel.swift */; };
+		D0D4E57A2C8D9C6F007F820A /* NetworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4A82C8D921A007F820A /* NetworkView.swift */; };
+		D0D4E57B2C8D9C6F007F820A /* OAuth2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4A92C8D921A007F820A /* OAuth2.swift */; };
+		D0D4E57C2C8D9C6F007F820A /* Tunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4AA2C8D921A007F820A /* Tunnel.swift */; };
+		D0D4E57D2C8D9C6F007F820A /* TunnelButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4AB2C8D921A007F820A /* TunnelButton.swift */; };
+		D0D4E57E2C8D9C6F007F820A /* TunnelStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4AC2C8D921A007F820A /* TunnelStatusView.swift */; };
+		D0D4E5892C8D9C94007F820A /* BurrowUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D4E5582C8D9BF2007F820A /* BurrowUI.framework */; };
+		D0D4E58A2C8D9C9E007F820A /* BurrowUI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D0D4E5582C8D9BF2007F820A /* BurrowUI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D0D4E58B2C8D9CA4007F820A /* BurrowConfiguration.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D0D4E5622C8D9BF4007F820A /* BurrowConfiguration.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D0D4E5922C8D9D15007F820A /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E58F2C8D9D0A007F820A /* Constants.swift */; };
+		D0D4E5A62C8D9E65007F820A /* BurrowCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D4E5312C8D996F007F820A /* BurrowCore.framework */; };
+		D0F4FAD32C8DC79C0068730A /* BurrowCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D4E5312C8D996F007F820A /* BurrowCore.framework */; };
+		D0F7594E2C8DAB6B00126CF3 /* GRPC in Frameworks */ = {isa = PBXBuildFile; productRef = D078F7E02C8DA375008A8CEC /* GRPC */; };
+		D0F759612C8DB24B00126CF3 /* grpc-swift-config.json in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4962C8D921A007F820A /* grpc-swift-config.json */; };
+		D0F759622C8DB24B00126CF3 /* swift-protobuf-config.json in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4972C8D921A007F820A /* swift-protobuf-config.json */; };
+		D0F7597E2C8DB30500126CF3 /* CGRPCZlib in Frameworks */ = {isa = PBXBuildFile; productRef = D0F7597D2C8DB30500126CF3 /* CGRPCZlib */; };
+		D0F7598D2C8DB3DA00126CF3 /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4992C8D921A007F820A /* Client.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		D00117462B30373100D87C25 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D05B9F6A29E39EEC008CB1F9 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = D00117372B30341C00D87C25;
-			remoteInfo = Shared;
-		};
-		D00117482B30373500D87C25 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D05B9F6A29E39EEC008CB1F9 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = D00117372B30341C00D87C25;
-			remoteInfo = Shared;
-		};
 		D020F65B29E4A697002790F6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D05B9F6A29E39EEC008CB1F9 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = D020F65229E4A697002790F6;
 			remoteInfo = BurrowNetworkExtension;
+		};
+		D0BF09502C8E66F1000D8DEC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D05B9F6A29E39EEC008CB1F9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D0D4E55A2C8D9BF4007F820A;
+			remoteInfo = Configuration;
+		};
+		D0BF09532C8E66FA000D8DEC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D05B9F6A29E39EEC008CB1F9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D0D4E55A2C8D9BF4007F820A;
+			remoteInfo = Configuration;
+		};
+		D0D4E56E2C8D9C5D007F820A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D05B9F6A29E39EEC008CB1F9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D0D4E5302C8D996F007F820A;
+			remoteInfo = Core;
+		};
+		D0D4E57F2C8D9C78007F820A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D05B9F6A29E39EEC008CB1F9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D0D4E5302C8D996F007F820A;
+			remoteInfo = Core;
+		};
+		D0D4E5872C8D9C88007F820A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D05B9F6A29E39EEC008CB1F9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D0D4E5502C8D9BF2007F820A;
+			remoteInfo = UI;
+		};
+		D0F4FAD12C8DC7960068730A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D05B9F6A29E39EEC008CB1F9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D0D4E5302C8D996F007F820A;
+			remoteInfo = Core;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -74,22 +114,24 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D0D4E53F2C8D996F007F820A /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				D0D4E58B2C8D9CA4007F820A /* BurrowConfiguration.framework in Embed Frameworks */,
+				D0D4E58A2C8D9C9E007F820A /* BurrowUI.framework in Embed Frameworks */,
+				D0D4E53A2C8D996F007F820A /* BurrowCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0B28F1552ABF463A000D44B0 /* DataTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTypes.swift; sourceTree = "<group>"; };
-		0B46E8DF2AC918CA00BA2A3C /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
-		43AA26D72A10004900F14CE6 /* MenuItemToggleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuItemToggleView.swift; sourceTree = "<group>"; };
-		D000363C2BB8928E00E582EC /* NetworkCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkCarouselView.swift; sourceTree = "<group>"; };
-		D000363E2BB895FB00E582EC /* OAuth2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuth2.swift; sourceTree = "<group>"; };
-		D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NWConnection+Async.swift"; sourceTree = "<group>"; };
-		D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewlineProtocolFramer.swift; sourceTree = "<group>"; };
-		D00117382B30341C00D87C25 /* libBurrowShared.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBurrowShared.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		D001173A2B30341C00D87C25 /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
-		D00117412B30347800D87C25 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
-		D00117422B30348D00D87C25 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
+		D00117422B30348D00D87C25 /* Configuration.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Configuration.xcconfig; sourceTree = "<group>"; };
 		D00AA8962A4669BC005C8102 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		D01A79302B81630D0024EC91 /* NetworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkView.swift; sourceTree = "<group>"; };
 		D020F63D29E4A1FF002790F6 /* Identity.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Identity.xcconfig; sourceTree = "<group>"; };
 		D020F64029E4A1FF002790F6 /* Compiler.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Compiler.xcconfig; sourceTree = "<group>"; };
 		D020F64229E4A1FF002790F6 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -104,43 +146,54 @@
 		D020F66729E4A95D002790F6 /* NetworkExtension-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "NetworkExtension-iOS.entitlements"; sourceTree = "<group>"; };
 		D020F66829E4AA74002790F6 /* App-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "App-iOS.entitlements"; sourceTree = "<group>"; };
 		D020F66929E4AA74002790F6 /* App-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "App-macOS.entitlements"; sourceTree = "<group>"; };
-		D032E6512B8A79C20006B8AD /* HackClub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HackClub.swift; sourceTree = "<group>"; };
-		D032E6532B8A79DA0006B8AD /* WireGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireGuard.swift; sourceTree = "<group>"; };
 		D04A3E1D2BAF465F0043EC85 /* Version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Version.xcconfig; sourceTree = "<group>"; };
 		D05B9F7229E39EEC008CB1F9 /* Burrow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Burrow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowApp.swift; sourceTree = "<group>"; };
-		D05B9F7729E39EEC008CB1F9 /* BurrowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowView.swift; sourceTree = "<group>"; };
-		D05B9F7929E39EED008CB1F9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		D05EF8C72B81818D0017AB4F /* FloatingButtonStyle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FloatingButtonStyle.swift; sourceTree = "<group>"; };
-		D08252742B5C9DEB005DA378 /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
-		D08252752B5C9FC4005DA378 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		D09150412B9D2AF700BE3CB0 /* MainMenu.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		D0B98FBF29FD8072004E7149 /* build-rust.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-rust.sh"; sourceTree = "<group>"; };
-		D0B98FC629FDC5B5004E7149 /* Tunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tunnel.swift; sourceTree = "<group>"; };
 		D0B98FD829FDDB6F004E7149 /* libburrow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libburrow.h; sourceTree = "<group>"; };
 		D0B98FDC29FDDDCF004E7149 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
-		D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NetworkExtension+Async.swift"; sourceTree = "<group>"; };
 		D0BCC6032A09535900AD070D /* libburrow.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libburrow.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		D0FAB5912B818A5900F6A84B /* NetworkExtensionTunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkExtensionTunnel.swift; sourceTree = "<group>"; };
-		D0FAB5952B818B2900F6A84B /* TunnelButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelButton.swift; sourceTree = "<group>"; };
-		D0FAB5972B818B8200F6A84B /* TunnelStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelStatusView.swift; sourceTree = "<group>"; };
-		D0FAB5992B818B9600F6A84B /* Network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Network.swift; sourceTree = "<group>"; };
+		D0BF09582C8E6789000D8DEC /* UI.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = UI.xcconfig; sourceTree = "<group>"; };
+		D0D4E4952C8D921A007F820A /* burrow.proto */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.protobuf; path = burrow.proto; sourceTree = "<group>"; };
+		D0D4E4962C8D921A007F820A /* grpc-swift-config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "grpc-swift-config.json"; sourceTree = "<group>"; };
+		D0D4E4972C8D921A007F820A /* swift-protobuf-config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "swift-protobuf-config.json"; sourceTree = "<group>"; };
+		D0D4E4992C8D921A007F820A /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
+		D0D4E49A2C8D921A007F820A /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
+		D0D4E49D2C8D921A007F820A /* HackClub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HackClub.swift; sourceTree = "<group>"; };
+		D0D4E49E2C8D921A007F820A /* Network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Network.swift; sourceTree = "<group>"; };
+		D0D4E49F2C8D921A007F820A /* WireGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireGuard.swift; sourceTree = "<group>"; };
+		D0D4E4A12C8D921A007F820A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D0D4E4A22C8D921A007F820A /* BurrowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowView.swift; sourceTree = "<group>"; };
+		D0D4E4A32C8D921A007F820A /* FloatingButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingButtonStyle.swift; sourceTree = "<group>"; };
+		D0D4E4A42C8D921A007F820A /* MenuItemToggleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuItemToggleView.swift; sourceTree = "<group>"; };
+		D0D4E4A52C8D921A007F820A /* NetworkCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkCarouselView.swift; sourceTree = "<group>"; };
+		D0D4E4A62C8D921A007F820A /* NetworkExtension+Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NetworkExtension+Async.swift"; sourceTree = "<group>"; };
+		D0D4E4A72C8D921A007F820A /* NetworkExtensionTunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkExtensionTunnel.swift; sourceTree = "<group>"; };
+		D0D4E4A82C8D921A007F820A /* NetworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkView.swift; sourceTree = "<group>"; };
+		D0D4E4A92C8D921A007F820A /* OAuth2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuth2.swift; sourceTree = "<group>"; };
+		D0D4E4AA2C8D921A007F820A /* Tunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tunnel.swift; sourceTree = "<group>"; };
+		D0D4E4AB2C8D921A007F820A /* TunnelButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelButton.swift; sourceTree = "<group>"; };
+		D0D4E4AC2C8D921A007F820A /* TunnelStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelStatusView.swift; sourceTree = "<group>"; };
+		D0D4E4F62C8D932D007F820A /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		D0D4E4F72C8D941D007F820A /* Framework.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Framework.xcconfig; sourceTree = "<group>"; };
+		D0D4E5312C8D996F007F820A /* BurrowCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BurrowCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0D4E5582C8D9BF2007F820A /* BurrowUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BurrowUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0D4E5622C8D9BF4007F820A /* BurrowConfiguration.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BurrowConfiguration.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0D4E58E2C8D9D0A007F820A /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
+		D0D4E58F2C8D9D0A007F820A /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		D0D4E5902C8D9D0A007F820A /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		D00117352B30341C00D87C25 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		D020F65029E4A697002790F6 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D00117442B30372900D87C25 /* libBurrowShared.a in Frameworks */,
+				D0BF09522C8E66F6000D8DEC /* BurrowConfiguration.framework in Frameworks */,
+				D0D4E5A62C8D9E65007F820A /* BurrowCore.framework in Frameworks */,
 				D0BCC6092A09A03E00AD070D /* libburrow.a in Frameworks */,
+				D0B1D1102C436152004B7823 /* AsyncAlgorithms in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -148,37 +201,36 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D00117452B30372C00D87C25 /* libBurrowShared.a in Frameworks */,
+				D0BF09552C8E66FD000D8DEC /* BurrowConfiguration.framework in Frameworks */,
+				D0F4FAD32C8DC79C0068730A /* BurrowCore.framework in Frameworks */,
+				D0D4E5892C8D9C94007F820A /* BurrowUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D078F7CF2C8DA213008A8CEC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D03383B02C8E67E300F7C44E /* NIOTransportServices in Frameworks */,
+				D03383AF2C8E67E300F7C44E /* NIOConcurrencyHelpers in Frameworks */,
+				D03383AE2C8E67E300F7C44E /* NIO in Frameworks */,
+				D03383AD2C8E67E300F7C44E /* SwiftProtobuf in Frameworks */,
+				D0F7594E2C8DAB6B00126CF3 /* GRPC in Frameworks */,
+				D0F7597E2C8DB30500126CF3 /* CGRPCZlib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0D4E5532C8D9BF2007F820A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D0D4E5702C8D9C62007F820A /* BurrowCore.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		D00117392B30341C00D87C25 /* Shared */ = {
-			isa = PBXGroup;
-			children = (
-				0B28F1552ABF463A000D44B0 /* DataTypes.swift */,
-				D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */,
-				D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */,
-				0B46E8DF2AC918CA00BA2A3C /* Client.swift */,
-				D001173A2B30341C00D87C25 /* Logging.swift */,
-				D08252752B5C9FC4005DA378 /* Constants.swift */,
-				D00117422B30348D00D87C25 /* Shared.xcconfig */,
-				D001173F2B30347800D87C25 /* Constants */,
-			);
-			path = Shared;
-			sourceTree = "<group>";
-		};
-		D001173F2B30347800D87C25 /* Constants */ = {
-			isa = PBXGroup;
-			children = (
-				D08252742B5C9DEB005DA378 /* Constants.h */,
-				D00117412B30347800D87C25 /* module.modulemap */,
-			);
-			path = Constants;
-			sourceTree = "<group>";
-		};
 		D00117432B30372900D87C25 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -192,9 +244,13 @@
 				D020F63D29E4A1FF002790F6 /* Identity.xcconfig */,
 				D020F64A29E4A452002790F6 /* App.xcconfig */,
 				D020F66329E4A703002790F6 /* Extension.xcconfig */,
+				D0D4E4F72C8D941D007F820A /* Framework.xcconfig */,
 				D020F64029E4A1FF002790F6 /* Compiler.xcconfig */,
+				D0D4E4F62C8D932D007F820A /* Debug.xcconfig */,
 				D04A3E1D2BAF465F0043EC85 /* Version.xcconfig */,
 				D020F64229E4A1FF002790F6 /* Info.plist */,
+				D0D4E5912C8D9D0A007F820A /* Constants */,
+				D00117422B30348D00D87C25 /* Configuration.xcconfig */,
 			);
 			path = Configuration;
 			sourceTree = "<group>";
@@ -212,22 +268,13 @@
 			path = NetworkExtension;
 			sourceTree = "<group>";
 		};
-		D032E64D2B8A69C90006B8AD /* Networks */ = {
-			isa = PBXGroup;
-			children = (
-				D0FAB5992B818B9600F6A84B /* Network.swift */,
-				D032E6512B8A79C20006B8AD /* HackClub.swift */,
-				D032E6532B8A79DA0006B8AD /* WireGuard.swift */,
-			);
-			path = Networks;
-			sourceTree = "<group>";
-		};
 		D05B9F6929E39EEC008CB1F9 = {
 			isa = PBXGroup;
 			children = (
 				D05B9F7429E39EEC008CB1F9 /* App */,
 				D020F65629E4A697002790F6 /* NetworkExtension */,
-				D00117392B30341C00D87C25 /* Shared */,
+				D0D4E49C2C8D921A007F820A /* Core */,
+				D0D4E4AD2C8D921A007F820A /* UI */,
 				D020F63C29E4A1FF002790F6 /* Configuration */,
 				D05B9F7329E39EEC008CB1F9 /* Products */,
 				D00117432B30372900D87C25 /* Frameworks */,
@@ -239,7 +286,10 @@
 			children = (
 				D05B9F7229E39EEC008CB1F9 /* Burrow.app */,
 				D020F65329E4A697002790F6 /* BurrowNetworkExtension.appex */,
-				D00117382B30341C00D87C25 /* libBurrowShared.a */,
+				D0BCC6032A09535900AD070D /* libburrow.a */,
+				D0D4E5312C8D996F007F820A /* BurrowCore.framework */,
+				D0D4E5582C8D9BF2007F820A /* BurrowUI.framework */,
+				D0D4E5622C8D9BF4007F820A /* BurrowConfiguration.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -249,19 +299,6 @@
 			children = (
 				D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */,
 				D00AA8962A4669BC005C8102 /* AppDelegate.swift */,
-				43AA26D72A10004900F14CE6 /* MenuItemToggleView.swift */,
-				D05B9F7729E39EEC008CB1F9 /* BurrowView.swift */,
-				D000363C2BB8928E00E582EC /* NetworkCarouselView.swift */,
-				D01A79302B81630D0024EC91 /* NetworkView.swift */,
-				D000363E2BB895FB00E582EC /* OAuth2.swift */,
-				D032E64D2B8A69C90006B8AD /* Networks */,
-				D0FAB5972B818B8200F6A84B /* TunnelStatusView.swift */,
-				D0FAB5952B818B2900F6A84B /* TunnelButton.swift */,
-				D0B98FC629FDC5B5004E7149 /* Tunnel.swift */,
-				D0FAB5912B818A5900F6A84B /* NetworkExtensionTunnel.swift */,
-				D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */,
-				D05EF8C72B81818D0017AB4F /* FloatingButtonStyle.swift */,
-				D05B9F7929E39EED008CB1F9 /* Assets.xcassets */,
 				D09150412B9D2AF700BE3CB0 /* MainMenu.xib */,
 				D020F66829E4AA74002790F6 /* App-iOS.entitlements */,
 				D020F66929E4AA74002790F6 /* App-macOS.entitlements */,
@@ -276,30 +313,74 @@
 				D0B98FBF29FD8072004E7149 /* build-rust.sh */,
 				D0B98FDC29FDDDCF004E7149 /* module.modulemap */,
 				D0B98FD829FDDB6F004E7149 /* libburrow.h */,
-				D0BCC6032A09535900AD070D /* libburrow.a */,
 			);
 			path = libburrow;
+			sourceTree = "<group>";
+		};
+		D0D4E4982C8D921A007F820A /* Client */ = {
+			isa = PBXGroup;
+			children = (
+				D0D4E4952C8D921A007F820A /* burrow.proto */,
+				D0D4E4962C8D921A007F820A /* grpc-swift-config.json */,
+				D0D4E4972C8D921A007F820A /* swift-protobuf-config.json */,
+			);
+			path = Client;
+			sourceTree = "<group>";
+		};
+		D0D4E49C2C8D921A007F820A /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				D0D4E49A2C8D921A007F820A /* Logging.swift */,
+				D0D4E4992C8D921A007F820A /* Client.swift */,
+				D0D4E4982C8D921A007F820A /* Client */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		D0D4E4A02C8D921A007F820A /* Networks */ = {
+			isa = PBXGroup;
+			children = (
+				D0D4E49D2C8D921A007F820A /* HackClub.swift */,
+				D0D4E49E2C8D921A007F820A /* Network.swift */,
+				D0D4E49F2C8D921A007F820A /* WireGuard.swift */,
+			);
+			path = Networks;
+			sourceTree = "<group>";
+		};
+		D0D4E4AD2C8D921A007F820A /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				D0D4E4A22C8D921A007F820A /* BurrowView.swift */,
+				D0D4E4A02C8D921A007F820A /* Networks */,
+				D0D4E4A32C8D921A007F820A /* FloatingButtonStyle.swift */,
+				D0D4E4A42C8D921A007F820A /* MenuItemToggleView.swift */,
+				D0D4E4A52C8D921A007F820A /* NetworkCarouselView.swift */,
+				D0D4E4A62C8D921A007F820A /* NetworkExtension+Async.swift */,
+				D0D4E4A72C8D921A007F820A /* NetworkExtensionTunnel.swift */,
+				D0D4E4A82C8D921A007F820A /* NetworkView.swift */,
+				D0D4E4A92C8D921A007F820A /* OAuth2.swift */,
+				D0D4E4AA2C8D921A007F820A /* Tunnel.swift */,
+				D0D4E4AB2C8D921A007F820A /* TunnelButton.swift */,
+				D0D4E4AC2C8D921A007F820A /* TunnelStatusView.swift */,
+				D0D4E4A12C8D921A007F820A /* Assets.xcassets */,
+				D0BF09582C8E6789000D8DEC /* UI.xcconfig */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		D0D4E5912C8D9D0A007F820A /* Constants */ = {
+			isa = PBXGroup;
+			children = (
+				D0D4E58E2C8D9D0A007F820A /* Constants.h */,
+				D0D4E58F2C8D9D0A007F820A /* Constants.swift */,
+				D0D4E5902C8D9D0A007F820A /* module.modulemap */,
+			);
+			path = Constants;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		D00117372B30341C00D87C25 /* Shared */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = D001173C2B30341C00D87C25 /* Build configuration list for PBXNativeTarget "Shared" */;
-			buildPhases = (
-				D00117342B30341C00D87C25 /* Sources */,
-				D00117352B30341C00D87C25 /* Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = Shared;
-			productName = Shared;
-			productReference = D00117382B30341C00D87C25 /* libBurrowShared.a */;
-			productType = "com.apple.product-type.library.static";
-		};
 		D020F65229E4A697002790F6 /* NetworkExtension */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D020F65E29E4A697002790F6 /* Build configuration list for PBXNativeTarget "NetworkExtension" */;
@@ -307,12 +388,12 @@
 				D0BCC60B2A09A0C100AD070D /* Compile Rust */,
 				D020F64F29E4A697002790F6 /* Sources */,
 				D020F65029E4A697002790F6 /* Frameworks */,
-				D020F65129E4A697002790F6 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				D00117492B30373500D87C25 /* PBXTargetDependency */,
+				D0BF09512C8E66F1000D8DEC /* PBXTargetDependency */,
+				D0D4E5802C8D9C78007F820A /* PBXTargetDependency */,
 			);
 			name = NetworkExtension;
 			productName = BurrowNetworkExtension;
@@ -323,22 +404,89 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D05B9F8129E39EED008CB1F9 /* Build configuration list for PBXNativeTarget "App" */;
 			buildPhases = (
-				D04A3E232BAF4AE50043EC85 /* Update Build Number */,
 				D05B9F6E29E39EEC008CB1F9 /* Sources */,
 				D05B9F6F29E39EEC008CB1F9 /* Frameworks */,
 				D05B9F7029E39EEC008CB1F9 /* Resources */,
+				D0D4E53F2C8D996F007F820A /* Embed Frameworks */,
 				D020F66129E4A697002790F6 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				D00117472B30373100D87C25 /* PBXTargetDependency */,
+				D0BF09542C8E66FA000D8DEC /* PBXTargetDependency */,
+				D0F4FAD22C8DC7960068730A /* PBXTargetDependency */,
+				D0D4E5882C8D9C88007F820A /* PBXTargetDependency */,
 				D020F65C29E4A697002790F6 /* PBXTargetDependency */,
 			);
 			name = App;
 			productName = Burrow;
 			productReference = D05B9F7229E39EEC008CB1F9 /* Burrow.app */;
 			productType = "com.apple.product-type.application";
+		};
+		D0D4E5302C8D996F007F820A /* Core */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D0D4E53C2C8D996F007F820A /* Build configuration list for PBXNativeTarget "Core" */;
+			buildPhases = (
+				D0D4E52D2C8D996F007F820A /* Sources */,
+				D078F7CF2C8DA213008A8CEC /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D0F7598A2C8DB34200126CF3 /* PBXTargetDependency */,
+				D0F7595E2C8DB24400126CF3 /* PBXTargetDependency */,
+				D0F759602C8DB24400126CF3 /* PBXTargetDependency */,
+			);
+			name = Core;
+			packageProductDependencies = (
+				D078F7E02C8DA375008A8CEC /* GRPC */,
+				D078F7E22C8DA375008A8CEC /* SwiftProtobuf */,
+				D044EE902C8DAB2000778185 /* NIO */,
+				D044EE922C8DAB2000778185 /* NIOConcurrencyHelpers */,
+				D044EE952C8DAB2800778185 /* NIOTransportServices */,
+				D0F7597D2C8DB30500126CF3 /* CGRPCZlib */,
+			);
+			productName = Core;
+			productReference = D0D4E5312C8D996F007F820A /* BurrowCore.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		D0D4E5502C8D9BF2007F820A /* UI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D0D4E5552C8D9BF2007F820A /* Build configuration list for PBXNativeTarget "UI" */;
+			buildPhases = (
+				D0D4E5522C8D9BF2007F820A /* Sources */,
+				D0D4E5532C8D9BF2007F820A /* Frameworks */,
+				D0D4E5542C8D9BF2007F820A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D0D4E56F2C8D9C5D007F820A /* PBXTargetDependency */,
+			);
+			name = UI;
+			packageProductDependencies = (
+			);
+			productName = Core;
+			productReference = D0D4E5582C8D9BF2007F820A /* BurrowUI.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		D0D4E55A2C8D9BF4007F820A /* Configuration */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D0D4E55F2C8D9BF4007F820A /* Build configuration list for PBXNativeTarget "Configuration" */;
+			buildPhases = (
+				D0F759912C8DB49E00126CF3 /* Configure Version */,
+				D0D4E55C2C8D9BF4007F820A /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Configuration;
+			packageProductDependencies = (
+			);
+			productName = Core;
+			productReference = D0D4E5622C8D9BF4007F820A /* BurrowConfiguration.framework */;
+			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
 
@@ -347,17 +495,17 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1510;
+				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1520;
 				TargetAttributes = {
-					D00117372B30341C00D87C25 = {
-						CreatedOnToolsVersion = 15.1;
-					};
 					D020F65229E4A697002790F6 = {
 						CreatedOnToolsVersion = 14.3;
 					};
 					D05B9F7129E39EEC008CB1F9 = {
 						CreatedOnToolsVersion = 14.3;
+					};
+					D0D4E5302C8D996F007F820A = {
+						CreatedOnToolsVersion = 16.0;
 					};
 				};
 			};
@@ -371,6 +519,11 @@
 			);
 			mainGroup = D05B9F6929E39EEC008CB1F9;
 			packageReferences = (
+				D0B1D10E2C436152004B7823 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
+				D0D4E4822C8D8EF6007F820A /* XCRemoteSwiftPackageReference "grpc-swift" */,
+				D0D4E4852C8D8F29007F820A /* XCRemoteSwiftPackageReference "swift-protobuf" */,
+				D044EE8F2C8DAB2000778185 /* XCRemoteSwiftPackageReference "swift-nio" */,
+				D044EE942C8DAB2800778185 /* XCRemoteSwiftPackageReference "swift-nio-transport-services" */,
 			);
 			productRefGroup = D05B9F7329E39EEC008CB1F9 /* Products */;
 			projectDirPath = "";
@@ -378,52 +531,32 @@
 			targets = (
 				D05B9F7129E39EEC008CB1F9 /* App */,
 				D020F65229E4A697002790F6 /* NetworkExtension */,
-				D00117372B30341C00D87C25 /* Shared */,
+				D0D4E5502C8D9BF2007F820A /* UI */,
+				D0D4E5302C8D996F007F820A /* Core */,
+				D0D4E55A2C8D9BF4007F820A /* Configuration */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		D020F65129E4A697002790F6 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		D05B9F7029E39EEC008CB1F9 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D05B9F7A29E39EED008CB1F9 /* Assets.xcassets in Resources */,
 				D09150422B9D2AF700BE3CB0 /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0D4E5542C8D9BF2007F820A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		D04A3E232BAF4AE50043EC85 /* Update Build Number */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(PROJECT_DIR)/../Tools/version.sh",
-				"$(PROJECT_DIR)/../.git",
-			);
-			name = "Update Build Number";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(PROJECT_DIR)/Configuration/Version.xcconfig",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"$PROJECT_DIR/../Tools/version.sh\"\n";
-		};
 		D0BCC60B2A09A0C100AD070D /* Compile Rust */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -444,22 +577,31 @@
 			shellScript = "\"${PROJECT_DIR}/NetworkExtension/libburrow/build-rust.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		D0F759912C8DB49E00126CF3 /* Configure Version */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(PROJECT_DIR)/../Tools/version.sh",
+				"$(PROJECT_DIR)/../.git",
+			);
+			name = "Configure Version";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(PROJECT_DIR)/Configuration/Version.xcconfig",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$PROJECT_DIR/../Tools/version.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		D00117342B30341C00D87C25 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				D001173B2B30341C00D87C25 /* Logging.swift in Sources */,
-				0BA6D73C2BA6393200BD4B55 /* NWConnection+Async.swift in Sources */,
-				D08252762B5C9FC4005DA378 /* Constants.swift in Sources */,
-				0BA6D73E2BA6394B00BD4B55 /* DataTypes.swift in Sources */,
-				0BA6D73B2BA638D900BD4B55 /* Client.swift in Sources */,
-				0BA6D73D2BA6393B00BD4B55 /* NewlineProtocolFramer.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		D020F64F29E4A697002790F6 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -472,60 +614,104 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0FAB59A2B818B9600F6A84B /* Network.swift in Sources */,
-				D0BCC6082A0981FE00AD070D /* Tunnel.swift in Sources */,
-				D0FAB5982B818B8200F6A84B /* TunnelStatusView.swift in Sources */,
-				43AA26D82A10004900F14CE6 /* MenuItemToggleView.swift in Sources */,
-				D05B9F7829E39EEC008CB1F9 /* BurrowView.swift in Sources */,
-				D0FAB5922B818A5900F6A84B /* NetworkExtensionTunnel.swift in Sources */,
-				D000363F2BB895FB00E582EC /* OAuth2.swift in Sources */,
-				D0FAB5962B818B2900F6A84B /* TunnelButton.swift in Sources */,
 				D00AA8972A4669BC005C8102 /* AppDelegate.swift in Sources */,
-				D05EF8C82B81818D0017AB4F /* FloatingButtonStyle.swift in Sources */,
-				D032E6522B8A79C20006B8AD /* HackClub.swift in Sources */,
 				D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */,
-				D01A79312B81630D0024EC91 /* NetworkView.swift in Sources */,
-				D032E6542B8A79DA0006B8AD /* WireGuard.swift in Sources */,
-				D0BCC5FD2A086D4700AD070D /* NetworkExtension+Async.swift in Sources */,
-				D000363D2BB8928E00E582EC /* NetworkCarouselView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0D4E52D2C8D996F007F820A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D0F759612C8DB24B00126CF3 /* grpc-swift-config.json in Sources */,
+				D0F759622C8DB24B00126CF3 /* swift-protobuf-config.json in Sources */,
+				D0F7598D2C8DB3DA00126CF3 /* Client.swift in Sources */,
+				D0D4E56B2C8D9C2F007F820A /* Logging.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0D4E5522C8D9BF2007F820A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D0D4E5712C8D9C6F007F820A /* HackClub.swift in Sources */,
+				D0D4E5722C8D9C6F007F820A /* Network.swift in Sources */,
+				D0D4E5732C8D9C6F007F820A /* WireGuard.swift in Sources */,
+				D0D4E5742C8D9C6F007F820A /* BurrowView.swift in Sources */,
+				D0D4E5752C8D9C6F007F820A /* FloatingButtonStyle.swift in Sources */,
+				D0D4E5762C8D9C6F007F820A /* MenuItemToggleView.swift in Sources */,
+				D0D4E5772C8D9C6F007F820A /* NetworkCarouselView.swift in Sources */,
+				D0D4E5782C8D9C6F007F820A /* NetworkExtension+Async.swift in Sources */,
+				D0D4E5792C8D9C6F007F820A /* NetworkExtensionTunnel.swift in Sources */,
+				D0D4E57A2C8D9C6F007F820A /* NetworkView.swift in Sources */,
+				D0D4E57B2C8D9C6F007F820A /* OAuth2.swift in Sources */,
+				D0D4E57C2C8D9C6F007F820A /* Tunnel.swift in Sources */,
+				D0D4E57D2C8D9C6F007F820A /* TunnelButton.swift in Sources */,
+				D0D4E57E2C8D9C6F007F820A /* TunnelStatusView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0D4E55C2C8D9BF4007F820A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D0D4E5922C8D9D15007F820A /* Constants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		D00117472B30373100D87C25 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = D00117372B30341C00D87C25 /* Shared */;
-			targetProxy = D00117462B30373100D87C25 /* PBXContainerItemProxy */;
-		};
-		D00117492B30373500D87C25 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = D00117372B30341C00D87C25 /* Shared */;
-			targetProxy = D00117482B30373500D87C25 /* PBXContainerItemProxy */;
-		};
 		D020F65C29E4A697002790F6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D020F65229E4A697002790F6 /* NetworkExtension */;
 			targetProxy = D020F65B29E4A697002790F6 /* PBXContainerItemProxy */;
 		};
+		D0BF09512C8E66F1000D8DEC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D0D4E55A2C8D9BF4007F820A /* Configuration */;
+			targetProxy = D0BF09502C8E66F1000D8DEC /* PBXContainerItemProxy */;
+		};
+		D0BF09542C8E66FA000D8DEC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D0D4E55A2C8D9BF4007F820A /* Configuration */;
+			targetProxy = D0BF09532C8E66FA000D8DEC /* PBXContainerItemProxy */;
+		};
+		D0D4E56F2C8D9C5D007F820A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D0D4E5302C8D996F007F820A /* Core */;
+			targetProxy = D0D4E56E2C8D9C5D007F820A /* PBXContainerItemProxy */;
+		};
+		D0D4E5802C8D9C78007F820A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D0D4E5302C8D996F007F820A /* Core */;
+			targetProxy = D0D4E57F2C8D9C78007F820A /* PBXContainerItemProxy */;
+		};
+		D0D4E5882C8D9C88007F820A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D0D4E5502C8D9BF2007F820A /* UI */;
+			targetProxy = D0D4E5872C8D9C88007F820A /* PBXContainerItemProxy */;
+		};
+		D0F4FAD22C8DC7960068730A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D0D4E5302C8D996F007F820A /* Core */;
+			targetProxy = D0F4FAD12C8DC7960068730A /* PBXContainerItemProxy */;
+		};
+		D0F7595E2C8DB24400126CF3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = D0F7595D2C8DB24400126CF3 /* GRPCSwiftPlugin */;
+		};
+		D0F759602C8DB24400126CF3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = D0F7595F2C8DB24400126CF3 /* SwiftProtobufPlugin */;
+		};
+		D0F7598A2C8DB34200126CF3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = D0F759892C8DB34200126CF3 /* GRPC */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		D001173D2B30341C00D87C25 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = D00117422B30348D00D87C25 /* Shared.xcconfig */;
-			buildSettings = {
-			};
-			name = Debug;
-		};
-		D001173E2B30341C00D87C25 /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = D00117422B30348D00D87C25 /* Shared.xcconfig */;
-			buildSettings = {
-			};
-			name = Release;
-		};
 		D020F65F29E4A697002790F6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D020F66229E4A6E5002790F6 /* NetworkExtension.xcconfig */;
@@ -568,18 +754,51 @@
 			};
 			name = Release;
 		};
+		D0D4E53D2C8D996F007F820A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D0D4E4F72C8D941D007F820A /* Framework.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		D0D4E53E2C8D996F007F820A /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D0D4E4F72C8D941D007F820A /* Framework.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		D0D4E5562C8D9BF2007F820A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D0BF09582C8E6789000D8DEC /* UI.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		D0D4E5572C8D9BF2007F820A /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D0BF09582C8E6789000D8DEC /* UI.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		D0D4E5602C8D9BF4007F820A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D00117422B30348D00D87C25 /* Configuration.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		D0D4E5612C8D9BF4007F820A /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D00117422B30348D00D87C25 /* Configuration.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		D001173C2B30341C00D87C25 /* Build configuration list for PBXNativeTarget "Shared" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				D001173D2B30341C00D87C25 /* Debug */,
-				D001173E2B30341C00D87C25 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		D020F65E29E4A697002790F6 /* Build configuration list for PBXNativeTarget "NetworkExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -607,7 +826,130 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		D0D4E53C2C8D996F007F820A /* Build configuration list for PBXNativeTarget "Core" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D0D4E53D2C8D996F007F820A /* Debug */,
+				D0D4E53E2C8D996F007F820A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D0D4E5552C8D9BF2007F820A /* Build configuration list for PBXNativeTarget "UI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D0D4E5562C8D9BF2007F820A /* Debug */,
+				D0D4E5572C8D9BF2007F820A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D0D4E55F2C8D9BF4007F820A /* Build configuration list for PBXNativeTarget "Configuration" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D0D4E5602C8D9BF4007F820A /* Debug */,
+				D0D4E5612C8D9BF4007F820A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D044EE8F2C8DAB2000778185 /* XCRemoteSwiftPackageReference "swift-nio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.72.0;
+			};
+		};
+		D044EE942C8DAB2800778185 /* XCRemoteSwiftPackageReference "swift-nio-transport-services" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio-transport-services.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.21.0;
+			};
+		};
+		D0B1D10E2C436152004B7823 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-async-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.1;
+			};
+		};
+		D0D4E4822C8D8EF6007F820A /* XCRemoteSwiftPackageReference "grpc-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/grpc/grpc-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.23.0;
+			};
+		};
+		D0D4E4852C8D8F29007F820A /* XCRemoteSwiftPackageReference "swift-protobuf" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-protobuf.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.28.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D044EE902C8DAB2000778185 /* NIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D044EE8F2C8DAB2000778185 /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIO;
+		};
+		D044EE922C8DAB2000778185 /* NIOConcurrencyHelpers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D044EE8F2C8DAB2000778185 /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOConcurrencyHelpers;
+		};
+		D044EE952C8DAB2800778185 /* NIOTransportServices */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D044EE942C8DAB2800778185 /* XCRemoteSwiftPackageReference "swift-nio-transport-services" */;
+			productName = NIOTransportServices;
+		};
+		D078F7E02C8DA375008A8CEC /* GRPC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D0D4E4822C8D8EF6007F820A /* XCRemoteSwiftPackageReference "grpc-swift" */;
+			productName = GRPC;
+		};
+		D078F7E22C8DA375008A8CEC /* SwiftProtobuf */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D0D4E4852C8D8F29007F820A /* XCRemoteSwiftPackageReference "swift-protobuf" */;
+			productName = SwiftProtobuf;
+		};
+		D0B1D10F2C436152004B7823 /* AsyncAlgorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D0B1D10E2C436152004B7823 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
+			productName = AsyncAlgorithms;
+		};
+		D0F7595D2C8DB24400126CF3 /* GRPCSwiftPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D0D4E4822C8D8EF6007F820A /* XCRemoteSwiftPackageReference "grpc-swift" */;
+			productName = "plugin:GRPCSwiftPlugin";
+		};
+		D0F7595F2C8DB24400126CF3 /* SwiftProtobufPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D0D4E4852C8D8F29007F820A /* XCRemoteSwiftPackageReference "swift-protobuf" */;
+			productName = "plugin:SwiftProtobufPlugin";
+		};
+		D0F7597D2C8DB30500126CF3 /* CGRPCZlib */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D0D4E4822C8D8EF6007F820A /* XCRemoteSwiftPackageReference "grpc-swift" */;
+			productName = CGRPCZlib;
+		};
+		D0F759892C8DB34200126CF3 /* GRPC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D0D4E4822C8D8EF6007F820A /* XCRemoteSwiftPackageReference "grpc-swift" */;
+			productName = GRPC;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D05B9F6A29E39EEC008CB1F9 /* Project object */;
 }

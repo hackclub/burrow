@@ -1,0 +1,11 @@
+{
+  "invocations": [
+    {
+      "protoFiles": [
+        "burrow.proto",
+      ],
+      "server": false,
+      "visibility": "public"
+    }
+  ]
+}

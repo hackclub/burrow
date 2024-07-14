@@ -1,5 +1,6 @@
 #if os(macOS)
 import AppKit
+import BurrowUI
 import SwiftUI
 
 @main
