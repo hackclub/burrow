@@ -68,6 +68,8 @@ else
     CARGO_PATH="$(dirname $(readlink -f $(which cargo))):/usr/bin"
 fi
 
+CARGO_PATH="$(dirname $(readlink -f $(which protoc))):$CARGO_PATH"
+
 # Run cargo without the various environment variables set by Xcode.
 # Those variables can confuse cargo and the build scripts it runs.
 env -i PATH="$CARGO_PATH" CARGO_TARGET_DIR="${CONFIGURATION_TEMP_DIR}/target" IPHONEOS_DEPLOYMENT_TARGET="$IPHONEOS_DEPLOYMENT_TARGET" MACOSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET" cargo build "${CARGO_ARGS[@]}"

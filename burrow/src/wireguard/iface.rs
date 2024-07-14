@@ -93,6 +93,12 @@ impl Interface {
         *st = IfaceStatus::Running;
     }
 
+    pub async fn set_tun_ref(&mut self, tun: Arc<RwLock<Option<TunInterface>>>) {
+        self.tun = tun;
+        let mut st = self.status.write().await;
+        *st = IfaceStatus::Running;
+    }
+
     pub fn get_tun(&self) -> Arc<RwLock<Option<TunInterface>>> {
         self.tun.clone()
     }
@@ -135,7 +141,7 @@ impl Interface {
                     Some(addr) => addr,
                     None => {
                         debug!("No destination found");
-                        continue
+                        continue;
                     }
                 };
 
@@ -154,7 +160,7 @@ impl Interface {
                     }
                     Err(e) => {
                         log::error!("Failed to send packet {}", e);
-                        continue
+                        continue;
                     }
                 };
             }
@@ -175,7 +181,7 @@ impl Interface {
                 let main_tsk = async move {
                     if let Err(e) = pcb.open_if_closed().await {
                         log::error!("failed to open pcb: {}", e);
-                        return
+                        return;
                     }
                     let r2 = pcb.run(tun).await;
                     if let Err(e) = r2 {
@@ -195,7 +201,7 @@ impl Interface {
                             Ok(..) => (),
                             Err(e) => {
                                 error!("Failed to update timers: {}", e);
-                                return
+                                return;
                             }
                         }
                     }

@@ -15,5 +15,12 @@
   "rust-analyzer.inlayHints.typeHints.enable": false,
   "rust-analyzer.linkedProjects": [
     "./burrow/Cargo.toml"
-  ]
+  ],
+  "[yaml]": {
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.autoIndent": "advanced",
+    "diffEditor.ignoreTrimWhitespace": false,
+    "editor.formatOnSave": false
+  }
 }
