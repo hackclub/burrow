@@ -1,0 +1,72 @@
+syntax = "proto3";
+package burrow;
+
+import "google/protobuf/timestamp.proto";
+
+service Tunnel {
+    rpc TunnelConfiguration (Empty) returns (TunnelConfigurationResponse);
+    rpc TunnelStart (Empty) returns (Empty);
+    rpc TunnelStop (Empty) returns (Empty);
+    rpc TunnelStatus (Empty) returns (stream TunnelStatusResponse);
+}
+
+service Networks {
+    rpc NetworkAdd (Empty) returns (Empty);
+    rpc NetworkList (Empty) returns (stream NetworkListResponse);
+    rpc NetworkReorder (NetworkReorderRequest) returns (Empty);
+    rpc NetworkDelete (NetworkDeleteRequest) returns (Empty);
+}
+
+message NetworkReorderRequest {
+    int32 id = 1;
+    int32 index = 2;
+}
+
+message WireGuardPeer {
+    string endpoint = 1;
+    repeated string subnet = 2;
+}
+
+message WireGuardNetwork {
+    string address = 1;
+    string dns = 2;
+    repeated WireGuardPeer peer = 3;
+}
+
+message NetworkDeleteRequest {
+    int32 id = 1;
+}
+
+message Network {
+    int32 id = 1;
+    NetworkType type = 2;
+    bytes payload = 3;
+}
+
+enum NetworkType {
+    WireGuard = 0;
+    HackClub = 1;
+}
+
+message NetworkListResponse {
+    repeated Network network = 1;
+}
+
+message Empty {
+
+}
+
+enum State {
+    Stopped = 0;
+    Running = 1;
+}
+
+message TunnelStatusResponse {
+    State state = 1;
+    optional google.protobuf.Timestamp start = 2;
+}
+
+message TunnelConfigurationResponse {
+    repeated string addresses = 1;
+    int32 mtu = 2;
+}
