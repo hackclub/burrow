@@ -24,3 +24,13 @@ ioctl_write_ptr_bad!(if_set_addr6, libc::SIOCSIFADDR, libc::in6_ifreq);
 ioctl_write_ptr_bad!(if_set_brdaddr, libc::SIOCSIFBRDADDR, libc::ifreq);
 ioctl_write_ptr_bad!(if_set_mtu, libc::SIOCSIFMTU, libc::ifreq);
 ioctl_write_ptr_bad!(if_set_netmask, libc::SIOCSIFNETMASK, libc::ifreq);
+
+#[macro_export]
+macro_rules! syscall {
+    ($call: ident ( $($arg: expr),* $(,)* ) ) => {{
+        match unsafe { ::libc::$call($($arg, )*) } {
+            -1 => Err(::std::io::Error::last_os_error()),
+            res => Ok(res),
+        }
+    }};
+}
