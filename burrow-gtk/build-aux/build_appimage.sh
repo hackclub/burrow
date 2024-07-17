@@ -6,15 +6,14 @@ BURROW_GTK_ROOT="$(readlink -f $(dirname -- "$(readlink -f -- "$BASH_SOURCE")")/
 BURROW_GTK_BUILD="$BURROW_GTK_ROOT/build-appimage"
 LINUXDEPLOY_VERSION="${LINUXDEPLOY_VERSION:-"1-alpha-20240109-1"}"
 BURROW_BUILD_TYPE="${BURROW_BUILD_TYPE:-"release"}"
+HOST_ARCHITECTURE=$(lscpu | grep Architecture | awk '{print $2}')
+TARGET_ARCHITECTURE="${TARGET_ARCHITECTURE:-"x86_64"}"
 CARGO_FLAGS=""
 
 if [ "$BURROW_GTK_ROOT" != $(pwd) ]; then
     echo "Make sure to cd into burrow-gtk"
     exit 1
 fi
-
-HOST_ARCHITECTURE=$(lscpu | grep Architecture | awk '{print $2}')
-TARGET_ARCHITECTURE="x86_64"
 
 if [ "$HOST_ARCHITECTURE" == "x86_64" ]; then
     wget "https://github.com/linuxdeploy/linuxdeploy/releases/download/$LINUXDEPLOY_VERSION/linuxdeploy-x86_64.AppImage" -o /dev/null -O /tmp/linuxdeploy
