@@ -122,7 +122,6 @@ impl AsyncComponent for App {
         _root: &Self::Root,
     ) {
         loop {
-            tokio::time::sleep(RECONNECT_POLL_TIME).await;
             {
                 let mut daemon_client = self.daemon_client.lock().await;
                 let mut disconnected_daemon_client = false;
@@ -153,6 +152,7 @@ impl AsyncComponent for App {
                     }
                 }
             }
+            tokio::time::sleep(RECONNECT_POLL_TIME).await;
         }
     }
 }

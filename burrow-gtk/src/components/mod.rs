@@ -3,7 +3,6 @@ use adw::prelude::*;
 use gtk::Align;
 use relm4::{
     component::{
-        worker::{Worker, WorkerController},
         AsyncComponent, AsyncComponentController, AsyncComponentParts, AsyncComponentSender,
         AsyncController,
     },
