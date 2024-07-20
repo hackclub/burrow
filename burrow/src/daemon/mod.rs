@@ -5,9 +5,7 @@ mod instance;
 mod net;
 pub mod rpc;
 
-use crate::daemon::rpc::grpc_defs::tunnel_server::TunnelServer;
-use anyhow::Error as AhError;
-use anyhow::Result;
+use anyhow::{Error as AhError, Result};
 use instance::{DaemonInstance, DaemonRPCServer};
 pub use net::{DaemonClient, Listener};
 pub use rpc::{DaemonCommand, DaemonResponseData, DaemonStartOptions};
@@ -20,6 +18,7 @@ use tonic::transport::Server;
 use tracing::{error, info};
 
 use crate::{
+    daemon::rpc::grpc_defs::{networks_server::NetworksServer, tunnel_server::TunnelServer},
     database::{get_connection, load_interface},
     wireguard::Interface,
 };
@@ -62,11 +61,12 @@ pub async fn daemon_main(
         dbp,
     );
     let spp = socket_path.clone();
-    let uds = UnixListener::bind(spp.unwrap())?;
+    let uds = UnixListener::bind(spp.unwrap_or(Path::new("burrow_grpc.sock")))?;
     let serve_job = tokio::spawn(async move {
         let uds_stream = UnixListenerStream::new(uds);
-        let srv = Server::builder()
-            .add_service(TunnelServer::new(burrow_server))
+        let _srv = Server::builder()
+            .add_service(TunnelServer::new(burrow_server.clone()))
+            .add_service(NetworksServer::new(burrow_server))
             .serve_with_incoming(uds_stream)
             .await?;
         Ok::<(), AhError>(())

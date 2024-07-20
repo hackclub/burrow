@@ -1,29 +1,39 @@
 use std::{
+    ops::Deref,
     path::{Path, PathBuf},
     sync::Arc,
+    time::Duration,
 };
 
 use anyhow::Result;
-use tokio::{sync::RwLock, task::JoinHandle};
+use tokio::sync::{mpsc, RwLock};
+use tokio_stream::wrappers::ReceiverStream;
+use tonic::{Request, Response, Status as RspStatus};
 use tracing::{debug, info, warn};
-use tun::tokio::TunInterface;
+use tun::{tokio::TunInterface, TunOptions};
 
+use super::rpc::grpc_defs::{
+    networks_server::Networks,
+    tunnel_server::Tunnel,
+    Empty,
+    NetworkDeleteRequest,
+    NetworkListResponse,
+    NetworkReorderRequest,
+    TunnelConfigurationResponse,
+    TunnelStatusResponse,
+};
 use crate::{
     daemon::rpc::{
-        DaemonCommand, DaemonNotification, DaemonResponse, DaemonResponseData, ServerConfig,
+        DaemonCommand,
+        DaemonNotification,
+        DaemonResponse,
+        DaemonResponseData,
+        ServerConfig,
         ServerInfo,
     },
     database::{get_connection, load_interface},
     wireguard::{Config, Interface},
 };
-
-use tonic::{Request, Response, Status as RspStatus};
-
-use super::rpc::grpc_defs::{
-    tunnel_server::Tunnel, Empty, TunnelConfigurationResponse, TunnelStatusResponse,
-    WireGuardNetwork, WireGuardPeer,
-};
-use tokio_stream::{wrappers::ReceiverStream, Stream};
 
 #[derive(Debug, Clone)]
 enum RunState {
@@ -140,7 +150,7 @@ pub struct DaemonRPCServer {
     wg_interface: Arc<RwLock<Interface>>,
     config: Arc<RwLock<Config>>,
     db_path: Option<PathBuf>,
-    wg_state: RunState,
+    wg_state: Arc<RwLock<RunState>>,
 }
 
 impl DaemonRPCServer {
@@ -154,21 +164,63 @@ impl DaemonRPCServer {
             wg_interface,
             config,
             db_path: db_path.map(|p| p.to_owned()),
-            wg_state: RunState::Idle,
+            wg_state: Arc::new(RwLock::new(RunState::Idle)),
         }
     }
 }
 
 #[tonic::async_trait]
 impl Tunnel for DaemonRPCServer {
+    type TunnelConfigurationStream = ReceiverStream<Result<TunnelConfigurationResponse, RspStatus>>;
+    type TunnelStatusStream = ReceiverStream<Result<TunnelStatusResponse, RspStatus>>;
+
     async fn tunnel_configuration(
         &self,
         _request: Request<Empty>,
-    ) -> Result<Response<TunnelConfigurationResponse>, RspStatus> {
-        unimplemented!()
+    ) -> Result<Response<Self::TunnelConfigurationStream>, RspStatus> {
+        let (tx, rx) = mpsc::channel(10);
+        tokio::spawn(async move {
+            let serv_config = ServerConfig::default();
+            tx.send(Ok(TunnelConfigurationResponse {
+                mtu: serv_config.mtu.unwrap_or(1000),
+                addresses: serv_config.address,
+            }))
+            .await
+        });
+        Ok(Response::new(ReceiverStream::new(rx)))
     }
 
     async fn tunnel_start(&self, _request: Request<Empty>) -> Result<Response<Empty>, RspStatus> {
+        match self.wg_state.read().await.deref() {
+            RunState::Idle => {
+                let tun_if = TunOptions::new().open()?;
+                debug!("Setting tun on wg_interface");
+                self.tun_interface.write().await.replace(tun_if);
+                self.wg_interface
+                    .write()
+                    .await
+                    .set_tun_ref(self.tun_interface.clone())
+                    .await;
+                debug!("tun set on wg_interface");
+
+                debug!("Setting tun_interface");
+                debug!("tun_interface set: {:?}", self.tun_interface);
+
+                debug!("Cloning wg_interface");
+                let tmp_wg = self.wg_interface.clone();
+                let run_task = tokio::spawn(async move {
+                    let twlock = tmp_wg.read().await;
+                    twlock.run().await
+                });
+                let mut guard = self.wg_state.write().await;
+                *guard = RunState::Running;
+            }
+
+            RunState::Running => {
+                warn!("Got start, but tun interface already up.");
+            }
+        }
+
         return Ok(Response::new(Empty {}));
     }
 
@@ -176,12 +228,58 @@ impl Tunnel for DaemonRPCServer {
         return Ok(Response::new(Empty {}));
     }
 
-    type TunnelStatusStream = ReceiverStream<Result<TunnelStatusResponse, RspStatus>>;
-
     async fn tunnel_status(
         &self,
         _request: Request<Empty>,
     ) -> Result<Response<Self::TunnelStatusStream>, RspStatus> {
-        unimplemented!()
+        let (tx, rx) = mpsc::channel(10);
+        tokio::spawn(async move {
+            for _ in 0..1000 {
+                tx.send(Ok(TunnelStatusResponse { ..Default::default() }))
+                    .await;
+                tokio::time::sleep(Duration::from_secs(100)).await;
+            }
+        });
+        Ok(Response::new(ReceiverStream::new(rx)))
+    }
+}
+
+#[tonic::async_trait]
+impl Networks for DaemonRPCServer {
+    type NetworkListStream = ReceiverStream<Result<NetworkListResponse, RspStatus>>;
+
+    async fn network_add(&self, _request: Request<Empty>) -> Result<Response<Empty>, RspStatus> {
+        debug!("Mock network_add called");
+        Ok(Response::new(Empty {}))
+    }
+
+    async fn network_list(
+        &self,
+        _request: Request<Empty>,
+    ) -> Result<Response<Self::NetworkListStream>, RspStatus> {
+        debug!("Mock network_list called");
+        let (tx, rx) = mpsc::channel(10);
+        tokio::spawn(async move {
+            tx.send(Ok(NetworkListResponse { ..Default::default() }))
+                .await
+                .unwrap();
+        });
+        Ok(Response::new(ReceiverStream::new(rx)))
+    }
+
+    async fn network_reorder(
+        &self,
+        _request: Request<NetworkReorderRequest>,
+    ) -> Result<Response<Empty>, RspStatus> {
+        debug!("Mock network_reorder called");
+        Ok(Response::new(Empty {}))
+    }
+
+    async fn network_delete(
+        &self,
+        _request: Request<NetworkDeleteRequest>,
+    ) -> Result<Response<Empty>, RspStatus> {
+        debug!("Mock network_delete called");
+        Ok(Response::new(Empty {}))
     }
 }
