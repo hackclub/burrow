@@ -1,5 +1,7 @@
 use anyhow::Result;
 
+use crate::daemon::rpc::grpc_defs::{Network, NetworkType};
+
 pub static PATH: &str = "./server.sqlite3";
 
 pub fn init_db() -> Result<()> {

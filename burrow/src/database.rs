@@ -3,7 +3,15 @@ use std::path::Path;
 use anyhow::Result;
 use rusqlite::{params, Connection};
 
-use crate::wireguard::config::{Config, Interface, Peer};
+use crate::{
+    daemon::rpc::grpc_defs::{
+        Network as RPCNetwork,
+        NetworkDeleteRequest,
+        NetworkReorderRequest,
+        NetworkType,
+    },
+    wireguard::config::{Config, Interface, Peer},
+};
 
 #[cfg(target_vendor = "apple")]
 const DB_PATH: &str = "burrow.db";
@@ -30,7 +38,11 @@ const CREATE_WG_PEER_TABLE: &str = "CREATE TABLE IF NOT EXISTS wg_peer (
 )";
 
 const CREATE_NETWORK_TABLE: &str = "CREATE TABLE IF NOT EXISTS network (
-    interface_id INT REFERENCES wg_interface(id) ON UPDATE CASCADE
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL,
+    raw_payload TEXT,
+    index INTEGER AUTOINCREMENT,
+    interface_id INT REFERENCES wg_interface(id) ON UPDATE CASCADE,
 )";
 
 pub fn initialize_tables(conn: &Connection) -> Result<()> {
@@ -38,20 +50,6 @@ pub fn initialize_tables(conn: &Connection) -> Result<()> {
     conn.execute(CREATE_WG_PEER_TABLE, [])?;
     conn.execute(CREATE_NETWORK_TABLE, [])?;
     Ok(())
-}
-
-fn parse_lst(s: &str) -> Vec<String> {
-    if s.is_empty() {
-        return vec![];
-    }
-    s.split(',').map(|s| s.to_string()).collect()
-}
-
-fn to_lst<T: ToString>(v: &Vec<T>) -> String {
-    v.iter()
-        .map(|s| s.to_string())
-        .collect::<Vec<String>>()
-        .join(",")
 }
 
 pub fn load_interface(conn: &Connection, interface_id: &str) -> Result<Config> {
@@ -127,10 +125,66 @@ pub fn get_connection(path: Option<&Path>) -> Result<Connection> {
     Ok(Connection::open(p)?)
 }
 
+pub fn add_network(conn: &Connection, network: &RPCNetwork) -> Result<()> {
+    let mut stmt = conn.prepare("INSERT INTO network (type, payload) VALUES (?, ?)")?;
+    stmt.execute(params![network.r#type().as_str_name(), &network.payload])?;
+    // TODO: if the type is Wireguard, add the corresponding neetwork interface and then link it
+    Ok(())
+}
+
+pub fn list_networks(conn: &Connection) -> Result<Vec<RPCNetwork>> {
+    let mut stmt = conn.prepare("SELECT id, type, payload FROM network ORDER BY id")?;
+    let networks: Vec<RPCNetwork> = stmt
+        .query_map([], |row| {
+            let network_id: i32 = row.get(0)?;
+            let network_type: String = row.get(1)?;
+            let network_type = NetworkType::from_str_name(network_type.as_str())
+                .ok_or(rusqlite::Error::InvalidQuery)?;
+            let payload: String = row.get(2)?;
+            Ok(RPCNetwork {
+                id: network_id,
+                r#type: network_type.into(),
+                payload: payload.into(),
+            })
+        })?
+        .collect::<Result<Vec<RPCNetwork>, rusqlite::Error>>()?;
+    Ok(networks)
+}
+
+pub fn reorder_network(conn: &Connection, req: NetworkReorderRequest) -> Result<()> {
+    let mut stmt = conn.prepare("UPDATE network SET index = ? WHERE id = ?")?;
+    let res = stmt.execute(params![req.index, req.id])?;
+    if res == 0 {
+        return Err(anyhow::anyhow!("No such network exists"));
+    }
+    Ok(())
+}
+
+pub fn delete_network(conn: &Connection, req: NetworkDeleteRequest) -> Result<()> {
+    let mut stmt = conn.prepare("DELETE FROM network WHERE id = ?")?;
+    let res = stmt.execute(params![req.id])?;
+    if res == 0 {
+        return Err(anyhow::anyhow!("No such network exists"));
+    }
+    Ok(())
+}
+
+fn parse_lst(s: &str) -> Vec<String> {
+    if s.is_empty() {
+        return vec![];
+    }
+    s.split(',').map(|s| s.to_string()).collect()
+}
+
+fn to_lst<T: ToString>(v: &Vec<T>) -> String {
+    v.iter()
+        .map(|s| s.to_string())
+        .collect::<Vec<String>>()
+        .join(",")
+}
+
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
-
     use super::*;
 
     #[test]

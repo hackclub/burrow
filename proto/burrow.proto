@@ -11,7 +11,7 @@ service Tunnel {
 }
 
 service Networks {
-    rpc NetworkAdd (Empty) returns (Empty);
+    rpc NetworkAdd (Network) returns (Empty);
     rpc NetworkList (Empty) returns (stream NetworkListResponse);
     rpc NetworkReorder (NetworkReorderRequest) returns (Empty);
     rpc NetworkDelete (NetworkDeleteRequest) returns (Empty);

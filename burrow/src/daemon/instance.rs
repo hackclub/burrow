@@ -6,7 +6,8 @@ use std::{
 };
 
 use anyhow::Result;
-use tokio::sync::{mpsc, RwLock};
+use rusqlite::Connection;
+use tokio::sync::{mpsc, Notify, RwLock};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status as RspStatus};
 use tracing::{debug, info, warn};
@@ -16,6 +17,7 @@ use super::rpc::grpc_defs::{
     networks_server::Networks,
     tunnel_server::Tunnel,
     Empty,
+    Network,
     NetworkDeleteRequest,
     NetworkListResponse,
     NetworkReorderRequest,
@@ -31,7 +33,7 @@ use crate::{
         ServerConfig,
         ServerInfo,
     },
-    database::{get_connection, load_interface},
+    database::{delete_network, get_connection, list_networks, load_interface, reorder_network},
     wireguard::{Config, Interface},
 };
 
@@ -158,14 +160,18 @@ impl DaemonRPCServer {
         wg_interface: Arc<RwLock<Interface>>,
         config: Arc<RwLock<Config>>,
         db_path: Option<&Path>,
-    ) -> Self {
-        Self {
+    ) -> Result<Self> {
+        Ok(Self {
             tun_interface: Arc::new(RwLock::new(None)),
             wg_interface,
             config,
             db_path: db_path.map(|p| p.to_owned()),
             wg_state: Arc::new(RwLock::new(RunState::Idle)),
-        }
+        })
+    }
+
+    pub fn get_connection(&self) -> Result<Connection, RspStatus> {
+        get_connection(self.db_path.as_deref()).map_err(|e| RspStatus::internal(e.to_string()))
     }
 }
 
@@ -248,7 +254,7 @@ impl Tunnel for DaemonRPCServer {
 impl Networks for DaemonRPCServer {
     type NetworkListStream = ReceiverStream<Result<NetworkListResponse, RspStatus>>;
 
-    async fn network_add(&self, _request: Request<Empty>) -> Result<Response<Empty>, RspStatus> {
+    async fn network_add(&self, _request: Request<Network>) -> Result<Response<Empty>, RspStatus> {
         debug!("Mock network_add called");
         Ok(Response::new(Empty {}))
     }
@@ -259,27 +265,38 @@ impl Networks for DaemonRPCServer {
     ) -> Result<Response<Self::NetworkListStream>, RspStatus> {
         debug!("Mock network_list called");
         let (tx, rx) = mpsc::channel(10);
+        let conn = self.get_connection()?;
         tokio::spawn(async move {
-            tx.send(Ok(NetworkListResponse { ..Default::default() }))
-                .await
-                .unwrap();
+            loop {
+                let networks = list_networks(&conn)
+                    .map(|res| NetworkListResponse { network: res })
+                    .map_err(proc_err);
+                tx.send(networks).await.unwrap();
+                tokio::time::sleep(Duration::from_secs(10)).await;
+            }
         });
         Ok(Response::new(ReceiverStream::new(rx)))
     }
 
     async fn network_reorder(
         &self,
-        _request: Request<NetworkReorderRequest>,
+        request: Request<NetworkReorderRequest>,
     ) -> Result<Response<Empty>, RspStatus> {
-        debug!("Mock network_reorder called");
+        let conn = self.get_connection()?;
+        reorder_network(&conn, request.into_inner()).map_err(proc_err)?;
         Ok(Response::new(Empty {}))
     }
 
     async fn network_delete(
         &self,
-        _request: Request<NetworkDeleteRequest>,
+        request: Request<NetworkDeleteRequest>,
     ) -> Result<Response<Empty>, RspStatus> {
-        debug!("Mock network_delete called");
+        let conn = self.get_connection()?;
+        delete_network(&conn, request.into_inner()).map_err(proc_err)?;
         Ok(Response::new(Empty {}))
     }
+}
+
+fn proc_err(err: anyhow::Error) -> RspStatus {
+    RspStatus::internal(err.to_string())
 }

@@ -59,7 +59,7 @@ pub async fn daemon_main(
         Arc::new(RwLock::new(config.clone().try_into()?)),
         Arc::new(RwLock::new(config)),
         dbp,
-    );
+    )?;
     let spp = socket_path.clone();
     let uds = UnixListener::bind(spp.unwrap_or(Path::new("burrow_grpc.sock")))?;
     let serve_job = tokio::spawn(async move {
