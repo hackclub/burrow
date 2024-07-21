@@ -81,6 +81,10 @@ impl Listener {
         }
     }
 
+    pub fn into_inner(self) -> UnixListener {
+        self.inner
+    }
+
     pub async fn run(&self) -> Result<()> {
         info!("Waiting for connections...");
         loop {

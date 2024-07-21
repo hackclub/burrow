@@ -42,7 +42,7 @@ pub async fn daemon_main(
     if let Some(n) = notify_ready {
         n.notify_one()
     }
-    let listener = listener?;
+    let listener = listener?.into_inner();
     let conn = get_connection(db_path)?;
     let config = load_interface(&conn, "1")?;
     let iface: Interface = config.clone().try_into()?;
@@ -60,10 +60,8 @@ pub async fn daemon_main(
         Arc::new(RwLock::new(config)),
         dbp,
     );
-    let spp = socket_path.clone();
-    let uds = UnixListener::bind(spp.unwrap_or(Path::new("burrow_grpc.sock")))?;
     let serve_job = tokio::spawn(async move {
-        let uds_stream = UnixListenerStream::new(uds);
+        let uds_stream = UnixListenerStream::new(listener);
         let _srv = Server::builder()
             .add_service(TunnelServer::new(burrow_server.clone()))
             .add_service(NetworksServer::new(burrow_server))
@@ -82,15 +80,7 @@ pub async fn daemon_main(
         result
     });
 
-    let listener_job = tokio::spawn(async move {
-        let result = listener.run().await;
-        if let Err(e) = result.as_ref() {
-            error!("Listener exited: {}", e);
-        }
-        result
-    });
-
-    tokio::try_join!(main_job, listener_job, serve_job)
+    tokio::try_join!(main_job, serve_job)
         .map(|_| ())
         .map_err(|e| e.into())
 }
