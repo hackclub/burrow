@@ -197,7 +197,8 @@ impl Tunnel for DaemonRPCServer {
     }
 
     async fn tunnel_start(&self, _request: Request<Empty>) -> Result<Response<Empty>, RspStatus> {
-        match self.wg_state.read().await.deref() {
+        let wg_state = self.wg_state.read().await.clone();
+        match wg_state {
             RunState::Idle => {
                 let tun_if = TunOptions::new().open()?;
                 debug!("Setting tun on wg_interface");
