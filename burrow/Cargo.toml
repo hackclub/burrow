@@ -19,6 +19,7 @@ tokio = { version = "1.37", features = [
     "signal",
     "time",
     "tracing",
+    "fs",
 ] }
 tun = { version = "0.1", path = "../tun", features = ["serde", "tokio"] }
 clap = { version = "4.4", features = ["derive"] }
@@ -56,7 +57,7 @@ reqwest = { version = "0.12", default-features = false, features = [
     "json",
     "rustls-tls",
 ] }
-rusqlite = "0.31.0"
+rusqlite = { version = "0.31.0", features = ["blob"] }
 dotenv = "0.15.0"
 tonic = "0.12.0"
 prost = "0.13.1"
@@ -73,7 +74,7 @@ tracing-journald = "0.3"
 
 [target.'cfg(target_vendor = "apple")'.dependencies]
 nix = { version = "0.27" }
-rusqlite = { version = "0.31.0", features = ["bundled"] }
+rusqlite = { version = "0.31.0", features = ["bundled", "blob"] }
 
 [dev-dependencies]
 insta = { version = "1.32", features = ["yaml"] }

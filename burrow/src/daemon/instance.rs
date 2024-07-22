@@ -34,7 +34,14 @@ use crate::{
         ServerConfig,
         ServerInfo,
     },
-    database::{delete_network, get_connection, list_networks, load_interface, reorder_network},
+    database::{
+        add_network,
+        delete_network,
+        get_connection,
+        list_networks,
+        load_interface,
+        reorder_network,
+    },
     wireguard::{Config, Interface},
 };
 
@@ -164,6 +171,7 @@ pub struct DaemonRPCServer {
     config: Arc<RwLock<Config>>,
     db_path: Option<PathBuf>,
     wg_state_chan: (watch::Sender<RunState>, watch::Receiver<RunState>),
+    network_update_chan: (watch::Sender<()>, watch::Receiver<()>),
 }
 
 impl DaemonRPCServer {
@@ -178,6 +186,7 @@ impl DaemonRPCServer {
             config,
             db_path: db_path.map(|p| p.to_owned()),
             wg_state_chan: watch::channel(RunState::Idle),
+            network_update_chan: watch::channel(()),
         })
     }
 
@@ -191,6 +200,10 @@ impl DaemonRPCServer {
 
     async fn get_wg_state(&self) -> RunState {
         self.wg_state_chan.1.borrow().to_owned()
+    }
+
+    async fn notify_network_update(&self) -> Result<(), RspStatus> {
+        self.network_update_chan.0.send(()).map_err(proc_err)
     }
 }
 
@@ -267,7 +280,11 @@ impl Tunnel for DaemonRPCServer {
             loop {
                 state_rx.changed().await.unwrap();
                 let cur = state_rx.borrow().to_owned();
-                tx.send(Ok(status_rsp(cur))).await;
+                let res = tx.send(Ok(status_rsp(cur))).await;
+                if res.is_err() {
+                    eprintln!("Tunnel status channel closed");
+                    break;
+                }
             }
         });
         Ok(Response::new(ReceiverStream::new(rx)))
@@ -278,8 +295,11 @@ impl Tunnel for DaemonRPCServer {
 impl Networks for DaemonRPCServer {
     type NetworkListStream = ReceiverStream<Result<NetworkListResponse, RspStatus>>;
 
-    async fn network_add(&self, _request: Request<Network>) -> Result<Response<Empty>, RspStatus> {
-        debug!("Mock network_add called");
+    async fn network_add(&self, request: Request<Network>) -> Result<Response<Empty>, RspStatus> {
+        let conn = self.get_connection()?;
+        let network = request.into_inner();
+        add_network(&conn, &network).map_err(proc_err)?;
+        self.notify_network_update().await?;
         Ok(Response::new(Empty {}))
     }
 
@@ -290,13 +310,18 @@ impl Networks for DaemonRPCServer {
         debug!("Mock network_list called");
         let (tx, rx) = mpsc::channel(10);
         let conn = self.get_connection()?;
+        let mut sub = self.network_update_chan.1.clone();
         tokio::spawn(async move {
             loop {
                 let networks = list_networks(&conn)
                     .map(|res| NetworkListResponse { network: res })
                     .map_err(proc_err);
-                tx.send(networks).await.unwrap();
-                tokio::time::sleep(Duration::from_secs(10)).await;
+                let res = tx.send(networks).await;
+                if res.is_err() {
+                    eprintln!("Network list channel closed");
+                    break;
+                }
+                sub.changed().await.unwrap();
             }
         });
         Ok(Response::new(ReceiverStream::new(rx)))
@@ -308,6 +333,7 @@ impl Networks for DaemonRPCServer {
     ) -> Result<Response<Empty>, RspStatus> {
         let conn = self.get_connection()?;
         reorder_network(&conn, request.into_inner()).map_err(proc_err)?;
+        self.notify_network_update().await?;
         Ok(Response::new(Empty {}))
     }
 
@@ -317,6 +343,7 @@ impl Networks for DaemonRPCServer {
     ) -> Result<Response<Empty>, RspStatus> {
         let conn = self.get_connection()?;
         delete_network(&conn, request.into_inner()).map_err(proc_err)?;
+        self.notify_network_update().await?;
         Ok(Response::new(Empty {}))
     }
 }

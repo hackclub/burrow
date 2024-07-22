@@ -58,6 +58,14 @@ enum Commands {
     ServerStatus,
     /// Tunnel Config
     TunnelConfig,
+    /// Add Network
+    NetworkAdd(NetworkAddArgs),
+    /// List Networks
+    NetworkList,
+    /// Reorder Network
+    NetworkReorder(NetworkReorderArgs),
+    /// Delete Network
+    NetworkDelete(NetworkDeleteArgs),
 }
 
 #[derive(Args)]
@@ -71,6 +79,24 @@ struct StartArgs {}
 
 #[derive(Args)]
 struct DaemonArgs {}
+
+#[derive(Args)]
+struct NetworkAddArgs {
+    id: i32,
+    network_type: i32,
+    payload_path: String,
+}
+
+#[derive(Args)]
+struct NetworkReorderArgs {
+    id: i32,
+    index: i32,
+}
+
+#[derive(Args)]
+struct NetworkDeleteArgs {
+    id: i32,
+}
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 async fn try_start() -> Result<()> {
@@ -117,6 +143,69 @@ async fn try_tun_config() -> Result<()> {
     } else {
         println!("Tunnel Config is None");
     }
+    Ok(())
+}
+
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+async fn try_network_add(id: i32, network_type: i32, payload_path: &str) -> Result<()> {
+    use tokio::{fs::File, io::AsyncReadExt};
+
+    use crate::daemon::rpc::grpc_defs::Network;
+
+    let mut file = File::open(payload_path).await?;
+    let mut payload = Vec::new();
+    file.read_to_end(&mut payload).await?;
+
+    let mut client = BurrowClient::from_uds().await?;
+    let network = Network {
+        id,
+        r#type: network_type,
+        payload,
+    };
+    let res = client.networks_client.network_add(network).await?;
+    println!("Network Add Response: {:?}", res);
+    Ok(())
+}
+
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+async fn try_network_list() -> Result<()> {
+    let mut client = BurrowClient::from_uds().await?;
+    let mut res = client
+        .networks_client
+        .network_list(Empty {})
+        .await?
+        .into_inner();
+    while let Some(network_list) = res.message().await? {
+        println!("Network List: {:?}", network_list);
+    }
+    Ok(())
+}
+
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+async fn try_network_reorder(id: i32, index: i32) -> Result<()> {
+    use crate::daemon::rpc::grpc_defs::NetworkReorderRequest;
+
+    let mut client = BurrowClient::from_uds().await?;
+    let reorder_request = NetworkReorderRequest { id, index };
+    let res = client
+        .networks_client
+        .network_reorder(reorder_request)
+        .await?;
+    println!("Network Reorder Response: {:?}", res);
+    Ok(())
+}
+
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+async fn try_network_delete(id: i32) -> Result<()> {
+    use crate::daemon::rpc::grpc_defs::NetworkDeleteRequest;
+
+    let mut client = BurrowClient::from_uds().await?;
+    let delete_request = NetworkDeleteRequest { id };
+    let res = client
+        .networks_client
+        .network_delete(delete_request)
+        .await?;
+    println!("Network Delete Response: {:?}", res);
     Ok(())
 }
 
@@ -176,8 +265,6 @@ async fn try_reloadconfig(interface_id: String) -> Result<()> {
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 #[tokio::main]
 async fn main() -> Result<()> {
-    use daemon::get_socket_path;
-
     tracing::initialize();
     dotenv::dotenv().ok();
 
@@ -192,6 +279,12 @@ async fn main() -> Result<()> {
         Commands::AuthServer => crate::auth::server::serve().await?,
         Commands::ServerStatus => try_serverstatus().await?,
         Commands::TunnelConfig => try_tun_config().await?,
+        Commands::NetworkAdd(args) => {
+            try_network_add(args.id, args.network_type, &args.payload_path).await?
+        }
+        Commands::NetworkList => try_network_list().await?,
+        Commands::NetworkReorder(args) => try_network_reorder(args.id, args.index).await?,
+        Commands::NetworkDelete(args) => try_network_delete(args.id).await?,
     }
 
     Ok(())
