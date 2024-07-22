@@ -20,6 +20,12 @@ start:
 stop:
 	@$(cargo_norm) stop
 
+status:
+	@$(cargo_norm) server-status
+
+tunnel-config:
+	@$(cargo_norm) tunnel-config
+
 test-dns:
 	@sudo route delete 8.8.8.8
 	@sudo route add 8.8.8.8 -interface $(tun)

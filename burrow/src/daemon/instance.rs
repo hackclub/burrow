@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::Result;
 use rusqlite::Connection;
-use tokio::sync::{mpsc, Notify, RwLock};
+use tokio::sync::{mpsc, watch, Notify, RwLock};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status as RspStatus};
 use tracing::{debug, info, warn};
@@ -21,6 +21,7 @@ use super::rpc::grpc_defs::{
     NetworkDeleteRequest,
     NetworkListResponse,
     NetworkReorderRequest,
+    State as RPCTunnelState,
     TunnelConfigurationResponse,
     TunnelStatusResponse,
 };
@@ -43,6 +44,16 @@ enum RunState {
     Idle,
 }
 
+impl RunState {
+    pub fn to_rpc(&self) -> RPCTunnelState {
+        match self {
+            RunState::Running => RPCTunnelState::Running,
+            RunState::Idle => RPCTunnelState::Stopped,
+        }
+    }
+}
+
+#[deprecated = "Use DaemonRPCServer instead"]
 pub struct DaemonInstance {
     rx: async_channel::Receiver<DaemonCommand>,
     sx: async_channel::Sender<DaemonResponse>,
@@ -152,7 +163,7 @@ pub struct DaemonRPCServer {
     wg_interface: Arc<RwLock<Interface>>,
     config: Arc<RwLock<Config>>,
     db_path: Option<PathBuf>,
-    wg_state: Arc<RwLock<RunState>>,
+    wg_state_chan: (watch::Sender<RunState>, watch::Receiver<RunState>),
 }
 
 impl DaemonRPCServer {
@@ -166,12 +177,20 @@ impl DaemonRPCServer {
             wg_interface,
             config,
             db_path: db_path.map(|p| p.to_owned()),
-            wg_state: Arc::new(RwLock::new(RunState::Idle)),
+            wg_state_chan: watch::channel(RunState::Idle),
         })
     }
 
     pub fn get_connection(&self) -> Result<Connection, RspStatus> {
-        get_connection(self.db_path.as_deref()).map_err(|e| RspStatus::internal(e.to_string()))
+        get_connection(self.db_path.as_deref()).map_err(proc_err)
+    }
+
+    async fn set_wg_state(&self, state: RunState) -> Result<(), RspStatus> {
+        self.wg_state_chan.0.send(state).map_err(proc_err)
+    }
+
+    async fn get_wg_state(&self) -> RunState {
+        self.wg_state_chan.1.borrow().to_owned()
     }
 }
 
@@ -197,7 +216,7 @@ impl Tunnel for DaemonRPCServer {
     }
 
     async fn tunnel_start(&self, _request: Request<Empty>) -> Result<Response<Empty>, RspStatus> {
-        let wg_state = self.wg_state.read().await.clone();
+        let wg_state = self.get_wg_state().await;
         match wg_state {
             RunState::Idle => {
                 let tun_if = TunOptions::new().open()?;
@@ -219,8 +238,7 @@ impl Tunnel for DaemonRPCServer {
                     let twlock = tmp_wg.read().await;
                     twlock.run().await
                 });
-                let mut guard = self.wg_state.write().await;
-                *guard = RunState::Running;
+                self.set_wg_state(RunState::Running).await?;
             }
 
             RunState::Running => {
@@ -232,6 +250,8 @@ impl Tunnel for DaemonRPCServer {
     }
 
     async fn tunnel_stop(&self, _request: Request<Empty>) -> Result<Response<Empty>, RspStatus> {
+        self.wg_interface.write().await.remove_tun().await;
+        self.set_wg_state(RunState::Idle).await?;
         return Ok(Response::new(Empty {}));
     }
 
@@ -240,11 +260,14 @@ impl Tunnel for DaemonRPCServer {
         _request: Request<Empty>,
     ) -> Result<Response<Self::TunnelStatusStream>, RspStatus> {
         let (tx, rx) = mpsc::channel(10);
+        let mut state_rx = self.wg_state_chan.1.clone();
         tokio::spawn(async move {
-            for _ in 0..1000 {
-                tx.send(Ok(TunnelStatusResponse { ..Default::default() }))
-                    .await;
-                tokio::time::sleep(Duration::from_secs(100)).await;
+            let cur = state_rx.borrow_and_update().to_owned();
+            tx.send(Ok(status_rsp(cur))).await;
+            loop {
+                state_rx.changed().await.unwrap();
+                let cur = state_rx.borrow().to_owned();
+                tx.send(Ok(status_rsp(cur))).await;
             }
         });
         Ok(Response::new(ReceiverStream::new(rx)))
@@ -298,6 +321,13 @@ impl Networks for DaemonRPCServer {
     }
 }
 
-fn proc_err(err: anyhow::Error) -> RspStatus {
+fn proc_err(err: impl ToString) -> RspStatus {
     RspStatus::internal(err.to_string())
+}
+
+fn status_rsp(state: RunState) -> TunnelStatusResponse {
+    TunnelStatusResponse {
+        state: state.to_rpc().into(),
+        start: None, // TODO: Add timestamp
+    }
 }

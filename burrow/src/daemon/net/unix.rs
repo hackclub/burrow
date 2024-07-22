@@ -11,7 +11,11 @@ use tokio::{
 use tracing::{debug, error, info};
 
 use crate::daemon::rpc::{
-    DaemonCommand, DaemonMessage, DaemonNotification, DaemonRequest, DaemonResponse,
+    DaemonCommand,
+    DaemonMessage,
+    DaemonNotification,
+    DaemonRequest,
+    DaemonResponse,
     DaemonResponseData,
 };
 
@@ -21,7 +25,7 @@ const UNIX_SOCKET_PATH: &str = "/run/burrow.sock";
 #[cfg(target_vendor = "apple")]
 const UNIX_SOCKET_PATH: &str = "burrow.sock";
 
-fn get_socket_path() -> String {
+pub fn get_socket_path() -> String {
     if std::env::var("BURROW_SOCKET_PATH").is_ok() {
         return std::env::var("BURROW_SOCKET_PATH").unwrap();
     }

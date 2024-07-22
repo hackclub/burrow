@@ -63,6 +63,8 @@ prost = "0.13.1"
 prost-types = "0.13.1"
 tokio-stream = "0.1"
 async-stream = "0.2"
+tower = "0.4.13"
+hyper-util = "0.1.6"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 caps = "0.5"

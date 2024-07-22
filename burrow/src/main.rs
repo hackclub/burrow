@@ -11,14 +11,16 @@ mod wireguard;
 mod auth;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
-use daemon::{DaemonClient, DaemonCommand, DaemonStartOptions};
-use tun::TunOptions;
+use daemon::{DaemonClient, DaemonCommand};
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 use crate::daemon::DaemonResponseData;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 pub mod database;
+
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+use crate::daemon::rpc::{grpc_defs::Empty, BurrowClient};
 
 #[derive(Parser)]
 #[command(name = "Burrow")]
@@ -52,13 +54,16 @@ enum Commands {
     ReloadConfig(ReloadConfigArgs),
     /// Authentication server
     AuthServer,
+    /// Server Status
+    ServerStatus,
+    /// Tunnel Config
+    TunnelConfig,
 }
 
 #[derive(Args)]
 struct ReloadConfigArgs {
     #[clap(long, short)]
     interface_id: String,
-
 }
 
 #[derive(Args)]
@@ -69,19 +74,49 @@ struct DaemonArgs {}
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 async fn try_start() -> Result<()> {
-    let mut client = DaemonClient::new().await?;
-    client
-        .send_command(DaemonCommand::Start(DaemonStartOptions {
-            tun: TunOptions::new().address(vec!["10.13.13.2", "::2"]),
-        }))
-        .await
-        .map(|_| ())
+    let mut client = BurrowClient::from_uds().await?;
+    let res = client.tunnel_client.tunnel_start(Empty {}).await?;
+    println!("Got results! {:?}", res);
+    Ok(())
 }
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 async fn try_stop() -> Result<()> {
-    let mut client = DaemonClient::new().await?;
-    client.send_command(DaemonCommand::Stop).await?;
+    let mut client = BurrowClient::from_uds().await?;
+    let res = client.tunnel_client.tunnel_stop(Empty {}).await?;
+    println!("Got results! {:?}", res);
+    Ok(())
+}
+
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+async fn try_serverstatus() -> Result<()> {
+    let mut client = BurrowClient::from_uds().await?;
+    let mut res = client
+        .tunnel_client
+        .tunnel_status(Empty {})
+        .await?
+        .into_inner();
+    if let Some(st) = res.message().await? {
+        println!("Server Status: {:?}", st);
+    } else {
+        println!("Server Status is None");
+    }
+    Ok(())
+}
+
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+async fn try_tun_config() -> Result<()> {
+    let mut client = BurrowClient::from_uds().await?;
+    let mut res = client
+        .tunnel_client
+        .tunnel_configuration(Empty {})
+        .await?
+        .into_inner();
+    if let Some(config) = res.message().await? {
+        println!("Tunnel Config: {:?}", config);
+    } else {
+        println!("Tunnel Config is None");
+    }
     Ok(())
 }
 
@@ -141,6 +176,8 @@ async fn try_reloadconfig(interface_id: String) -> Result<()> {
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 #[tokio::main]
 async fn main() -> Result<()> {
+    use daemon::get_socket_path;
+
     tracing::initialize();
     dotenv::dotenv().ok();
 
@@ -153,6 +190,8 @@ async fn main() -> Result<()> {
         Commands::ServerConfig => try_serverconfig().await?,
         Commands::ReloadConfig(args) => try_reloadconfig(args.interface_id.clone()).await?,
         Commands::AuthServer => crate::auth::server::serve().await?,
+        Commands::ServerStatus => try_serverstatus().await?,
+        Commands::TunnelConfig => try_tun_config().await?,
     }
 
     Ok(())
