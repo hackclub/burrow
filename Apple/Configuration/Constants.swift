@@ -1,4 +1,5 @@
-@_implementationOnly import Constants
+@_implementationOnly import CConstants
+import OSLog
 
 public enum Constants {
     enum Error: Swift.Error {
@@ -12,14 +13,6 @@ public enum Constants {
     public static var groupContainerURL: URL {
         get throws { try _groupContainerURL.get() }
     }
-
-    private static let _groupContainerURL: Result<URL, Error> = {
-        guard let groupContainerURL = FileManager.default
-            .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier) else {
-            return .failure(.invalidAppGroupIdentifier)
-        }
-        return .success(groupContainerURL)
-    }()
     public static var socketURL: URL {
         get throws {
             try groupContainerURL.appending(component: "burrow.sock", directoryHint: .notDirectory)
@@ -30,4 +23,17 @@ public enum Constants {
             try groupContainerURL.appending(component: "burrow.db", directoryHint: .notDirectory)
         }
     }
+
+    private static let _groupContainerURL: Result<URL, Error> = {
+        guard let groupContainerURL = FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier) else {
+            return .failure(.invalidAppGroupIdentifier)
+        }
+        return .success(groupContainerURL)
+    }()
+}
+
+extension Logger {
+    @_dynamicReplacement(for: subsystem)
+    public static var subsystem: String { Constants.bundleIdentifier }
 }

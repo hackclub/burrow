@@ -21,6 +21,7 @@ struct TunnelButton: View {
 }
 
 extension Tunnel {
+    @MainActor
     fileprivate var action: TunnelButton.Action? {
         switch status {
         case .permissionRequired, .invalid:

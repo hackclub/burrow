@@ -2,11 +2,14 @@ import AuthenticationServices
 import SwiftUI
 
 #if !os(macOS)
-struct BurrowView: View {
+public struct BurrowView: View {
     @Environment(\.webAuthenticationSession)
     private var webAuthenticationSession
 
-    var body: some View {
+    public init() {
+    }
+
+    public var body: some View {
         NavigationStack {
             VStack {
                 HStack {

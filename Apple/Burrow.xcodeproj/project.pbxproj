@@ -7,35 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0BA6D73B2BA638D900BD4B55 /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B46E8DF2AC918CA00BA2A3C /* Client.swift */; };
-		0BA6D73C2BA6393200BD4B55 /* NWConnection+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */; };
-		0BA6D73D2BA6393B00BD4B55 /* NewlineProtocolFramer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */; };
-		0BA6D73E2BA6394B00BD4B55 /* DataTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B28F1552ABF463A000D44B0 /* DataTypes.swift */; };
-		43AA26D82A10004900F14CE6 /* MenuItemToggleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AA26D72A10004900F14CE6 /* MenuItemToggleView.swift */; };
-		D000363D2BB8928E00E582EC /* NetworkCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D000363C2BB8928E00E582EC /* NetworkCarouselView.swift */; };
-		D000363F2BB895FB00E582EC /* OAuth2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D000363E2BB895FB00E582EC /* OAuth2.swift */; };
-		D001173B2B30341C00D87C25 /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D001173A2B30341C00D87C25 /* Logging.swift */; };
-		D00117442B30372900D87C25 /* libBurrowShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D00117382B30341C00D87C25 /* libBurrowShared.a */; };
-		D00117452B30372C00D87C25 /* libBurrowShared.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D00117382B30341C00D87C25 /* libBurrowShared.a */; };
 		D00AA8972A4669BC005C8102 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00AA8962A4669BC005C8102 /* AppDelegate.swift */; };
-		D01A79312B81630D0024EC91 /* NetworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01A79302B81630D0024EC91 /* NetworkView.swift */; };
 		D020F65829E4A697002790F6 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D020F65729E4A697002790F6 /* PacketTunnelProvider.swift */; };
 		D020F65D29E4A697002790F6 /* BurrowNetworkExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D020F65329E4A697002790F6 /* BurrowNetworkExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		D032E6522B8A79C20006B8AD /* HackClub.swift in Sources */ = {isa = PBXBuildFile; fileRef = D032E6512B8A79C20006B8AD /* HackClub.swift */; };
-		D032E6542B8A79DA0006B8AD /* WireGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D032E6532B8A79DA0006B8AD /* WireGuard.swift */; };
+		D048509A2C4351EF00E62169 /* libBurrowConfiguration.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D00117382B30341C00D87C25 /* libBurrowConfiguration.a */; };
+		D048509B2C4351F500E62169 /* libBurrowConfiguration.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D00117382B30341C00D87C25 /* libBurrowConfiguration.a */; };
+		D04F58552C4C4DF700A1A323 /* Network.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04F58532C4C49EC00A1A323 /* Network.swift */; };
 		D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */; };
-		D05B9F7829E39EEC008CB1F9 /* BurrowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05B9F7729E39EEC008CB1F9 /* BurrowView.swift */; };
-		D05B9F7A29E39EED008CB1F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D05B9F7929E39EED008CB1F9 /* Assets.xcassets */; };
-		D05EF8C82B81818D0017AB4F /* FloatingButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05EF8C72B81818D0017AB4F /* FloatingButtonStyle.swift */; };
+		D06E7BA52C4344FA00A0402B /* BurrowCore in Frameworks */ = {isa = PBXBuildFile; productRef = D06E7BA42C4344FA00A0402B /* BurrowCore */; };
+		D06E7BAD2C43513B00A0402B /* BurrowCore in Frameworks */ = {isa = PBXBuildFile; productRef = D06E7BAC2C43513B00A0402B /* BurrowCore */; };
 		D08252762B5C9FC4005DA378 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08252752B5C9FC4005DA378 /* Constants.swift */; };
+		D0881ACF2C4C42A50012C8AA /* BurrowUI in Frameworks */ = {isa = PBXBuildFile; productRef = D0881ACE2C4C42A50012C8AA /* BurrowUI */; };
 		D09150422B9D2AF700BE3CB0 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = D09150412B9D2AF700BE3CB0 /* MainMenu.xib */; };
-		D0BCC5FD2A086D4700AD070D /* NetworkExtension+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */; };
-		D0BCC6082A0981FE00AD070D /* Tunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B98FC629FDC5B5004E7149 /* Tunnel.swift */; };
+		D0B1D1102C436152004B7823 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = D0B1D10F2C436152004B7823 /* AsyncAlgorithms */; };
 		D0BCC6092A09A03E00AD070D /* libburrow.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0BCC6032A09535900AD070D /* libburrow.a */; };
-		D0FAB5922B818A5900F6A84B /* NetworkExtensionTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FAB5912B818A5900F6A84B /* NetworkExtensionTunnel.swift */; };
-		D0FAB5962B818B2900F6A84B /* TunnelButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FAB5952B818B2900F6A84B /* TunnelButton.swift */; };
-		D0FAB5982B818B8200F6A84B /* TunnelStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FAB5972B818B8200F6A84B /* TunnelStatusView.swift */; };
-		D0FAB59A2B818B9600F6A84B /* Network.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FAB5992B818B9600F6A84B /* Network.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -77,19 +62,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0B28F1552ABF463A000D44B0 /* DataTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTypes.swift; sourceTree = "<group>"; };
-		0B46E8DF2AC918CA00BA2A3C /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
-		43AA26D72A10004900F14CE6 /* MenuItemToggleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuItemToggleView.swift; sourceTree = "<group>"; };
-		D000363C2BB8928E00E582EC /* NetworkCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkCarouselView.swift; sourceTree = "<group>"; };
-		D000363E2BB895FB00E582EC /* OAuth2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuth2.swift; sourceTree = "<group>"; };
-		D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NWConnection+Async.swift"; sourceTree = "<group>"; };
-		D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewlineProtocolFramer.swift; sourceTree = "<group>"; };
-		D00117382B30341C00D87C25 /* libBurrowShared.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBurrowShared.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		D001173A2B30341C00D87C25 /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
+		D00117382B30341C00D87C25 /* libBurrowConfiguration.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBurrowConfiguration.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		D00117412B30347800D87C25 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
-		D00117422B30348D00D87C25 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
+		D00117422B30348D00D87C25 /* Configuration.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Configuration.xcconfig; sourceTree = "<group>"; };
 		D00AA8962A4669BC005C8102 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		D01A79302B81630D0024EC91 /* NetworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkView.swift; sourceTree = "<group>"; };
 		D020F63D29E4A1FF002790F6 /* Identity.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Identity.xcconfig; sourceTree = "<group>"; };
 		D020F64029E4A1FF002790F6 /* Compiler.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Compiler.xcconfig; sourceTree = "<group>"; };
 		D020F64229E4A1FF002790F6 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -104,27 +80,18 @@
 		D020F66729E4A95D002790F6 /* NetworkExtension-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "NetworkExtension-iOS.entitlements"; sourceTree = "<group>"; };
 		D020F66829E4AA74002790F6 /* App-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "App-iOS.entitlements"; sourceTree = "<group>"; };
 		D020F66929E4AA74002790F6 /* App-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "App-macOS.entitlements"; sourceTree = "<group>"; };
-		D032E6512B8A79C20006B8AD /* HackClub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HackClub.swift; sourceTree = "<group>"; };
-		D032E6532B8A79DA0006B8AD /* WireGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireGuard.swift; sourceTree = "<group>"; };
 		D04A3E1D2BAF465F0043EC85 /* Version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Version.xcconfig; sourceTree = "<group>"; };
+		D04F58532C4C49EC00A1A323 /* Network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Network.swift; sourceTree = "<group>"; };
 		D05B9F7229E39EEC008CB1F9 /* Burrow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Burrow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowApp.swift; sourceTree = "<group>"; };
-		D05B9F7729E39EEC008CB1F9 /* BurrowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowView.swift; sourceTree = "<group>"; };
-		D05B9F7929E39EED008CB1F9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		D05EF8C72B81818D0017AB4F /* FloatingButtonStyle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FloatingButtonStyle.swift; sourceTree = "<group>"; };
+		D065A9B62C433BF400D34E7D /* Package */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Package; sourceTree = "<group>"; };
 		D08252742B5C9DEB005DA378 /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		D08252752B5C9FC4005DA378 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		D09150412B9D2AF700BE3CB0 /* MainMenu.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		D0B98FBF29FD8072004E7149 /* build-rust.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-rust.sh"; sourceTree = "<group>"; };
-		D0B98FC629FDC5B5004E7149 /* Tunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tunnel.swift; sourceTree = "<group>"; };
 		D0B98FD829FDDB6F004E7149 /* libburrow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libburrow.h; sourceTree = "<group>"; };
 		D0B98FDC29FDDDCF004E7149 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
-		D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NetworkExtension+Async.swift"; sourceTree = "<group>"; };
 		D0BCC6032A09535900AD070D /* libburrow.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libburrow.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		D0FAB5912B818A5900F6A84B /* NetworkExtensionTunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkExtensionTunnel.swift; sourceTree = "<group>"; };
-		D0FAB5952B818B2900F6A84B /* TunnelButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelButton.swift; sourceTree = "<group>"; };
-		D0FAB5972B818B8200F6A84B /* TunnelStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelStatusView.swift; sourceTree = "<group>"; };
-		D0FAB5992B818B9600F6A84B /* Network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Network.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,6 +99,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D06E7BA52C4344FA00A0402B /* BurrowCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -139,8 +107,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D00117442B30372900D87C25 /* libBurrowShared.a in Frameworks */,
+				D048509A2C4351EF00E62169 /* libBurrowConfiguration.a in Frameworks */,
+				D06E7BAD2C43513B00A0402B /* BurrowCore in Frameworks */,
 				D0BCC6092A09A03E00AD070D /* libburrow.a in Frameworks */,
+				D0B1D1102C436152004B7823 /* AsyncAlgorithms in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -148,37 +118,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D00117452B30372C00D87C25 /* libBurrowShared.a in Frameworks */,
+				D0881ACF2C4C42A50012C8AA /* BurrowUI in Frameworks */,
+				D048509B2C4351F500E62169 /* libBurrowConfiguration.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		D00117392B30341C00D87C25 /* Shared */ = {
-			isa = PBXGroup;
-			children = (
-				0B28F1552ABF463A000D44B0 /* DataTypes.swift */,
-				D00117322B3001A400D87C25 /* NewlineProtocolFramer.swift */,
-				D00117302B2FFFC900D87C25 /* NWConnection+Async.swift */,
-				0B46E8DF2AC918CA00BA2A3C /* Client.swift */,
-				D001173A2B30341C00D87C25 /* Logging.swift */,
-				D08252752B5C9FC4005DA378 /* Constants.swift */,
-				D00117422B30348D00D87C25 /* Shared.xcconfig */,
-				D001173F2B30347800D87C25 /* Constants */,
-			);
-			path = Shared;
-			sourceTree = "<group>";
-		};
-		D001173F2B30347800D87C25 /* Constants */ = {
-			isa = PBXGroup;
-			children = (
-				D08252742B5C9DEB005DA378 /* Constants.h */,
-				D00117412B30347800D87C25 /* module.modulemap */,
-			);
-			path = Constants;
-			sourceTree = "<group>";
-		};
 		D00117432B30372900D87C25 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -195,6 +142,10 @@
 				D020F64029E4A1FF002790F6 /* Compiler.xcconfig */,
 				D04A3E1D2BAF465F0043EC85 /* Version.xcconfig */,
 				D020F64229E4A1FF002790F6 /* Info.plist */,
+				D08252752B5C9FC4005DA378 /* Constants.swift */,
+				D08252742B5C9DEB005DA378 /* Constants.h */,
+				D00117412B30347800D87C25 /* module.modulemap */,
+				D00117422B30348D00D87C25 /* Configuration.xcconfig */,
 			);
 			path = Configuration;
 			sourceTree = "<group>";
@@ -212,22 +163,12 @@
 			path = NetworkExtension;
 			sourceTree = "<group>";
 		};
-		D032E64D2B8A69C90006B8AD /* Networks */ = {
-			isa = PBXGroup;
-			children = (
-				D0FAB5992B818B9600F6A84B /* Network.swift */,
-				D032E6512B8A79C20006B8AD /* HackClub.swift */,
-				D032E6532B8A79DA0006B8AD /* WireGuard.swift */,
-			);
-			path = Networks;
-			sourceTree = "<group>";
-		};
 		D05B9F6929E39EEC008CB1F9 = {
 			isa = PBXGroup;
 			children = (
 				D05B9F7429E39EEC008CB1F9 /* App */,
 				D020F65629E4A697002790F6 /* NetworkExtension */,
-				D00117392B30341C00D87C25 /* Shared */,
+				D065A9B62C433BF400D34E7D /* Package */,
 				D020F63C29E4A1FF002790F6 /* Configuration */,
 				D05B9F7329E39EEC008CB1F9 /* Products */,
 				D00117432B30372900D87C25 /* Frameworks */,
@@ -239,7 +180,8 @@
 			children = (
 				D05B9F7229E39EEC008CB1F9 /* Burrow.app */,
 				D020F65329E4A697002790F6 /* BurrowNetworkExtension.appex */,
-				D00117382B30341C00D87C25 /* libBurrowShared.a */,
+				D0BCC6032A09535900AD070D /* libburrow.a */,
+				D00117382B30341C00D87C25 /* libBurrowConfiguration.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -249,19 +191,7 @@
 			children = (
 				D05B9F7529E39EEC008CB1F9 /* BurrowApp.swift */,
 				D00AA8962A4669BC005C8102 /* AppDelegate.swift */,
-				43AA26D72A10004900F14CE6 /* MenuItemToggleView.swift */,
-				D05B9F7729E39EEC008CB1F9 /* BurrowView.swift */,
-				D000363C2BB8928E00E582EC /* NetworkCarouselView.swift */,
-				D01A79302B81630D0024EC91 /* NetworkView.swift */,
-				D000363E2BB895FB00E582EC /* OAuth2.swift */,
-				D032E64D2B8A69C90006B8AD /* Networks */,
-				D0FAB5972B818B8200F6A84B /* TunnelStatusView.swift */,
-				D0FAB5952B818B2900F6A84B /* TunnelButton.swift */,
-				D0B98FC629FDC5B5004E7149 /* Tunnel.swift */,
-				D0FAB5912B818A5900F6A84B /* NetworkExtensionTunnel.swift */,
-				D0BCC5FC2A086D4700AD070D /* NetworkExtension+Async.swift */,
-				D05EF8C72B81818D0017AB4F /* FloatingButtonStyle.swift */,
-				D05B9F7929E39EED008CB1F9 /* Assets.xcassets */,
+				D04F58532C4C49EC00A1A323 /* Network.swift */,
 				D09150412B9D2AF700BE3CB0 /* MainMenu.xib */,
 				D020F66829E4AA74002790F6 /* App-iOS.entitlements */,
 				D020F66929E4AA74002790F6 /* App-macOS.entitlements */,
@@ -276,7 +206,6 @@
 				D0B98FBF29FD8072004E7149 /* build-rust.sh */,
 				D0B98FDC29FDDDCF004E7149 /* module.modulemap */,
 				D0B98FD829FDDB6F004E7149 /* libburrow.h */,
-				D0BCC6032A09535900AD070D /* libburrow.a */,
 			);
 			path = libburrow;
 			sourceTree = "<group>";
@@ -284,9 +213,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		D00117372B30341C00D87C25 /* Shared */ = {
+		D00117372B30341C00D87C25 /* Configuration */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D001173C2B30341C00D87C25 /* Build configuration list for PBXNativeTarget "Shared" */;
+			buildConfigurationList = D001173C2B30341C00D87C25 /* Build configuration list for PBXNativeTarget "Configuration" */;
 			buildPhases = (
 				D00117342B30341C00D87C25 /* Sources */,
 				D00117352B30341C00D87C25 /* Frameworks */,
@@ -294,10 +223,11 @@
 			buildRules = (
 			);
 			dependencies = (
+				D04F58502C4C44B500A1A323 /* PBXTargetDependency */,
 			);
-			name = Shared;
+			name = Configuration;
 			productName = Shared;
-			productReference = D00117382B30341C00D87C25 /* libBurrowShared.a */;
+			productReference = D00117382B30341C00D87C25 /* libBurrowConfiguration.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		D020F65229E4A697002790F6 /* NetworkExtension */ = {
@@ -332,6 +262,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				D0881AD12C4C42B40012C8AA /* PBXTargetDependency */,
 				D00117472B30373100D87C25 /* PBXTargetDependency */,
 				D020F65C29E4A697002790F6 /* PBXTargetDependency */,
 			);
@@ -371,6 +302,7 @@
 			);
 			mainGroup = D05B9F6929E39EEC008CB1F9;
 			packageReferences = (
+				D0B1D10E2C436152004B7823 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 			);
 			productRefGroup = D05B9F7329E39EEC008CB1F9 /* Products */;
 			projectDirPath = "";
@@ -378,7 +310,7 @@
 			targets = (
 				D05B9F7129E39EEC008CB1F9 /* App */,
 				D020F65229E4A697002790F6 /* NetworkExtension */,
-				D00117372B30341C00D87C25 /* Shared */,
+				D00117372B30341C00D87C25 /* Configuration */,
 			);
 		};
 /* End PBXProject section */
@@ -395,7 +327,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D05B9F7A29E39EED008CB1F9 /* Assets.xcassets in Resources */,
 				D09150422B9D2AF700BE3CB0 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -451,12 +382,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D001173B2B30341C00D87C25 /* Logging.swift in Sources */,
-				0BA6D73C2BA6393200BD4B55 /* NWConnection+Async.swift in Sources */,
 				D08252762B5C9FC4005DA378 /* Constants.swift in Sources */,
-				0BA6D73E2BA6394B00BD4B55 /* DataTypes.swift in Sources */,
-				0BA6D73B2BA638D900BD4B55 /* Client.swift in Sources */,
-				0BA6D73D2BA6393B00BD4B55 /* NewlineProtocolFramer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -472,22 +398,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0FAB59A2B818B9600F6A84B /* Network.swift in Sources */,
-				D0BCC6082A0981FE00AD070D /* Tunnel.swift in Sources */,
-				D0FAB5982B818B8200F6A84B /* TunnelStatusView.swift in Sources */,
-				43AA26D82A10004900F14CE6 /* MenuItemToggleView.swift in Sources */,
-				D05B9F7829E39EEC008CB1F9 /* BurrowView.swift in Sources */,
-				D0FAB5922B818A5900F6A84B /* NetworkExtensionTunnel.swift in Sources */,
-				D000363F2BB895FB00E582EC /* OAuth2.swift in Sources */,
-				D0FAB5962B818B2900F6A84B /* TunnelButton.swift in Sources */,
 				D00AA8972A4669BC005C8102 /* AppDelegate.swift in Sources */,
-				D05EF8C82B81818D0017AB4F /* FloatingButtonStyle.swift in Sources */,
-				D032E6522B8A79C20006B8AD /* HackClub.swift in Sources */,
+				D04F58552C4C4DF700A1A323 /* Network.swift in Sources */,
 				D05B9F7629E39EEC008CB1F9 /* BurrowApp.swift in Sources */,
-				D01A79312B81630D0024EC91 /* NetworkView.swift in Sources */,
-				D032E6542B8A79DA0006B8AD /* WireGuard.swift in Sources */,
-				D0BCC5FD2A086D4700AD070D /* NetworkExtension+Async.swift in Sources */,
-				D000363D2BB8928E00E582EC /* NetworkCarouselView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -496,12 +409,12 @@
 /* Begin PBXTargetDependency section */
 		D00117472B30373100D87C25 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = D00117372B30341C00D87C25 /* Shared */;
+			target = D00117372B30341C00D87C25 /* Configuration */;
 			targetProxy = D00117462B30373100D87C25 /* PBXContainerItemProxy */;
 		};
 		D00117492B30373500D87C25 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = D00117372B30341C00D87C25 /* Shared */;
+			target = D00117372B30341C00D87C25 /* Configuration */;
 			targetProxy = D00117482B30373500D87C25 /* PBXContainerItemProxy */;
 		};
 		D020F65C29E4A697002790F6 /* PBXTargetDependency */ = {
@@ -509,19 +422,27 @@
 			target = D020F65229E4A697002790F6 /* NetworkExtension */;
 			targetProxy = D020F65B29E4A697002790F6 /* PBXContainerItemProxy */;
 		};
+		D04F58502C4C44B500A1A323 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = D04F584F2C4C44B500A1A323 /* BurrowClient */;
+		};
+		D0881AD12C4C42B40012C8AA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = D0881AD02C4C42B40012C8AA /* BurrowUI */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		D001173D2B30341C00D87C25 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D00117422B30348D00D87C25 /* Shared.xcconfig */;
+			baseConfigurationReference = D00117422B30348D00D87C25 /* Configuration.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		D001173E2B30341C00D87C25 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D00117422B30348D00D87C25 /* Shared.xcconfig */;
+			baseConfigurationReference = D00117422B30348D00D87C25 /* Configuration.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
@@ -571,7 +492,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		D001173C2B30341C00D87C25 /* Build configuration list for PBXNativeTarget "Shared" */ = {
+		D001173C2B30341C00D87C25 /* Build configuration list for PBXNativeTarget "Configuration" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D001173D2B30341C00D87C25 /* Debug */,
@@ -608,6 +529,45 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D0B1D10E2C436152004B7823 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-async-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D04F584F2C4C44B500A1A323 /* BurrowClient */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BurrowClient;
+		};
+		D06E7BA42C4344FA00A0402B /* BurrowCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BurrowCore;
+		};
+		D06E7BAC2C43513B00A0402B /* BurrowCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BurrowCore;
+		};
+		D0881ACE2C4C42A50012C8AA /* BurrowUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BurrowUI;
+		};
+		D0881AD02C4C42B40012C8AA /* BurrowUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BurrowUI;
+		};
+		D0B1D10F2C436152004B7823 /* AsyncAlgorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D0B1D10E2C436152004B7823 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
+			productName = AsyncAlgorithms;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D05B9F6A29E39EEC008CB1F9 /* Project object */;
 }

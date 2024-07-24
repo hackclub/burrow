@@ -7,11 +7,14 @@
 
 import SwiftUI
 
-struct MenuItemToggleView: View {
+public struct MenuItemToggleView: View {
     @Environment(\.tunnel)
     var tunnel: Tunnel
 
-    var body: some View {
+    public init() {
+    }
+
+    public var body: some View {
         HStack {
             VStack(alignment: .leading) {
                 Text("Burrow")
@@ -33,6 +36,7 @@ struct MenuItemToggleView: View {
 }
 
 extension Tunnel {
+    @MainActor
     fileprivate var toggleDisabled: Bool {
         switch status {
         case .disconnected, .permissionRequired, .connected, .disconnecting:
@@ -42,6 +46,7 @@ extension Tunnel {
         }
     }
 
+    @MainActor
     var toggleIsOn: Binding<Bool> {
         Binding {
             switch status {

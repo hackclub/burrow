@@ -1,6 +1,7 @@
+#if !os(macOS)
+import BurrowUI
 import SwiftUI
 
-#if !os(macOS)
 @MainActor
 @main
 struct BurrowApp: App {
