@@ -1,7 +1,10 @@
+pub mod client;
+pub mod grpc_defs;
 pub mod notification;
 pub mod request;
 pub mod response;
 
+pub use client::BurrowClient;
 pub use notification::DaemonNotification;
 pub use request::{DaemonCommand, DaemonRequest, DaemonStartOptions};
 pub use response::{DaemonResponse, DaemonResponseData, ServerConfig, ServerInfo};

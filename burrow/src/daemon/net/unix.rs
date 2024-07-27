@@ -25,7 +25,7 @@ const UNIX_SOCKET_PATH: &str = "/run/burrow.sock";
 #[cfg(target_vendor = "apple")]
 const UNIX_SOCKET_PATH: &str = "burrow.sock";
 
-fn get_socket_path() -> String {
+pub fn get_socket_path() -> String {
     if std::env::var("BURROW_SOCKET_PATH").is_ok() {
         return std::env::var("BURROW_SOCKET_PATH").unwrap();
     }
@@ -36,7 +36,7 @@ pub struct Listener {
     cmd_tx: async_channel::Sender<DaemonCommand>,
     rsp_rx: async_channel::Receiver<DaemonResponse>,
     sub_chan: async_channel::Receiver<DaemonNotification>,
-    inner: UnixListener,
+    pub inner: UnixListener,
 }
 
 impl Listener {

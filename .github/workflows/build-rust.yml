@@ -2,10 +2,10 @@ name: Build Rust Crate
 on:
   push:
     branches:
-    - main
+      - main
   pull_request:
     branches:
-    - "*"
+      - "*"
 jobs:
   build:
     name: Build Crate (${{ matrix.platform }})
@@ -13,66 +13,71 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - os: ubuntu-latest
-          platform: Linux
-          packages:
-          - gcc-aarch64-linux-gnu
-          test-targets:
-          - x86_64-unknown-linux-gnu
-          targets:
-          - aarch64-unknown-linux-gnu
-        - os: macos-12
-          platform: macOS (Intel)
-          test-targets:
-          - x86_64-apple-darwin
-          targets:
-          - x86_64-apple-ios
-        - os: macos-14
-          platform: macOS
-          test-targets:
-          - aarch64-apple-darwin
-          targets:
-          - aarch64-apple-ios
-          - aarch64-apple-ios-sim
-        - os: windows-2022
-          platform: Windows
-          test-targets:
-          - x86_64-pc-windows-msvc
-          targets:
-          - aarch64-pc-windows-msvc
+          - os: ubuntu-latest
+            platform: Linux
+            packages:
+              - gcc-aarch64-linux-gnu
+            test-targets:
+              - x86_64-unknown-linux-gnu
+            targets:
+              - aarch64-unknown-linux-gnu
+          - os: macos-12
+            platform: macOS (Intel)
+            test-targets:
+              - x86_64-apple-darwin
+            targets:
+              - x86_64-apple-ios
+          - os: macos-14
+            platform: macOS
+            test-targets:
+              - aarch64-apple-darwin
+            targets:
+              - aarch64-apple-ios
+              - aarch64-apple-ios-sim
+          - os: windows-2022
+            platform: Windows
+            test-targets:
+              - x86_64-pc-windows-msvc
+            targets:
+              - aarch64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
     env:
       DEVELOPER_DIR: /Applications/Xcode_15.4.app/Contents/Developer
       CARGO_INCREMENTAL: 0
       CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
       RUST_BACKTRACE: short
+      PROTOC_VERSION: 3.25.1
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        ssh-key: ${{ secrets.DEPLOY_KEY }}
-        submodules: recursive
-    - name: Install Packages
-      if: matrix.os == 'ubuntu-latest'
-      shell: bash
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ${{ join(matrix.packages, ' ') }}
-    - name: Install Windows Deps
-      if: matrix.os == 'windows-2022'
-      shell: bash
-      run: echo "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\Llvm\x64\bin" >> $GITHUB_PATH
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        toolchain: stable
-        components: rustfmt
-        targets: ${{ join(matrix.targets, ', ') }}
-    - name: Setup Rust Cache
-      uses: Swatinem/rust-cache@v2
-    - name: Build
-      shell: bash
-      run: cargo build --verbose --workspace --all-features --target ${{ join(matrix.targets, ' --target ') }} --target ${{ join(matrix.test-targets, ' --target ') }}
-    - name: Test
-      shell: bash
-      run: cargo test --verbose --workspace --all-features --target ${{ join(matrix.test-targets, ' --target ') }}
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          submodules: recursive
+      - name: Install Packages
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ join(matrix.packages, ' ') }}
+      - name: Install Windows Deps
+        if: matrix.os == 'windows-2022'
+        shell: bash
+        run: echo "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\Llvm\x64\bin" >> $GITHUB_PATH
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: rustfmt
+          targets: ${{ join(matrix.targets, ', ') }}
+      - name: Install protoc
+        uses: taiki-e/install-action@v2
+        with:
+          tool: protoc@${{ env.PROTOC_VERSION }}
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
+      - name: Build
+        shell: bash
+        run: cargo build --verbose --workspace --all-features --target ${{ join(matrix.targets, ' --target ') }} --target ${{ join(matrix.test-targets, ' --target ') }}
+      - name: Test
+        shell: bash
+        run: cargo test --verbose --workspace --all-features --target ${{ join(matrix.test-targets, ' --target ') }}
