@@ -56,6 +56,8 @@ jobs:
           targets: ${{ join(matrix.rust-targets, ', ') }}
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Build
         id: build
         uses: ./.github/actions/build-for-testing
