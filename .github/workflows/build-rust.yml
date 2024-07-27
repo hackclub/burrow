@@ -46,6 +46,7 @@ jobs:
       CARGO_INCREMENTAL: 0
       CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
       RUST_BACKTRACE: short
+      PROTOC_VERSION: 3.25.1
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -68,9 +69,10 @@ jobs:
           toolchain: stable
           components: rustfmt
           targets: ${{ join(matrix.targets, ', ') }}
-      - name: Install Protobuf Compiler
-        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-12' || matrix.os == 'macos-14'
-        uses: arduino/setup-protoc@v3
+      - name: Install protoc
+        uses: taiki-e/install-action@v2
+        with:
+          tool: protoc@${{ env.PROTOC_VERSION }}
       - name: Setup Rust Cache
         uses: Swatinem/rust-cache@v2
       - name: Build
