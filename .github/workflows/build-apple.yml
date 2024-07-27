@@ -1,11 +1,11 @@
 name: Build Apple Apps
 on:
   push:
-    branches:  
-    - main
+    branches:
+      - main
   pull_request:
     branches:
-    - "*"
+      - "*"
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -17,69 +17,71 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - scheme: App
-          destination: generic/platform=iOS
-          platform: iOS
-          sdk-name: iphoneos
-          rust-targets:
-          - aarch64-apple-ios
-        - scheme: App
-          destination: platform=iOS Simulator,OS=18.0,name=iPhone 15 Pro
-          platform: iOS Simulator
-          sdk-name: iphonesimulator
-          rust-targets:
-          - aarch64-apple-ios-sim
-          - x86_64-apple-ios
-        - scheme: App
-          destination: platform=macOS
-          platform: macOS
-          sdk-name: macos
-          rust-targets:
-          - x86_64-apple-darwin
-          - aarch64-apple-darwin
+          - scheme: App
+            destination: generic/platform=iOS
+            platform: iOS
+            sdk-name: iphoneos
+            rust-targets:
+              - aarch64-apple-ios
+          - scheme: App
+            destination: platform=iOS Simulator,OS=18.0,name=iPhone 15 Pro
+            platform: iOS Simulator
+            sdk-name: iphonesimulator
+            rust-targets:
+              - aarch64-apple-ios-sim
+              - x86_64-apple-ios
+          - scheme: App
+            destination: platform=macOS
+            platform: macOS
+            sdk-name: macos
+            rust-targets:
+              - x86_64-apple-darwin
+              - aarch64-apple-darwin
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.0.app/Contents/Developer
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        ssh-key: ${{ secrets.DEPLOY_KEY }}
-        submodules: recursive
-    - name: Import Certificate
-      uses: ./.github/actions/import-cert
-      with:
-        certificate: ${{ secrets.DEVELOPER_CERT }}
-        password: ${{ secrets.DEVELOPER_CERT_PASSWORD }}
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: ${{ join(matrix.rust-targets, ', ') }}
-    - name: Build
-      id: build
-      uses: ./.github/actions/build-for-testing
-      with:
-        scheme: ${{ matrix.scheme }}
-        destination: ${{ matrix.destination }}
-        app-store-key: ${{ secrets.APPSTORE_KEY }}
-        app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
-        app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
-    - name: Run Unit Tests
-      if: ${{ matrix.xcode-unit-test != '' }}
-      continue-on-error: true
-      uses: ./.github/actions/test-without-building
-      with:
-        scheme: ${{ matrix.scheme }}
-        destination: ${{ matrix.destination }}
-        test-plan: ${{ matrix.xcode-unit-test }}
-        artifact-prefix: unit-tests-${{ matrix.sdk-name }}
-        check-name: Xcode Unit Tests (${{ matrix.platform }})
-    - name: Run UI Tests
-      if: ${{ matrix.xcode-ui-test != '' }}
-      continue-on-error: true
-      uses: ./.github/actions/test-without-building
-      with:
-        scheme: ${{ matrix.scheme }}
-        destination: ${{ matrix.destination }}
-        test-plan: ${{ matrix.xcode-ui-test }}
-        artifact-prefix: ui-tests-${{ matrix.sdk-name }}
-        check-name: Xcode UI Tests (${{ matrix.platform }})
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          submodules: recursive
+      - name: Import Certificate
+        uses: ./.github/actions/import-cert
+        with:
+          certificate: ${{ secrets.DEVELOPER_CERT }}
+          password: ${{ secrets.DEVELOPER_CERT_PASSWORD }}
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ join(matrix.rust-targets, ', ') }}
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+      - name: Build
+        id: build
+        uses: ./.github/actions/build-for-testing
+        with:
+          scheme: ${{ matrix.scheme }}
+          destination: ${{ matrix.destination }}
+          app-store-key: ${{ secrets.APPSTORE_KEY }}
+          app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+          app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
+      - name: Run Unit Tests
+        if: ${{ matrix.xcode-unit-test != '' }}
+        continue-on-error: true
+        uses: ./.github/actions/test-without-building
+        with:
+          scheme: ${{ matrix.scheme }}
+          destination: ${{ matrix.destination }}
+          test-plan: ${{ matrix.xcode-unit-test }}
+          artifact-prefix: unit-tests-${{ matrix.sdk-name }}
+          check-name: Xcode Unit Tests (${{ matrix.platform }})
+      - name: Run UI Tests
+        if: ${{ matrix.xcode-ui-test != '' }}
+        continue-on-error: true
+        uses: ./.github/actions/test-without-building
+        with:
+          scheme: ${{ matrix.scheme }}
+          destination: ${{ matrix.destination }}
+          test-plan: ${{ matrix.xcode-ui-test }}
+          artifact-prefix: ui-tests-${{ matrix.sdk-name }}
+          check-name: Xcode UI Tests (${{ matrix.platform }})
