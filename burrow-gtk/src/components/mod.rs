@@ -14,7 +14,7 @@ use tokio::sync::Mutex;
 pub mod burrow_rpc {
     tonic::include_proto!("burrow");
 }
-use burrow_rpc::tunnel_client;
+use burrow_rpc::{networks_client, tunnel_client};
 use tonic::transport::Channel;
 
 mod app;

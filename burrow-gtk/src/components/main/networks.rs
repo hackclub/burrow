@@ -1,8 +1,12 @@
 use super::*;
+use std::time::Duration;
+
+const RECONNECT_POLL_TIME: Duration = Duration::from_secs(3);
 
 pub struct Networks {
     daemon_client: Arc<Mutex<Option<Channel>>>,
-    network_widgets: Vec<AsyncController<NetworkCard>>,
+    network_cards: Vec<AsyncController<NetworkCard>>,
+    networks_list_box: gtk::ListBox,
 }
 
 pub struct NetworksInit {
@@ -12,6 +16,7 @@ pub struct NetworksInit {
 #[derive(Debug)]
 pub enum NetworksMsg {
     None,
+    NetworkList(Vec<burrow_rpc::Network>),
 }
 
 #[relm4::component(pub, async)]
@@ -40,7 +45,7 @@ impl AsyncComponent for Networks {
     ) -> AsyncComponentParts<Self> {
         let widgets = view_output!();
 
-        let network_widgets = vec![
+        let network_cards = vec![
             NetworkCard::builder()
                 .launch(NetworkCardInit {
                     name: "Hello".to_owned(),
@@ -61,13 +66,10 @@ impl AsyncComponent for Networks {
                 .forward(sender.input_sender(), |_| NetworksMsg::None),
         ];
 
-        widgets.networks.append(network_widgets[0].widget());
-        widgets.networks.append(network_widgets[1].widget());
-        widgets.networks.append(network_widgets[2].widget());
-
         let model = Networks {
             daemon_client: init.daemon_client,
-            network_widgets,
+            network_cards,
+            networks_list_box: widgets.networks.clone(),
         };
 
         AsyncComponentParts { model, widgets }
@@ -76,8 +78,60 @@ impl AsyncComponent for Networks {
     async fn update(
         &mut self,
         msg: Self::Input,
-        _: AsyncComponentSender<Self>,
+        sender: AsyncComponentSender<Self>,
         _root: &Self::Root,
     ) {
+        if let NetworksMsg::NetworkList(networks) = msg {
+            for network_card in self.network_cards.iter() {
+                self.networks_list_box
+                    .remove(&network_card.widget().clone());
+            }
+            self.network_cards.clear();
+
+            for network in networks {
+                let network_card = NetworkCard::builder()
+                    .launch(NetworkCardInit {
+                        name: format!("ID: {}, TYPE: {}", network.id, network.r#type),
+                        enabled: false,
+                    })
+                    .forward(sender.input_sender(), |_| NetworksMsg::None);
+                self.networks_list_box.append(network_card.widget());
+                self.network_cards.push(network_card);
+            }
+        }
+    }
+}
+
+struct AsyncNetworkStateHandler;
+
+impl Worker for AsyncNetworkStateHandler {
+    type Init = ();
+    type Input = ();
+    type Output = NetworksMsg;
+
+    fn init(_: Self::Init, _sender: ComponentSender<Self>) -> Self {
+        Self
+    }
+
+    fn update(&mut self, _: (), sender: ComponentSender<Self>) {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let task = rt.spawn(async move {
+            loop {
+                let conn = daemon::daemon_connect().await;
+                if let Ok(conn) = conn {
+                    let mut client = networks_client::NetworksClient::new(conn);
+                    if let Ok(mut res) = client.network_list(burrow_rpc::Empty {}).await {
+                        let stream = res.get_mut();
+                        while let Ok(Some(msg)) = stream.message().await {
+                            sender
+                                .output(NetworksMsg::NetworkList(msg.network))
+                                .unwrap();
+                        }
+                    }
+                }
+                tokio::time::sleep(RECONNECT_POLL_TIME).await;
+            }
+        });
+        rt.block_on(task).unwrap();
     }
 }
