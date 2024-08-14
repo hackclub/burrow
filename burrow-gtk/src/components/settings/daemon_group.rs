@@ -30,8 +30,8 @@ impl AsyncComponent for DaemonGroup {
         #[name(group)]
         adw::PreferencesGroup {
             #[watch]
-            set_sensitive: 
-                (model.system_setup == SystemSetup::AppImage || model.system_setup == SystemSetup::Other) && 
+            set_sensitive:
+                (model.system_setup == SystemSetup::AppImage || model.system_setup == SystemSetup::Other) &&
                 !model.already_running,
             set_title: "Local Daemon",
             set_description: Some("Run Local Daemon"),
@@ -68,26 +68,31 @@ impl AsyncComponent for DaemonGroup {
     ) {
         match msg {
             DaemonGroupMsg::LaunchLocal => {
+                //  TODO: Handle error condition
+
+                const BURROW_LOCAL_DAEMON_PATH: &str = "/tmp/burrow-detached-daemon";
+
                 let burrow_original_bin = std::env::vars()
                     .find(|(k, _)| k == "APPDIR")
                     .map(|(_, v)| v + "/usr/bin/burrow")
                     .unwrap_or("/usr/bin/burrow".to_owned());
+
+                Command::new("cp")
+                    .arg(&burrow_original_bin)
+                    .arg(BURROW_LOCAL_DAEMON_PATH)
+                    .output()
+                    .unwrap();
 
                 let mut burrow_bin =
                     String::from_utf8(Command::new("mktemp").output().unwrap().stdout).unwrap();
                 burrow_bin.pop();
 
                 let privileged_spawn_script = format!(
-                    r#"TEMP=$(mktemp -p /root)
-cp {} $TEMP
-chmod +x $TEMP
-setcap CAP_NET_BIND_SERVICE,CAP_NET_ADMIN+eip $TEMP
-mv $TEMP /tmp/burrow-detached-daemon"#,
-                    burrow_original_bin
+                    r#"chmod +x {}
+setcap CAP_NET_BIND_SERVICE,CAP_NET_ADMIN+eip {}"#,
+                    BURROW_LOCAL_DAEMON_PATH, BURROW_LOCAL_DAEMON_PATH
                 )
                 .replace('\n', "&&");
-
-                //  TODO: Handle error condition
 
                 Command::new("pkexec")
                     .arg("sh")
@@ -97,7 +102,7 @@ mv $TEMP /tmp/burrow-detached-daemon"#,
                     .output()
                     .unwrap();
 
-                Command::new("/tmp/burrow-detached-daemon")
+                Command::new(BURROW_LOCAL_DAEMON_PATH)
                     .env("RUST_LOG", "debug")
                     .arg("daemon")
                     .spawn()
