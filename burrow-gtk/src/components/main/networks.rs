@@ -17,6 +17,7 @@ pub struct NetworksInit {
 pub enum NetworksMsg {
     None,
     NetworkList(Vec<burrow_rpc::Network>),
+    NetworkAdd,
 }
 
 #[relm4::component(pub, async)]
@@ -34,7 +35,14 @@ impl AsyncComponent for Networks {
             set_valign: Align::Start,
 
             #[name = "networks"]
-            gtk::ListBox {}
+            gtk::ListBox {},
+
+            gtk::Button {
+                set_icon_name: "list-add",
+                set_margin_all: 12,
+
+                connect_clicked => NetworksMsg::NetworkAdd,
+            },
         }
     }
 
@@ -48,23 +56,39 @@ impl AsyncComponent for Networks {
         let network_cards = vec![
             NetworkCard::builder()
                 .launch(NetworkCardInit {
+                    id: 0,
+                    index: 0,
+                    index_max: 3,
+                    daemon_client: Arc::clone(&init.daemon_client),
                     name: "Hello".to_owned(),
                     enabled: true,
                 })
                 .forward(sender.input_sender(), |_| NetworksMsg::None),
             NetworkCard::builder()
                 .launch(NetworkCardInit {
+                    id: 1,
+                    index: 1,
+                    index_max: 3,
+                    daemon_client: Arc::clone(&init.daemon_client),
                     name: "World".to_owned(),
                     enabled: false,
                 })
                 .forward(sender.input_sender(), |_| NetworksMsg::None),
             NetworkCard::builder()
                 .launch(NetworkCardInit {
+                    id: 2,
+                    index: 2,
+                    index_max: 3,
+                    daemon_client: Arc::clone(&init.daemon_client),
                     name: "Yay".to_owned(),
                     enabled: false,
                 })
                 .forward(sender.input_sender(), |_| NetworksMsg::None),
         ];
+        widgets.networks.append(network_cards[0].widget());
+        widgets.networks.append(network_cards[1].widget());
+        widgets.networks.append(network_cards[2].widget());
+        // let network_cards = vec![];
 
         let model = Networks {
             daemon_client: init.daemon_client,
@@ -81,23 +105,37 @@ impl AsyncComponent for Networks {
         sender: AsyncComponentSender<Self>,
         _root: &Self::Root,
     ) {
-        if let NetworksMsg::NetworkList(networks) = msg {
-            for network_card in self.network_cards.iter() {
-                self.networks_list_box
-                    .remove(&network_card.widget().clone());
-            }
-            self.network_cards.clear();
+        match msg {
+            NetworksMsg::NetworkList(networks) => {
+                for network_card in self.network_cards.iter() {
+                    self.networks_list_box
+                        .remove(&network_card.widget().clone());
+                }
+                self.network_cards.clear();
 
-            for network in networks {
-                let network_card = NetworkCard::builder()
-                    .launch(NetworkCardInit {
-                        name: format!("ID: {}, TYPE: {}", network.id, network.r#type),
-                        enabled: false,
-                    })
-                    .forward(sender.input_sender(), |_| NetworksMsg::None);
-                self.networks_list_box.append(network_card.widget());
-                self.network_cards.push(network_card);
+                let index_max = networks.len();
+                for (index, network) in networks.iter().enumerate() {
+                    let network_card = NetworkCard::builder()
+                        .launch(NetworkCardInit {
+                            id: network.id,
+                            index,
+                            index_max,
+                            daemon_client: Arc::clone(&self.daemon_client),
+                            name: format!("ID: {}, TYPE: {}", network.id, network.r#type),
+                            enabled: false,
+                        })
+                        .forward(sender.input_sender(), |_| NetworksMsg::None);
+                    self.networks_list_box.append(network_card.widget());
+                    self.network_cards.push(network_card);
+                }
             }
+            NetworksMsg::NetworkAdd => {
+                if let Some(daemon_client) = self.daemon_client.lock().await.as_mut() {
+                    let mut client = networks_client::NetworksClient::new(daemon_client);
+                    client.network_add(burrow_rpc::Empty {}).await.unwrap();
+                }
+            }
+            _ => {}
         }
     }
 }
