@@ -2,6 +2,7 @@ use super::*;
 
 pub struct MainScreen {
     switch: AsyncController<main::Switch>,
+    networks: AsyncController<main::Networks>,
 }
 
 pub struct MainScreenInit {
@@ -85,7 +86,7 @@ impl AsyncComponent for MainScreen {
         widgets.content.append(networks.widget());
         widgets.content.append(switch.widget());
 
-        let model = MainScreen { switch };
+        let model = MainScreen { switch, networks };
 
         AsyncComponentParts { model, widgets }
     }
