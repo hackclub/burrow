@@ -49,7 +49,7 @@ impl AsyncComponent for App {
     view! {
         adw::Window {
             set_title: Some("Burrow"),
-            set_default_size: (640, 480),
+            set_default_size: (640, 800),
         }
     }
 

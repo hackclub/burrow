@@ -32,19 +32,43 @@ impl AsyncComponent for Networks {
     view! {
         gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
-            set_spacing: 5,
+            set_spacing: 20,
             set_margin_all: 5,
-            set_valign: Align::Start,
+            set_valign: Align::Fill,
+            set_vexpand: true,
 
-            #[name = "networks"]
-            gtk::ListBox {},
+            gtk::Box {
+                set_orientation: gtk::Orientation::Horizontal,
+                set_spacing: 10,
+                set_margin_all: 5,
+                set_valign: Align::Start,
+                set_halign: Align::Center,
 
-            gtk::Button {
-                set_icon_name: "list-add",
-                set_margin_all: 12,
+                gtk::Label {
+                    set_label: "Add Network",
+                },
 
-                connect_clicked => NetworksMsg::NetworkAdd,
+                gtk::Button {
+                    set_icon_name: "list-add",
+                    set_margin_all: 12,
+
+                    connect_clicked => NetworksMsg::NetworkAdd,
+                },
             },
+
+
+            gtk::ScrolledWindow {
+                set_valign: Align::Fill,
+                set_vexpand: true,
+                set_margin_bottom: 50,
+                set_margin_start: 50,
+                set_margin_end: 50,
+
+                #[name = "networks"]
+                gtk::ListBox {
+                    set_vexpand: true,
+                },
+            }
         }
     }
 
@@ -86,10 +110,30 @@ impl AsyncComponent for Networks {
                     enabled: false,
                 })
                 .forward(sender.input_sender(), |_| NetworksMsg::None),
+            NetworkCard::builder()
+                .launch(NetworkCardInit {
+                    id: 2,
+                    index: 2,
+                    index_max: 3,
+                    daemon_client: Arc::clone(&init.daemon_client),
+                    name: "Yay".to_owned(),
+                    enabled: false,
+                })
+                .forward(sender.input_sender(), |_| NetworksMsg::None),
+            NetworkCard::builder()
+                .launch(NetworkCardInit {
+                    id: 2,
+                    index: 2,
+                    index_max: 3,
+                    daemon_client: Arc::clone(&init.daemon_client),
+                    name: "Yay".to_owned(),
+                    enabled: false,
+                })
+                .forward(sender.input_sender(), |_| NetworksMsg::None),
         ];
-        widgets.networks.append(network_cards[0].widget());
-        widgets.networks.append(network_cards[1].widget());
-        widgets.networks.append(network_cards[2].widget());
+        for network_card in network_cards.iter() {
+            widgets.networks.append(network_card.widget());
+        }
         // let network_cards = vec![];
 
         let model = Networks {

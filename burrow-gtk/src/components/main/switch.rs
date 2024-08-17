@@ -48,14 +48,13 @@ impl AsyncComponent for Switch {
             },
 
             gtk::Box {
-                set_orientation: gtk::Orientation::Vertical,
+                set_orientation: gtk::Orientation::Horizontal,
                 set_spacing: 10,
                 set_margin_all: 5,
-                set_valign: Align::Center,
-                set_vexpand: true,
+                set_halign: Align::Center,
 
                 gtk::Label {
-                    set_label: "Burrow Switch",
+                    set_label: "Burrow Tunnel",
                 },
 
                 #[name(switch)]

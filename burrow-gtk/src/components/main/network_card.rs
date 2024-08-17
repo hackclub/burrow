@@ -32,36 +32,54 @@ impl AsyncComponent for NetworkCard {
 
     view! {
         gtk::ListBoxRow {
+            set_halign: Align::Fill,
+            set_margin_vertical: 5,
+            set_margin_horizontal: 25,
             set_hexpand: true,
-            set_halign: Align::Center,
+
             gtk::Box {
-                gtk::Label {
-                    set_label: &init.name
+                set_halign: Align::Fill,
+                set_hexpand: true,
+                set_spacing: 10,
+
+                gtk::Box {
+                    set_halign: Align::Start,
+
+                    gtk::Switch {
+                        set_active: init.enabled,
+                    },
                 },
-                gtk::Switch {
+
+                gtk::Box {
                     set_halign: Align::Center,
-                    set_hexpand: false,
-                    set_vexpand: false,
-                    set_state: init.enabled,
-                },
-                gtk::Button {
-                    set_icon_name: "list-remove",
-                    set_margin_all: 12,
+                    set_hexpand: true,
 
-                    connect_clicked => NetworkCardMsg::NetworkDelete,
+                    gtk::Label {
+                        set_label: &init.name
+                    },
                 },
-                gtk::Button {
-                    set_icon_name: "pan-up-symbolic",
-                    set_margin_all: 12,
 
-                    connect_clicked => NetworkCardMsg::MoveUp,
-                },
-                gtk::Button {
-                    set_icon_name: "pan-down-symbolic",
-                    set_margin_all: 12,
 
-                    connect_clicked => NetworkCardMsg::MoveDown,
-                },
+                gtk::Box {
+                    set_halign: Align::End,
+                    set_spacing: 5,
+
+                    gtk::Button {
+                        set_icon_name: "list-remove",
+
+                        connect_clicked => NetworkCardMsg::NetworkDelete,
+                    },
+                    gtk::Button {
+                        set_icon_name: "pan-up-symbolic",
+
+                        connect_clicked => NetworkCardMsg::MoveUp,
+                    },
+                    gtk::Button {
+                        set_icon_name: "pan-down-symbolic",
+
+                        connect_clicked => NetworkCardMsg::MoveDown,
+                    },
+                }
             }
         }
     }
@@ -86,7 +104,7 @@ impl AsyncComponent for NetworkCard {
     async fn update(
         &mut self,
         msg: Self::Input,
-        _: AsyncComponentSender<Self>,
+        _sender: AsyncComponentSender<Self>,
         _root: &Self::Root,
     ) {
         match msg {

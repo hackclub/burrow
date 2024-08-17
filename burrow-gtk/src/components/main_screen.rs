@@ -29,7 +29,7 @@ impl AsyncComponent for MainScreen {
         gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
             set_valign: Align::Fill,
-            set_valign: Align::Center,
+            set_vexpand: true,
 
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
@@ -43,25 +43,13 @@ impl AsyncComponent for MainScreen {
                 },
             },
 
-            gtk::Box {
-                set_orientation: gtk::Orientation::Vertical,
-                set_spacing: 10,
-                set_margin_all: 5,
-                set_valign: Align::Center,
-                set_vexpand: true,
-            },
-
             #[name(content)]
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
                 set_spacing: 10,
                 set_margin_all: 5,
-                set_valign: Align::Center,
+                set_valign: Align::Fill,
                 set_vexpand: true,
-
-                gtk::Label {
-                    set_label: "Main Screen",
-                },
             }
         }
     }
@@ -85,8 +73,8 @@ impl AsyncComponent for MainScreen {
 
         let widgets = view_output!();
 
-        widgets.content.append(networks.widget());
         widgets.content.append(switch.widget());
+        widgets.content.append(networks.widget());
 
         let model = MainScreen {
             _switch: switch,
