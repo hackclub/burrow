@@ -6,4 +6,4 @@ mod switch;
 
 pub use network_card::{NetworkCard, NetworkCardInit};
 pub use networks::{Networks, NetworksInit};
-pub use switch::{Switch, SwitchInit, SwitchMsg};
+pub use switch::{Switch, SwitchInit};

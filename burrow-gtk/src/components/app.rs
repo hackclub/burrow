@@ -2,7 +2,7 @@ use super::*;
 use anyhow::Context;
 use std::time::Duration;
 
-const RECONNECT_POLL_TIME: Duration = Duration::from_secs(5);
+const RECONNECT_POLL_TIME: Duration = Duration::from_secs(3);
 
 pub struct App {
     daemon_client: Arc<Mutex<Option<Channel>>>,
@@ -58,7 +58,16 @@ impl AsyncComponent for App {
         root: Self::Root,
         sender: AsyncComponentSender<Self>,
     ) -> AsyncComponentParts<Self> {
-        let daemon_client = Arc::new(Mutex::new(daemon::daemon_connect().await.ok()));
+        // TODO: RPC REFACTOR (Handle Error)
+        let mut daemon_client_connected = false;
+        let daemon_client = Arc::new(Mutex::new(
+            daemon::daemon_connect()
+                .await
+                .inspect(|_| {
+                    daemon_client_connected = true;
+                })
+                .ok(),
+        ));
 
         let main_screen = main_screen::MainScreen::builder()
             .launch(main_screen::MainScreenInit {
@@ -71,6 +80,17 @@ impl AsyncComponent for App {
                 daemon_client: Arc::clone(&daemon_client),
             })
             .forward(sender.input_sender(), |_| AppMsg::None);
+
+        if !daemon_client_connected {
+            main_screen
+                .sender()
+                .send(main_screen::MainScreenMsg::DaemonDisconnect)
+                .unwrap();
+            settings_screen
+                .sender()
+                .send(settings_screen::SettingsScreenMsg::DaemonStateChange)
+                .unwrap();
+        }
 
         let widgets = view_output!();
 
@@ -126,15 +146,20 @@ impl AsyncComponent for App {
                 let mut daemon_client = self.daemon_client.lock().await;
                 let mut disconnected_daemon_client = false;
 
-                if let Some(daemon_client) = daemon_client.as_mut() {
-                    let mut client = tunnel_client::TunnelClient::new(daemon_client);
-                    if let Err(_e) = client.tunnel_status(burrow_rpc::Empty {}).await {
-                        disconnected_daemon_client = true;
-                        self.main_screen
-                            .emit(main_screen::MainScreenMsg::DaemonDisconnect);
-                        self.settings_screen
-                            .emit(settings_screen::SettingsScreenMsg::DaemonStateChange)
+                if let Some(client) = daemon_client.as_mut() {
+                    let mut client = tunnel_client::TunnelClient::new(client);
+
+                    if let Ok(mut res) = client.tunnel_status(burrow_rpc::Empty {}).await {
+                        let stream = res.get_mut();
+                        while let Ok(Some(_)) = stream.message().await {}
                     }
+
+                    *daemon_client = None;
+                    disconnected_daemon_client = true;
+                    self.main_screen
+                        .emit(main_screen::MainScreenMsg::DaemonDisconnect);
+                    self.settings_screen
+                        .emit(settings_screen::SettingsScreenMsg::DaemonStateChange)
                 }
 
                 if disconnected_daemon_client || daemon_client.is_none() {

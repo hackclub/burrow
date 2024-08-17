@@ -86,30 +86,28 @@ impl AsyncComponent for NetworkCard {
     async fn update(
         &mut self,
         msg: Self::Input,
-        sender: AsyncComponentSender<Self>,
+        _: AsyncComponentSender<Self>,
         _root: &Self::Root,
     ) {
         match msg {
             NetworkCardMsg::NetworkDelete => {
                 if let Some(daemon_client) = self.daemon_client.lock().await.as_mut() {
                     let mut client = networks_client::NetworksClient::new(daemon_client);
-                    client
+                    let _ = client
                         .network_delete(burrow_rpc::NetworkDeleteRequest { id: self.id })
-                        .await
-                        .unwrap();
+                        .await;
                 }
             }
             NetworkCardMsg::MoveUp => {
                 if self.index.checked_sub(1).is_some() {
                     if let Some(daemon_client) = self.daemon_client.lock().await.as_mut() {
                         let mut client = networks_client::NetworksClient::new(daemon_client);
-                        client
+                        let _ = client
                             .network_reorder(burrow_rpc::NetworkReorderRequest {
                                 id: self.id,
                                 index: self.index as i32 - 1,
                             })
-                            .await
-                            .unwrap();
+                            .await;
                     }
                 }
             }
@@ -117,13 +115,12 @@ impl AsyncComponent for NetworkCard {
                 if self.index + 1 < self.index_max {
                     if let Some(daemon_client) = self.daemon_client.lock().await.as_mut() {
                         let mut client = networks_client::NetworksClient::new(daemon_client);
-                        client
+                        let _ = client
                             .network_reorder(burrow_rpc::NetworkReorderRequest {
                                 id: self.id,
                                 index: self.index as i32 + 1,
                             })
-                            .await
-                            .unwrap();
+                            .await;
                     }
                 }
             }
