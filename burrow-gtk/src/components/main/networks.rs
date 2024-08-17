@@ -7,6 +7,8 @@ pub struct Networks {
     daemon_client: Arc<Mutex<Option<Channel>>>,
     network_cards: Vec<AsyncController<NetworkCard>>,
     networks_list_box: gtk::ListBox,
+
+    _network_state_worker: WorkerController<AsyncNetworkStateHandler>,
 }
 
 pub struct NetworksInit {
@@ -94,6 +96,10 @@ impl AsyncComponent for Networks {
             daemon_client: init.daemon_client,
             network_cards,
             networks_list_box: widgets.networks.clone(),
+
+            _network_state_worker: AsyncNetworkStateHandler::builder()
+                .detach_worker(())
+                .forward(sender.input_sender(), |msg| msg),
         };
 
         AsyncComponentParts { model, widgets }
@@ -132,7 +138,7 @@ impl AsyncComponent for Networks {
             NetworksMsg::NetworkAdd => {
                 if let Some(daemon_client) = self.daemon_client.lock().await.as_mut() {
                     let mut client = networks_client::NetworksClient::new(daemon_client);
-                    client.network_add(burrow_rpc::Empty {}).await.unwrap();
+                    let _ = client.network_add(burrow_rpc::Empty {}).await;
                 }
             }
             _ => {}
@@ -147,7 +153,8 @@ impl Worker for AsyncNetworkStateHandler {
     type Input = ();
     type Output = NetworksMsg;
 
-    fn init(_: Self::Init, _sender: ComponentSender<Self>) -> Self {
+    fn init(_: Self::Init, sender: ComponentSender<Self>) -> Self {
+        sender.input(());
         Self
     }
 

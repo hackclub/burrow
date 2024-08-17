@@ -1,8 +1,10 @@
 use super::*;
 
 pub struct MainScreen {
-    switch: AsyncController<main::Switch>,
-    networks: AsyncController<main::Networks>,
+    _switch: AsyncController<main::Switch>,
+    _networks: AsyncController<main::Networks>,
+    content_box: gtk::Box,
+    daemon_status_banner: adw::Banner,
 }
 
 pub struct MainScreenInit {
@@ -29,17 +31,17 @@ impl AsyncComponent for MainScreen {
             set_valign: Align::Fill,
             set_valign: Align::Center,
 
-            // gtk::Box {
-            //     set_orientation: gtk::Orientation::Vertical,
-            //     set_spacing: 5,
-            //     set_margin_all: 5,
-            //     set_valign: Align::Start,
+            gtk::Box {
+                set_orientation: gtk::Orientation::Vertical,
+                set_spacing: 5,
+                set_margin_all: 5,
+                set_valign: Align::Start,
 
-            //     #[name(setup_banner)]
-            //     adw::Banner {
-            //         set_title: "Burrow is not running!",
-            //     },
-            // },
+                #[name(daemon_status_banner)]
+                adw::Banner {
+                    set_title: "Burrow is not running!",
+                },
+            },
 
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
@@ -86,7 +88,12 @@ impl AsyncComponent for MainScreen {
         widgets.content.append(networks.widget());
         widgets.content.append(switch.widget());
 
-        let model = MainScreen { switch, networks };
+        let model = MainScreen {
+            _switch: switch,
+            _networks: networks,
+            content_box: widgets.content.clone(),
+            daemon_status_banner: widgets.daemon_status_banner.clone(),
+        };
 
         AsyncComponentParts { model, widgets }
     }
@@ -99,10 +106,12 @@ impl AsyncComponent for MainScreen {
     ) {
         match msg {
             MainScreenMsg::DaemonDisconnect => {
-                self.switch.emit(main::SwitchMsg::DaemonDisconnect);
+                self.daemon_status_banner.set_revealed(true);
+                self.content_box.set_sensitive(false);
             }
             MainScreenMsg::DaemonReconnect => {
-                self.switch.emit(main::SwitchMsg::DaemonReconnect);
+                self.daemon_status_banner.set_revealed(false);
+                self.content_box.set_sensitive(true);
             }
             _ => {}
         }
