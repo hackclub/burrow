@@ -7,6 +7,7 @@ use relm4::{
         AsyncController,
     },
     prelude::*,
+    Worker, WorkerController,
 };
 use std::sync::Arc;
 use tokio::sync::Mutex;
