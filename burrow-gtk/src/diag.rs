@@ -4,7 +4,6 @@ use std::{fmt::Display, fs, process::Command};
 const SYSTEMD_SOCKET_LOC: &str = "/etc/systemd/system/burrow.socket";
 const SYSTEMD_SERVICE_LOC: &str = "/etc/systemd/system/burrow.service";
 
-//  I don't like this type very much.
 #[derive(Debug, Clone, Copy)]
 pub enum StatusTernary {
     True,
@@ -33,35 +32,41 @@ impl SystemSetup {
         }
     }
 
-    pub fn is_service_installed(&self) -> Result<StatusTernary> {
+    pub fn is_service_installed(&self) -> StatusTernary {
         match self {
-            SystemSetup::Systemd => Ok(fs::metadata(SYSTEMD_SERVICE_LOC).is_ok().into()),
-            SystemSetup::AppImage => Ok(StatusTernary::NA),
-            SystemSetup::Other => Ok(StatusTernary::NA),
+            SystemSetup::Systemd => fs::metadata(SYSTEMD_SERVICE_LOC).is_ok().into(),
+            SystemSetup::AppImage => StatusTernary::NA,
+            SystemSetup::Other => StatusTernary::NA,
         }
     }
 
-    pub fn is_socket_installed(&self) -> Result<StatusTernary> {
+    pub fn is_socket_installed(&self) -> StatusTernary {
         match self {
-            SystemSetup::Systemd => Ok(fs::metadata(SYSTEMD_SOCKET_LOC).is_ok().into()),
-            SystemSetup::AppImage => Ok(StatusTernary::NA),
-            SystemSetup::Other => Ok(StatusTernary::NA),
+            SystemSetup::Systemd => fs::metadata(SYSTEMD_SOCKET_LOC).is_ok().into(),
+            SystemSetup::AppImage => StatusTernary::NA,
+            SystemSetup::Other => StatusTernary::NA,
         }
     }
 
-    pub fn is_socket_enabled(&self) -> Result<StatusTernary> {
+    pub fn is_socket_enabled(&self) -> StatusTernary {
         match self {
             SystemSetup::Systemd => {
-                let output = Command::new("systemctl")
+                let Ok(output) = Command::new("systemctl")
                     .arg("is-enabled")
                     .arg("burrow.socket")
-                    .output()?
-                    .stdout;
-                let output = String::from_utf8(output)?;
-                Ok((output == "enabled\n").into())
+                    .output()
+                    .map(|o| o.stdout)
+                    .inspect_err(|e| {
+                        error!("Failed to run `systemctl is-enabled burrow.socket` {}", e)
+                    })
+                else {
+                    return StatusTernary::NA;
+                };
+                let output = String::from_utf8(output).unwrap();
+                (output == "enabled\n").into()
             }
-            SystemSetup::AppImage => Ok(StatusTernary::NA),
-            SystemSetup::Other => Ok(StatusTernary::NA),
+            SystemSetup::AppImage => StatusTernary::NA,
+            SystemSetup::Other => StatusTernary::NA,
         }
     }
 }

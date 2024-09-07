@@ -17,18 +17,18 @@ pub struct DiagGroupInit {
 }
 
 impl DiagGroup {
-    async fn new(daemon_client: Arc<Mutex<Option<Channel>>>) -> Result<Self> {
+    async fn new(daemon_client: Arc<Mutex<Option<Channel>>>) -> Self {
         let system_setup = SystemSetup::new();
         let daemon_running = daemon_client.lock().await.is_some();
 
-        Ok(Self {
-            service_installed: system_setup.is_service_installed()?,
-            socket_installed: system_setup.is_socket_installed()?,
-            socket_enabled: system_setup.is_socket_enabled()?,
+        Self {
+            service_installed: system_setup.is_service_installed(),
+            socket_installed: system_setup.is_socket_installed(),
+            socket_enabled: system_setup.is_socket_enabled(),
             daemon_running,
             system_setup,
             daemon_client,
-        })
+        }
     }
 }
 
@@ -95,7 +95,7 @@ impl AsyncComponent for DiagGroup {
         sender: AsyncComponentSender<Self>,
     ) -> AsyncComponentParts<Self> {
         //  Should be impossible to panic here
-        let model = DiagGroup::new(init.daemon_client).await.unwrap();
+        let model = DiagGroup::new(init.daemon_client).await;
 
         let widgets = view_output!();
 
@@ -111,7 +111,7 @@ impl AsyncComponent for DiagGroup {
         match msg {
             DiagGroupMsg::Refresh => {
                 //  Should be impossible to panic here
-                *self = Self::new(Arc::clone(&self.daemon_client)).await.unwrap();
+                *self = Self::new(Arc::clone(&self.daemon_client)).await;
             }
         }
     }
