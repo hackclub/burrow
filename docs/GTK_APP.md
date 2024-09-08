@@ -15,7 +15,7 @@ Note that the flatpak version can compile but will not run properly!
   1. Install build dependencies
 
   ```
-  sudo apt install -y clang meson cmake pkg-config libgtk-4-dev libadwaita-1-dev gettext desktop-file-utils
+  sudo apt install -y clang meson cmake pkg-config libgtk-4-dev libadwaita-1-dev gettext desktop-file-utils libsqlite3-dev protobuf-compiler libprotobuf-dev
   ```
 
   2. Install flatpak builder (Optional)
@@ -38,7 +38,7 @@ Note that the flatpak version can compile but will not run properly!
   1. Install build dependencies
 
   ```
-  sudo dnf install -y clang ninja-build cmake meson gtk4-devel glib2-devel libadwaita-devel desktop-file-utils libappstream-glib
+  sudo dnf install -y clang ninja-build cmake meson gtk4-devel glib2-devel libadwaita-devel desktop-file-utils libappstream-glib sqlite-devel protobuf-compiler protobuf-devel
   ```
 
   2. Install flatpak builder (Optional)
@@ -50,7 +50,7 @@ Note that the flatpak version can compile but will not run properly!
   3. Install AppImage build tools (Optional)
   
   ```
-  sudo dnf install -y util-linux wget fuse fuse-libs file
+  sudo dnf install -y util-linux wget fuse fuse-libs file 
   ```
 
 </details>
@@ -61,7 +61,7 @@ Note that the flatpak version can compile but will not run properly!
   1. Install build dependencies
 
   ```
-  sudo xbps-install -Sy gcc clang meson cmake pkg-config gtk4-devel gettext desktop-file-utils gtk4-update-icon-cache appstream-glib
+  sudo xbps-install -Sy gcc clang meson cmake pkg-config gtk4-devel gettext desktop-file-utils gtk4-update-icon-cache appstream-glib sqlite-devel protobuf protobuf-devel
   ```
 
   2. Install flatpak builder (Optional)
