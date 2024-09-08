@@ -38,6 +38,11 @@ jobs:
         app-store-key: ${{ secrets.APPSTORE_KEY }}
         app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
         app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
+    - name: Install Provisioning Profiles
+      shell: bash
+      run: |
+        mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
+        cp -f Apple/Profiles/* ~/Library/MobileDevice/Provisioning\ Profiles/
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
