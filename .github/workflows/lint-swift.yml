@@ -13,4 +13,4 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Lint
-      run: swiftlint lint --reporter github-actions-logging
+      run: swiftlint lint --strict --reporter github-actions-logging

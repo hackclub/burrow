@@ -24,7 +24,7 @@ jobs:
           - x86_64-apple-darwin
           - aarch64-apple-darwin
     env:
-      DEVELOPER_DIR: /Applications/Xcode_15.4.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_16.0.app/Contents/Developer
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -40,8 +40,9 @@ jobs:
       with:
         targets: ${{ join(matrix.rust-targets, ', ') }}
     - name: Configure Version
+      id: version
       shell: bash
-      run: Tools/version.sh
+      run: echo "BUILD_NUMBER=$(Tools/version.sh)" >> $GITHUB_OUTPUT
     - name: Archive
       uses: ./.github/actions/archive
       with:
