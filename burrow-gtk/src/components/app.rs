@@ -2,12 +2,12 @@ use super::*;
 use anyhow::Context;
 use std::time::Duration;
 
-const RECONNECT_POLL_TIME: Duration = Duration::from_secs(5);
+const RECONNECT_POLL_TIME: Duration = Duration::from_secs(3);
 
 pub struct App {
-    daemon_client: Arc<Mutex<Option<DaemonClient>>>,
+    daemon_client: Arc<Mutex<Option<Channel>>>,
     settings_screen: Controller<settings_screen::SettingsScreen>,
-    switch_screen: AsyncController<switch_screen::SwitchScreen>,
+    main_screen: AsyncController<main_screen::MainScreen>,
 }
 
 #[derive(Debug)]
@@ -49,7 +49,7 @@ impl AsyncComponent for App {
     view! {
         adw::Window {
             set_title: Some("Burrow"),
-            set_default_size: (640, 480),
+            set_default_size: (640, 800),
         }
     }
 
@@ -58,10 +58,19 @@ impl AsyncComponent for App {
         root: Self::Root,
         sender: AsyncComponentSender<Self>,
     ) -> AsyncComponentParts<Self> {
-        let daemon_client = Arc::new(Mutex::new(DaemonClient::new().await.ok()));
+        // TODO: RPC REFACTOR (Handle Error)
+        let mut daemon_client_connected = false;
+        let daemon_client = Arc::new(Mutex::new(
+            daemon::daemon_connect()
+                .await
+                .inspect(|_| {
+                    daemon_client_connected = true;
+                })
+                .ok(),
+        ));
 
-        let switch_screen = switch_screen::SwitchScreen::builder()
-            .launch(switch_screen::SwitchScreenInit {
+        let main_screen = main_screen::MainScreen::builder()
+            .launch(main_screen::MainScreenInit {
                 daemon_client: Arc::clone(&daemon_client),
             })
             .forward(sender.input_sender(), |_| AppMsg::None);
@@ -72,10 +81,21 @@ impl AsyncComponent for App {
             })
             .forward(sender.input_sender(), |_| AppMsg::None);
 
+        if !daemon_client_connected {
+            main_screen
+                .sender()
+                .send(main_screen::MainScreenMsg::DaemonDisconnect)
+                .unwrap();
+            settings_screen
+                .sender()
+                .send(settings_screen::SettingsScreenMsg::DaemonStateChange)
+                .unwrap();
+        }
+
         let widgets = view_output!();
 
         let view_stack = adw::ViewStack::new();
-        view_stack.add_titled(switch_screen.widget(), None, "Switch");
+        view_stack.add_titled(main_screen.widget(), None, "Burrow");
         view_stack.add_titled(settings_screen.widget(), None, "Settings");
 
         let view_switcher_bar = adw::ViewSwitcherBar::builder().stack(&view_stack).build();
@@ -108,7 +128,7 @@ impl AsyncComponent for App {
 
         let model = App {
             daemon_client,
-            switch_screen,
+            main_screen,
             settings_screen,
         };
 
@@ -122,27 +142,32 @@ impl AsyncComponent for App {
         _root: &Self::Root,
     ) {
         loop {
-            tokio::time::sleep(RECONNECT_POLL_TIME).await;
             {
                 let mut daemon_client = self.daemon_client.lock().await;
                 let mut disconnected_daemon_client = false;
 
-                if let Some(daemon_client) = daemon_client.as_mut() {
-                    if let Err(_e) = daemon_client.send_command(DaemonCommand::ServerInfo).await {
-                        disconnected_daemon_client = true;
-                        self.switch_screen
-                            .emit(switch_screen::SwitchScreenMsg::DaemonDisconnect);
-                        self.settings_screen
-                            .emit(settings_screen::SettingsScreenMsg::DaemonStateChange)
+                if let Some(client) = daemon_client.as_mut() {
+                    let mut client = tunnel_client::TunnelClient::new(client);
+
+                    if let Ok(mut res) = client.tunnel_status(burrow_rpc::Empty {}).await {
+                        let stream = res.get_mut();
+                        while let Ok(Some(_)) = stream.message().await {}
                     }
+
+                    *daemon_client = None;
+                    disconnected_daemon_client = true;
+                    self.main_screen
+                        .emit(main_screen::MainScreenMsg::DaemonDisconnect);
+                    self.settings_screen
+                        .emit(settings_screen::SettingsScreenMsg::DaemonStateChange)
                 }
 
                 if disconnected_daemon_client || daemon_client.is_none() {
-                    match DaemonClient::new().await {
+                    match daemon::daemon_connect().await {
                         Ok(new_daemon_client) => {
                             *daemon_client = Some(new_daemon_client);
-                            self.switch_screen
-                                .emit(switch_screen::SwitchScreenMsg::DaemonReconnect);
+                            self.main_screen
+                                .emit(main_screen::MainScreenMsg::DaemonReconnect);
                             self.settings_screen
                                 .emit(settings_screen::SettingsScreenMsg::DaemonStateChange)
                         }
@@ -152,6 +177,7 @@ impl AsyncComponent for App {
                     }
                 }
             }
+            tokio::time::sleep(RECONNECT_POLL_TIME).await;
         }
     }
 }

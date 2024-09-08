@@ -7,7 +7,7 @@ pub struct SettingsScreen {
 }
 
 pub struct SettingsScreenInit {
-    pub daemon_client: Arc<Mutex<Option<DaemonClient>>>,
+    pub daemon_client: Arc<Mutex<Option<Channel>>>,
 }
 
 #[derive(Debug, PartialEq, Eq)]

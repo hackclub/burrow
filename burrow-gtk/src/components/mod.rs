@@ -1,6 +1,5 @@
 use super::*;
 use adw::prelude::*;
-use burrow::{DaemonClient, DaemonCommand, DaemonResponseData};
 use gtk::Align;
 use relm4::{
     component::{
@@ -8,14 +7,23 @@ use relm4::{
         AsyncController,
     },
     prelude::*,
+    Worker, WorkerController,
 };
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+pub mod burrow_rpc {
+    tonic::include_proto!("burrow");
+}
+use burrow_rpc::{networks_client, tunnel_client};
+use tonic::transport::Channel;
+
 mod app;
+mod main;
+mod main_screen;
 mod settings;
 mod settings_screen;
-mod switch_screen;
+// mod switch_screen;
 
 pub use app::*;
 pub use settings::{DaemonGroupMsg, DiagGroupMsg};
