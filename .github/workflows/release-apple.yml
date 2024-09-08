@@ -24,12 +24,18 @@ jobs:
           - x86_64-apple-darwin
           - aarch64-apple-darwin
     env:
-      DEVELOPER_DIR: /Applications/Xcode_15.4.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_16.0.app/Contents/Developer
     steps:
     - name: Checkout
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+    - name: Download Provisioning Profiles
+      uses: ./.github/actions/download-profiles
+      with:
+        app-store-key: ${{ secrets.APPSTORE_KEY }}
+        app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+        app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
     - name: Import Certificate
       uses: ./.github/actions/import-cert
       with:
@@ -40,8 +46,9 @@ jobs:
       with:
         targets: ${{ join(matrix.rust-targets, ', ') }}
     - name: Configure Version
+      id: version
       shell: bash
-      run: Tools/version.sh
+      run: echo "BUILD_NUMBER=$(Tools/version.sh)" >> $GITHUB_OUTPUT
     - name: Archive
       uses: ./.github/actions/archive
       with:
