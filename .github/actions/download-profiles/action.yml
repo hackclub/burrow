@@ -13,15 +13,18 @@ runs:
   using: composite
   steps:
   - shell: bash
+    env:
+      FASTLANE_OPT_OUT_USAGE: 'YES'
     run: |
+      APP_STORE_KEY=$(echo "${{ inputs.app-store-key }}" | jq -sR .)
       cat << EOF > api-key.json
       {
         "key_id": "${{ inputs.app-store-key-id }}",
         "issuer_id": "${{ inputs.app-store-key-issuer-id }}",
-        "key": "${{ inputs.app-store-key }}"
+        "key": $APP_STORE_KEY
       }
       EOF
 
-      fastlane sigh download_all --api_key_path api-key.json --download_xcode_profiles
+      fastlane sigh download_all --api_key_path api-key.json
 
       rm -rf api-key.json

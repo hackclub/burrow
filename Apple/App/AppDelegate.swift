@@ -2,7 +2,8 @@
 import AppKit
 import SwiftUI
 
-@MainActor @main
+@main
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     private let quitItem: NSMenuItem = {
         let quitItem = NSMenuItem(
