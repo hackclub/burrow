@@ -13,13 +13,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - 
-          destination: generic/platform=iOS
-          platform: iOS
+        - platform: iOS
           rust-targets:
           - aarch64-apple-ios
-        - destination: generic/platform=macOS
-          platform: macOS
+        - platform: macOS
           rust-targets:
           - x86_64-apple-darwin
           - aarch64-apple-darwin
@@ -35,6 +32,12 @@ jobs:
       with:
         certificate: ${{ secrets.DEVELOPER_CERT }}
         password: ${{ secrets.DEVELOPER_CERT_PASSWORD }}
+    - name: Download Provisioning Profiles
+      uses: ./.github/actions/download-profiles
+      with:
+        app-store-key: ${{ secrets.APPSTORE_KEY }}
+        app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+        app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
@@ -47,7 +50,7 @@ jobs:
       uses: ./.github/actions/archive
       with:
         scheme: App
-        destination: ${{ matrix.destination }}
+        destination: generic/platform=${{ matrix.platform }}
         app-store-key: ${{ secrets.APPSTORE_KEY }}
         app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
         app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
@@ -61,6 +64,8 @@ jobs:
         app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
         app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
         archive-path: Burrow.xcarchive
+        export-options: |
+          {"teamID":"P6PV2R9443","destination":"export","method":"developer-id","provisioningProfiles":{"com.hackclub.burrow":"Burrow Developer ID","com.hackclub.burrow.network":"Burrow Network Developer ID"},"signingCertificate":"Developer ID Application","signingStyle":"manual"}
         export-path: Release
     - name: Notarize
       if: ${{ matrix.platform == 'macOS' }}
@@ -96,10 +101,10 @@ jobs:
       if: ${{ matrix.platform == 'iOS' }}
       uses: ./.github/actions/export
       with:
-        method: app-store
-        destination: upload
         app-store-key: ${{ secrets.APPSTORE_KEY }}
         app-store-key-id: ${{ secrets.APPSTORE_KEY_ID }}
         app-store-key-issuer-id: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
         archive-path: Burrow.xcarchive
+        export-options: |
+          {"method": "app-store", "destination": "upload"}
         export-path: Release
