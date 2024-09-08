@@ -58,7 +58,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y ${{ join(matrix.packages, ' ') }}
-    - name: Install Windows Deps
+    - name: Configure LLVM
       if: matrix.os == 'windows-2022'
       shell: bash
       run: echo "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\Llvm\x64\bin" >> $GITHUB_PATH

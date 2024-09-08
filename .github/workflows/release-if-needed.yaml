@@ -9,6 +9,8 @@ jobs:
   create:
     name: Create Release If Needed
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4

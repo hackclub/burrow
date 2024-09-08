@@ -1,0 +1,27 @@
+name: Download Provisioning Profiles
+inputs:
+  app-store-key:
+    description: App Store key in PEM PKCS#8 format
+    required: true
+  app-store-key-id:
+    description: App Store key ID
+    required: true
+  app-store-key-issuer-id:
+    description: App Store key issuer ID
+    required: true
+runs:
+  using: composite
+  steps:
+  - shell: bash
+    run: |
+      cat << EOF > api-key.json
+      {
+        "key_id": "${{ inputs.app-store-key-id }}",
+        "issuer_id": "${{ inputs.app-store-key-issuer-id }}",
+        "key": "${{ inputs.app-store-key }}"
+      }
+      EOF
+
+      fastlane sigh download_all --api_key_path api-key.json --download_xcode_profiles
+
+      rm -rf api-key.json
