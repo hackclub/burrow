@@ -27,7 +27,9 @@ runs:
         Apple/DerivedData
       key: ${{ runner.os }}-${{ inputs.scheme }}-${{ hashFiles('**/Package.resolved') }}
       restore-keys: |
+        ${{ runner.os }}-${{ inputs.scheme }}-${{ hashFiles('**/Package.resolved') }}
         ${{ runner.os }}-${{ inputs.scheme }}-
+        ${{ runner.os }}-
   - name: Build
     shell: bash
     working-directory: Apple

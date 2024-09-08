@@ -42,7 +42,6 @@ struct BurrowView: View {
     }
 
     private func addWireGuardNetwork() {
-        
     }
 
     private func authenticateWithSlack() async throws {

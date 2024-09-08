@@ -1,6 +1,6 @@
 import AuthenticationServices
-import SwiftUI
 import Foundation
+import SwiftUI
 
 enum OAuth2 {
     enum Error: Swift.Error {
@@ -35,7 +35,7 @@ enum OAuth2 {
             }
         }
 
-        public init(
+        init(
             authorizationEndpoint: URL,
             tokenEndpoint: URL,
             redirectURI: URL,
@@ -125,7 +125,11 @@ enum OAuth2 {
         var refreshToken: String?
 
         var credential: Credential {
-            .init(accessToken: accessToken, refreshToken: refreshToken, expirationDate: expiresIn.map { Date.init(timeIntervalSinceNow: $0) })
+            .init(
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+                expirationDate: expiresIn.map { Date(timeIntervalSinceNow: $0) }
+            )
         }
     }
 
@@ -203,7 +207,24 @@ enum OAuth2 {
 }
 
 extension WebAuthenticationSession {
-    func start(url: URL, redirectURI: URL) async throws -> URL {
+#if canImport(BrowserEngineKit)
+    @available(iOS 17.4, macOS 14.4, tvOS 17.4, watchOS 10.4, *)
+    fileprivate static func callback(for redirectURI: URL) throws -> ASWebAuthenticationSession.Callback {
+        switch redirectURI.scheme {
+        case "https":
+            guard let host = redirectURI.host else { throw OAuth2.Error.invalidRedirectURI }
+            return .https(host: host, path: redirectURI.path)
+        case "http":
+            throw OAuth2.Error.invalidRedirectURI
+        case .some(let scheme):
+            return .customScheme(scheme)
+        case .none:
+            throw OAuth2.Error.invalidRedirectURI
+        }
+    }
+#endif
+
+    fileprivate func start(url: URL, redirectURI: URL) async throws -> URL {
         #if canImport(BrowserEngineKit)
         if #available(iOS 17.4, macOS 14.4, tvOS 17.4, watchOS 10.4, *) {
             return try await authenticate(
@@ -231,23 +252,6 @@ extension WebAuthenticationSession {
             return url
         }
     }
-
-    #if canImport(BrowserEngineKit)
-    @available(iOS 17.4, macOS 14.4, tvOS 17.4, watchOS 10.4, *)
-    fileprivate static func callback(for redirectURI: URL) throws -> ASWebAuthenticationSession.Callback {
-        switch redirectURI.scheme {
-        case "https":
-            guard let host = redirectURI.host else { throw OAuth2.Error.invalidRedirectURI }
-            return .https(host: host, path: redirectURI.path)
-        case "http":
-            throw OAuth2.Error.invalidRedirectURI
-        case .some(let scheme):
-            return .customScheme(scheme)
-        case .none:
-            throw OAuth2.Error.invalidRedirectURI
-        }
-    }
-    #endif
 }
 
 extension View {
