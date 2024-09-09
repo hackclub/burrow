@@ -1,10 +1,15 @@
 use std::{
+    ffi::CStr,
     io::Error,
+    mem,
     mem::MaybeUninit,
+    net::{IpAddr, SocketAddr},
     os::fd::{AsRawFd, FromRawFd, IntoRawFd, RawFd},
 };
 
 use tracing::instrument;
+
+use crate::syscall;
 
 mod queue;
 
@@ -59,6 +64,47 @@ impl TunInterface {
     #[instrument]
     pub fn set_nonblocking(&mut self, nb: bool) {
         self.socket.set_nonblocking(nb)?;
+    }
+
+    #[throws]
+    #[instrument]
+    pub fn ip_addrs(&self) -> Vec<IpAddr> {
+        let mut result: Vec<IpAddr> = vec![];
+        let mut addrs: *mut libc::ifaddrs = std::ptr::null_mut();
+        let if_name = self.name()?;
+        syscall!(getifaddrs(&mut addrs as *mut _))?;
+        unsafe {
+            while !addrs.is_null() {
+                let addr = &*addrs;
+                addrs = addr.ifa_next;
+
+                let name = CStr::from_ptr(addr.ifa_name).to_str().unwrap();
+                if if_name != name {
+                    continue;
+                }
+                let family = (*addr.ifa_addr).sa_family;
+                let addr_len = match family as i32 {
+                    libc::AF_INET => mem::size_of::<libc::sockaddr_in>(),
+                    libc::AF_INET6 => mem::size_of::<libc::sockaddr_in6>(),
+                    _ => continue,
+                };
+
+                let (_, sock_addr) = socket2::SockAddr::try_init(|addr_storage, len| {
+                    *len = addr_len as u32;
+                    std::ptr::copy_nonoverlapping(
+                        addr.ifa_addr as *const libc::c_void,
+                        addr_storage as *mut _,
+                        addr_len,
+                    );
+                    Ok(())
+                })?;
+
+                if let Some(socket_addr) = sock_addr.as_socket() {
+                    result.push(socket_addr.ip());
+                }
+            }
+        }
+        result
     }
 }
 
