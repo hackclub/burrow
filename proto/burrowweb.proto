@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package burrowweb;
+
+import "wireguard.proto";
+
+
+// TODO: Frontend sends slack token → receive JWT
+// TODO: create/delete/list routes
+
+service BurrowWeb {
+    rpc SlackAuth (SlackAuthRequest) returns (JWTInfo);
+    // Server assigns a IP address, generates a token, saves a user entry,
+    // then responds back with WireGuard configuration
+    rpc CreateDevice (CreateDeviceRequest) returns (CreateDeviceResponse);
+    rpc DeleteDevice (JWTInfo) returns (Empty);
+    rpc ListDevices (JWTInfo) returns (ListDevicesResponse);
+}
+
+message Empty {}
+
+message SlackAuthRequest {
+    string slack_token = 1;
+}
+
+
+message JWTInfo {
+    string jwt = 1;
+}
+
+message CreateDeviceRequest {
+    JWTInfo jwt = 1;
+    string public_key = 2; // User's specified WG Public Key
+}
+
+message CreateDeviceResponse {
+    wireguard.Config wg_config = 1;
+}
+
+message ListDevicesResponse {
+    repeated wireguard.Device devices = 1;
+}

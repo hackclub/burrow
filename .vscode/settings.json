@@ -22,5 +22,10 @@
     "editor.autoIndent": "advanced",
     "diffEditor.ignoreTrimWhitespace": false,
     "editor.formatOnSave": false
+  },
+  "protoc": {
+    "options": [
+      "--proto_path=proto/"
+    ]
   }
 }

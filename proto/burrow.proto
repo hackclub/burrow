@@ -3,6 +3,9 @@ package burrow;
 
 import "google/protobuf/timestamp.proto";
 
+// Internal service for managing tunnels and networks
+// Used for IPC
+
 service Tunnel {
     rpc TunnelConfiguration (Empty) returns (stream TunnelConfigurationResponse);
     rpc TunnelStart (Empty) returns (Empty);
