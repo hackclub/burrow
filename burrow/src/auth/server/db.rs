@@ -49,7 +49,7 @@ pub fn init_db() -> Result<()> {
 }
 
 pub fn store_connection(
-    openid_user: super::providers::OpenIdUser,
+    openid_user: &super::providers::OpenIdUser,
     openid_provider: &str,
     access_token: &str,
     refresh_token: Option<&str>,

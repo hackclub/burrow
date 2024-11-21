@@ -58,6 +58,7 @@ mod tests {
             name: "Inquisition".into(),
         };
         let encoded = JwtInfo::try_from_oid(sample_usr.clone(), &key_pair)?;
+        println!("{}", encoded.jwt);
         let decoded = OpenIdUser::try_from_jwt(&encoded, &key_pair)?;
         assert_eq!(decoded, sample_usr);
         Ok(())

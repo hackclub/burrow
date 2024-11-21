@@ -25,7 +25,7 @@ impl BurrowWeb for BurrowGrpcServer {
         &self,
         request: Request<SlackAuthRequest>,
     ) -> Result<Response<JwtInfo>, Status> {
-        auth(request).await
+        auth(request, &self.jwt_keypair).await
     }
 
     async fn create_device(
