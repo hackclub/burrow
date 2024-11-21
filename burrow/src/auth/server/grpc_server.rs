@@ -1,5 +1,7 @@
 use tonic::{Request, Response, Status};
 
+use crate::auth::server::providers::OpenIdUser;
+
 use super::{
     grpc_defs::{
         burrowwebrpc::burrow_web_server::{BurrowWeb, BurrowWebServer},
@@ -25,6 +27,12 @@ impl BurrowWeb for BurrowGrpcServer {
         &self,
         request: Request<CreateDeviceRequest>,
     ) -> Result<Response<CreateDeviceResponse>, Status> {
+        let req = request.into_inner();
+        let jwt = req
+            .jwt
+            .ok_or(Status::invalid_argument("JWT Not existent!"))?;
+        let oid_user =
+            OpenIdUser::try_from(&jwt).map_err(|e| Status::invalid_argument(e.to_string()))?;
         unimplemented!()
     }
 

@@ -2,9 +2,6 @@ syntax = "proto3";
 
 package burrowweb;
 
-import "wireguard.proto";
-
-
 // TODO: Frontend sends slack token → receive JWT
 // TODO: create/delete/list routes
 
@@ -17,12 +14,63 @@ service BurrowWeb {
     rpc ListDevices (JWTInfo) returns (ListDevicesResponse);
 }
 
+message Peer {
+    string public_key = 1;
+    optional string preshared_key = 2;
+    repeated string allowed_ips = 3;
+    string endpoint = 4;
+    optional uint32 persistent_keepalive = 5;
+    optional string name = 6;
+}
+
+message InterfaceConfig {
+    // Does not include private key; the client is responsible for generating & persisting that
+    repeated string address = 1;
+    optional uint32 listen_port = 2;
+    repeated string dns = 3;
+    optional uint32 mtu = 4;
+}
+
+message Device {
+    int32 id = 1;
+    optional string name = 2;
+    string public_key = 3;
+    optional string apns_token = 4;
+    int32 user_id = 5;
+    string created_at = 6;
+    string ipv4 = 7;
+    string ipv6 = 8;
+    string access_token = 9;
+    string refresh_token = 10;
+    string expires_at = 11;
+}
+
+message User {
+    int32 id = 1;
+    string created_at = 2;
+}
+
+message UserConnection {
+    int32 user_id = 1;
+    string openid_provider = 2;
+    string openid_user_id = 3;
+    string openid_user_name = 4;
+    string access_token = 5;
+    string refresh_token = 6;
+}
+
+
+message Config {
+    InterfaceConfig interface = 1;
+    repeated Peer peers = 2;
+}
+
+
 message Empty {}
 
 message SlackAuthRequest {
     string slack_token = 1;
 }
-
 
 message JWTInfo {
     string jwt = 1;
@@ -34,9 +82,9 @@ message CreateDeviceRequest {
 }
 
 message CreateDeviceResponse {
-    wireguard.Config wg_config = 1;
+    Config wg_config = 1;
 }
 
 message ListDevicesResponse {
-    repeated wireguard.Device devices = 1;
+    repeated Device devices = 1;
 }

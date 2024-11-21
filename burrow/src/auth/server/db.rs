@@ -89,3 +89,28 @@ pub fn store_device(
 
     Ok(())
 }
+
+pub fn delete_device(id: i64) -> Result<()> {
+    let conn = rusqlite::Connection::open(PATH)?;
+
+    conn.execute("DELETE FROM device WHERE id = ?", [id])?;
+
+    Ok(())
+}
+
+pub fn list_devices(user_id: i64) -> Result<Vec<String>> {
+    let conn = rusqlite::Connection::open(PATH)?;
+    let mut stmt = conn.prepare("SELECT name FROM device WHERE user_id = ?")?;
+
+    let devices = stmt.query_map([user_id], |row| {
+        let name: String = row.get(0)?;
+        Ok(name)
+    })?;
+
+    let mut result = Vec::new();
+    for device in devices {
+        result.push(device?);
+    }
+
+    Ok(result)
+}
