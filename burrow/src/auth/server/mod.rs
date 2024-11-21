@@ -1,5 +1,6 @@
 pub mod db;
-mod grpc_defs;
+pub mod grpc_defs;
+mod grpc_server;
 pub mod providers;
 
 use anyhow::Result;

@@ -1,5 +1,5 @@
 pub mod slack;
-pub use super::db;
+pub use super::{db, grpc_defs};
 
 #[derive(serde::Deserialize, Default, Debug)]
 pub struct OpenIdUser {

@@ -1,5 +1,5 @@
 pub use burrowwebrpc::*;
 
-mod burrowwebrpc {
+pub mod burrowwebrpc {
     tonic::include_proto!("burrowweb");
 }

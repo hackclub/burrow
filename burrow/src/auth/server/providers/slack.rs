@@ -8,17 +8,20 @@ use reqwest::header::AUTHORIZATION;
 use serde::Deserialize;
 
 use super::db::store_connection;
+use super::grpc_defs::{JwtInfo, SlackAuthRequest};
+use tonic::{Request as TRequest, Response as TResponse, Result as TResult, Status as TStatus};
 
 #[derive(Deserialize)]
 pub struct SlackToken {
     slack_token: String,
 }
-pub async fn auth(Json(payload): Json<SlackToken>) -> (StatusCode, String) {
-    let slack_user = match fetch_slack_user(&payload.slack_token).await {
+pub async fn auth(request: TRequest<SlackAuthRequest>) -> TResult<TResponse<JwtInfo>, TStatus> {
+    let slack_token = request.into_inner().slack_token;
+    let slack_user = match fetch_slack_user(&slack_token).await {
         Ok(user) => user,
         Err(e) => {
             log::error!("Failed to fetch Slack user: {:?}", e);
-            return (StatusCode::UNAUTHORIZED, String::new());
+            return Err(TStatus::unauthenticated("Failed to fetch slack user"));
         }
     };
 
@@ -28,15 +31,16 @@ pub async fn auth(Json(payload): Json<SlackToken>) -> (StatusCode, String) {
         slack_user.sub
     );
 
-    let conn = match store_connection(slack_user, "slack", &payload.slack_token, None) {
+    let conn = match store_connection(slack_user, "slack", &slack_token, None) {
         Ok(user) => user,
         Err(e) => {
             log::error!("Failed to fetch Slack user: {:?}", e);
-            return (StatusCode::UNAUTHORIZED, String::new());
+            return Err(TStatus::unauthenticated("Failed to store connection"));
         }
     };
 
-    (StatusCode::OK, String::new())
+    // TODO
+    Ok(TResponse::new(JwtInfo { jwt: "TODO".into() }))
 }
 
 async fn fetch_slack_user(access_token: &str) -> Result<super::OpenIdUser> {
