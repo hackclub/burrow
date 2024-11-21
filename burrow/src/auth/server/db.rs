@@ -84,9 +84,11 @@ pub fn store_device(
 ) -> Result<()> {
     log::debug!("Storing openid user {:#?}", openid_user);
     let conn = rusqlite::Connection::open(PATH)?;
-
-    // TODO
-
+    todo!();
+    conn.execute(
+        "INSERT INTO device (name, public_key, apns_token, user_id, ipv4, ipv6, access_token, refresh_token)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        ())?;
     Ok(())
 }
 

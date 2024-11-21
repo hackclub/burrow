@@ -68,6 +68,9 @@ tower = "0.4.13"
 hyper-util = "0.1.6"
 toml = "0.8.15"
 rust-ini = "0.21.0"
+jwt-simple = "0.12.10"
+config = "0.14.1"
+dotenvy = "0.15.7"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 caps = "0.5"

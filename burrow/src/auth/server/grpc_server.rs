@@ -1,6 +1,8 @@
+use std::sync::Arc;
+
 use tonic::{Request, Response, Status};
 
-use crate::auth::server::providers::OpenIdUser;
+use crate::auth::server::providers::{KeypairT, OpenIdUser};
 
 use super::{
     grpc_defs::{
@@ -9,10 +11,13 @@ use super::{
         SlackAuthRequest,
     },
     providers::slack::auth,
+    settings::BurrowAuthServerConfig,
 };
 
-#[derive(Debug)]
-struct BurrowGrpcServer;
+struct BurrowGrpcServer {
+    config: Arc<BurrowAuthServerConfig>,
+    jwt_keypair: Arc<KeypairT>,
+}
 
 #[tonic::async_trait]
 impl BurrowWeb for BurrowGrpcServer {
@@ -31,19 +36,19 @@ impl BurrowWeb for BurrowGrpcServer {
         let jwt = req
             .jwt
             .ok_or(Status::invalid_argument("JWT Not existent!"))?;
-        let oid_user =
-            OpenIdUser::try_from(&jwt).map_err(|e| Status::invalid_argument(e.to_string()))?;
-        unimplemented!()
+        let oid_user = OpenIdUser::try_from_jwt(&jwt, &self.jwt_keypair)
+            .map_err(|e| Status::invalid_argument(e.to_string()))?;
+        todo!()
     }
 
     async fn delete_device(&self, request: Request<JwtInfo>) -> Result<Response<Empty>, Status> {
-        unimplemented!()
+        todo!()
     }
 
     async fn list_devices(
         &self,
         request: Request<JwtInfo>,
     ) -> Result<Response<ListDevicesResponse>, Status> {
-        unimplemented!()
+        todo!()
     }
 }

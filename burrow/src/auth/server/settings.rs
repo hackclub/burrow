@@ -1,0 +1,23 @@
+use config::{Config, ConfigError, Environment};
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+pub struct BurrowAuthServerConfig {
+    jwt_secret_key: String,
+    jwt_public_key: String,
+}
+
+impl BurrowAuthServerConfig {
+    pub fn new() -> Result<Self, ConfigError> {
+        let s = Config::builder()
+            .add_source(Environment::default())
+            .build()?;
+        s.try_deserialize()
+    }
+
+    /// Creates a new config that includes the dotenv
+    pub fn new_dotenv() -> Result<Self, ConfigError> {
+        dotenvy::dotenv().ok();
+        Self::new()
+    }
+}

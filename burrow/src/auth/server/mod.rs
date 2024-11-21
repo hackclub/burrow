@@ -2,6 +2,7 @@ pub mod db;
 pub mod grpc_defs;
 mod grpc_server;
 pub mod providers;
+pub mod settings;
 
 use anyhow::Result;
 use axum::{http::StatusCode, routing::post, Router};
@@ -11,9 +12,7 @@ use tokio::signal;
 pub async fn serve() -> Result<()> {
     db::init_db()?;
 
-    let app = Router::new()
-        .route("/slack-auth", post(auth))
-        .route("/device/new", post(device_new));
+    let app = Router::new().route("/device/new", post(device_new));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
     log::info!("Starting auth server on port 8080");
