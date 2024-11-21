@@ -59,7 +59,7 @@ reqwest = { version = "0.12", default-features = false, features = [
 ] }
 rusqlite = { version = "0.31.0", features = ["blob"] }
 dotenv = "0.15.0"
-tonic = "0.12.0"
+tonic = "0.12.3"
 prost = "0.13.1"
 prost-types = "0.13.1"
 tokio-stream = "0.1"
@@ -96,4 +96,4 @@ bundled = ["rusqlite/bundled"]
 
 
 [build-dependencies]
-tonic-build = "0.12.0"
+tonic-build = "0.12.3"
