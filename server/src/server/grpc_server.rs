@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use jwt_simple::prelude::Ed25519KeyPair;
 use tonic::{Request, Response, Status};
 
 use super::providers::{KeypairT, OpenIdUser};
@@ -16,6 +17,17 @@ use super::{
 struct BurrowGrpcServer {
     config: Arc<BurrowAuthServerConfig>,
     jwt_keypair: Arc<KeypairT>,
+}
+
+impl BurrowGrpcServer {
+    pub fn new() -> anyhow::Result<Self> {
+        let config = BurrowAuthServerConfig::new_dotenv()?;
+        let jwt_keypair = Ed25519KeyPair::from_pem(&config.jwt_pem)?;
+        Ok(Self {
+            config: Arc::new(config),
+            jwt_keypair: Arc::new(jwt_keypair),
+        })
+    }
 }
 
 #[tonic::async_trait]

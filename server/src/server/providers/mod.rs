@@ -46,6 +46,16 @@ impl JwtInfo {
     }
 }
 
+pub fn gen_keypem() -> String {
+    let keypair = KeypairT::generate();
+    keypair.to_pem()
+}
+
+pub fn parse_keypem(pem: &String) -> Result<KeypairT> {
+    let keypair = KeypairT::from_pem(&pem)?;
+    Ok(keypair)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

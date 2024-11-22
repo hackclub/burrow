@@ -3,8 +3,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct BurrowAuthServerConfig {
-    jwt_secret_key: String,
-    jwt_public_key: String,
+    pub jwt_pem: String,
 }
 
 impl BurrowAuthServerConfig {
