@@ -5,27 +5,14 @@ pub mod providers;
 pub mod settings;
 
 use anyhow::Result;
-use axum::{http::StatusCode, routing::post, Router};
 use providers::slack::auth;
 use tokio::signal;
 
 pub async fn serve() -> Result<()> {
     db::init_db()?;
-
-    let app = Router::new().route("/device/new", post(device_new));
-
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
     log::info!("Starting auth server on port 8080");
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
-        .await
-        .unwrap();
-
     Ok(())
-}
-
-async fn device_new() -> StatusCode {
-    StatusCode::OK
 }
 
 async fn shutdown_signal() {

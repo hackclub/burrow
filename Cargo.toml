@@ -1,5 +1,5 @@
 [workspace]
-members = ["burrow", "tun"]
+members = ["burrow", "server", "tun"]
 resolver = "2"
 exclude = ["burrow-gtk"]
 

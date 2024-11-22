@@ -1,0 +1,40 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.93"
+jwt-simple = "0.12.10"
+log = "0.4.22"
+reqwest = { version = "0.12.9", default-features = false, features = [
+    "json",
+    "rustls-tls",
+] }
+serde = "1.0.215"
+serde_json = "1.0.133"
+tokio = { version = "1.41.1", features = [
+    "rt",
+    "macros",
+    "sync",
+    "io-util",
+    "rt-multi-thread",
+    "signal",
+    "time",
+    "tracing",
+    "fs",
+] }
+tonic = "0.12.3"
+clap = { version = "4.4", features = ["derive"] }
+rusqlite = { version = "0.31.0", features = ["blob"] }
+dotenvy = "0.15.7"
+config = "0.14.1"
+prost = "0.13.3"
+prost-types = "0.13.3"
+
+
+[features]
+bundled = ["rusqlite/bundled"]
+
+[build-dependencies]
+tonic-build = "0.12.3"

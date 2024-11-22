@@ -8,9 +8,6 @@ pub(crate) mod tracing;
 mod wireguard;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
-mod auth;
-
-#[cfg(any(target_os = "linux", target_vendor = "apple"))]
 use daemon::{DaemonClient, DaemonCommand};
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
@@ -52,8 +49,6 @@ enum Commands {
     ServerConfig,
     /// Reload Config
     ReloadConfig(ReloadConfigArgs),
-    /// Authentication server
-    AuthServer,
     /// Server Status
     ServerStatus,
     /// Tunnel Config
@@ -276,7 +271,6 @@ async fn main() -> Result<()> {
         Commands::ServerInfo => try_serverinfo().await?,
         Commands::ServerConfig => try_serverconfig().await?,
         Commands::ReloadConfig(args) => try_reloadconfig(args.interface_id.clone()).await?,
-        Commands::AuthServer => crate::auth::server::serve().await?,
         Commands::ServerStatus => try_serverstatus().await?,
         Commands::TunnelConfig => try_tun_config().await?,
         Commands::NetworkAdd(args) => {

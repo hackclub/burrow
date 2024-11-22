@@ -2,13 +2,12 @@ use std::sync::Arc;
 
 use tonic::{Request, Response, Status};
 
-use crate::auth::server::providers::{KeypairT, OpenIdUser};
+use super::providers::{KeypairT, OpenIdUser};
 
 use super::{
     grpc_defs::{
-        burrowwebrpc::burrow_web_server::{BurrowWeb, BurrowWebServer},
-        CreateDeviceRequest, CreateDeviceResponse, Empty, JwtInfo, ListDevicesResponse,
-        SlackAuthRequest,
+        burrowwebrpc::burrow_web_server::BurrowWeb, CreateDeviceRequest, CreateDeviceResponse,
+        Empty, JwtInfo, ListDevicesResponse, SlackAuthRequest,
     },
     providers::slack::auth,
     settings::BurrowAuthServerConfig,
