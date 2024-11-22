@@ -5,13 +5,22 @@ pub mod providers;
 pub mod settings;
 
 use anyhow::Result;
-use providers::slack::auth;
+use grpc_defs::burrow_web_server::BurrowWebServer;
+use grpc_server::BurrowGrpcServer;
 use tokio::signal;
+use tonic::transport::Server;
 
 pub async fn serve() -> Result<()> {
     db::init_db()?;
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+    let addr = "[::1]:8080".parse()?;
     log::info!("Starting auth server on port 8080");
+    let burrow_grpc_server = BurrowGrpcServer::new()?;
+    let svc = BurrowWebServer::new(burrow_grpc_server);
+    Server::builder()
+        .accept_http1(true)
+        .add_service(tonic_web::enable(svc))
+        .serve(addr)
+        .await?;
     Ok(())
 }
 

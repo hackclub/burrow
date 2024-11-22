@@ -4,19 +4,30 @@ use jwt_simple::prelude::Ed25519KeyPair;
 use tonic::{Request, Response, Status};
 
 use super::providers::{KeypairT, OpenIdUser};
+use std::fmt::Debug;
 
 use super::{
     grpc_defs::{
         burrowwebrpc::burrow_web_server::BurrowWeb, CreateDeviceRequest, CreateDeviceResponse,
-        Empty, JwtInfo, ListDevicesResponse, SlackAuthRequest,
+        Empty, JwtInfo, ListDevicesResponse, ServerStatus, SlackAuthRequest,
     },
     providers::slack::auth,
     settings::BurrowAuthServerConfig,
 };
 
-struct BurrowGrpcServer {
+#[derive(Clone)]
+pub struct BurrowGrpcServer {
     config: Arc<BurrowAuthServerConfig>,
     jwt_keypair: Arc<KeypairT>,
+}
+
+impl Debug for BurrowGrpcServer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("BurrowGrpcServer")
+            .field("config", &self.config)
+            .field("jwt_keypair", &"<redacted>")
+            .finish()
+    }
 }
 
 impl BurrowGrpcServer {
@@ -61,5 +72,11 @@ impl BurrowWeb for BurrowGrpcServer {
         request: Request<JwtInfo>,
     ) -> Result<Response<ListDevicesResponse>, Status> {
         todo!()
+    }
+
+    async fn status(&self, _req: Request<Empty>) -> Result<Response<ServerStatus>, Status> {
+        Ok(Response::new(ServerStatus {
+            status: "Nobody expects the Spanish Inquisition".into(),
+        }))
     }
 }

@@ -2,7 +2,7 @@ pub mod client;
 pub mod server;
 use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
-use server::providers::gen_keypem;
+use server::{providers::gen_keypem, serve};
 
 #[derive(Parser)]
 #[command(name = "Burrow Server")]
@@ -44,7 +44,9 @@ async fn main() -> Result<()> {
                 println!("Generated PEM:\n{pem}")
             }
         }
-        Commands::StartServer => todo!(),
+        Commands::StartServer => {
+            serve().await?;
+        }
     };
     Ok(())
 }

@@ -12,6 +12,7 @@ service BurrowWeb {
     rpc CreateDevice (CreateDeviceRequest) returns (CreateDeviceResponse);
     rpc DeleteDevice (JWTInfo) returns (Empty);
     rpc ListDevices (JWTInfo) returns (ListDevicesResponse);
+    rpc Status(Empty) returns (ServerStatus);
 }
 
 message Peer {
@@ -87,4 +88,8 @@ message CreateDeviceResponse {
 
 message ListDevicesResponse {
     repeated Device devices = 1;
+}
+
+message ServerStatus {
+    string status = 1;
 }
