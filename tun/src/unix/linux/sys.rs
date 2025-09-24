@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-pub use libc::{ifreq, sockaddr, sockaddr_in, sockaddr_in6};
+pub use libc::{ifreq, sockaddr_in};
 use nix::{ioctl_read_bad, ioctl_write_ptr_bad, request_code_read, request_code_write};
 
 ioctl_write_ptr_bad!(

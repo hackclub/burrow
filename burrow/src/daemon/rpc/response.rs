@@ -36,6 +36,8 @@ impl DaemonResponse {
 pub struct ServerInfo {
     pub name: Option<String>,
     pub ip: Option<String>,
+    #[serde(default)]
+    pub ipv6: Vec<String>,
     pub mtu: Option<i32>,
 }
 
@@ -47,6 +49,12 @@ impl TryFrom<&TunInterface> for ServerInfo {
         Ok(ServerInfo {
             name: server.name().ok(),
             ip: server.ipv4_addr().ok().map(|ip| ip.to_string()),
+            ipv6: server
+                .ipv6_addrs()
+                .unwrap_or_default()
+                .into_iter()
+                .map(|ip| ip.to_string())
+                .collect(),
             mtu: server.mtu().ok(),
         })
     }
@@ -109,6 +117,7 @@ fn test_response_serialization() -> anyhow::Result<()> {
         DaemonResponseData::ServerInfo(ServerInfo {
             name: Some("burrow".to_string()),
             ip: None,
+            ipv6: Vec::new(),
             mtu: Some(1500)
         })
     )))?);

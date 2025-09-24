@@ -1,4 +1,5 @@
 use std::{
+    ffi::CStr,
     io::{Error, IoSlice},
     mem,
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddrV4},
@@ -163,6 +164,46 @@ impl TunInterface {
     }
 
     #[throws]
+    #[instrument]
+    pub fn ipv6_addrs(&self) -> Vec<Ipv6Addr> {
+        struct IfAddrs(*mut libc::ifaddrs);
+
+        impl Drop for IfAddrs {
+            fn drop(&mut self) {
+                if !self.0.is_null() {
+                    unsafe { libc::freeifaddrs(self.0) };
+                }
+            }
+        }
+
+        let mut ifaddrs = std::ptr::null_mut();
+        unsafe {
+            if libc::getifaddrs(&mut ifaddrs) != 0 {
+                Err(Error::last_os_error())?;
+            }
+        }
+
+        let guard = IfAddrs(ifaddrs);
+        let interface_name = self.name()?;
+        let mut cursor = guard.0;
+        let mut result = Vec::new();
+
+        while let Some(ifa) = unsafe { cursor.as_ref() } {
+            if !ifa.ifa_addr.is_null()
+                && unsafe { (*ifa.ifa_addr).sa_family as i32 } == AF_INET6
+                && unsafe { CStr::from_ptr(ifa.ifa_name) }.to_string_lossy() == interface_name
+            {
+                let sockaddr = unsafe { *(ifa.ifa_addr as *const libc::sockaddr_in6) };
+                result.push(Ipv6Addr::from(in6_addr_octets(sockaddr.sin6_addr)));
+            }
+
+            cursor = ifa.ifa_next;
+        }
+
+        result
+    }
+
+    #[throws]
     fn perform<R>(&self, perform: impl FnOnce(RawFd) -> Result<R, nix::Error>) -> R {
         let span = tracing::info_span!("perform", fd = self.as_raw_fd());
         let _enter = span.enter();
@@ -249,4 +290,9 @@ impl TunInterface {
             .try_into()
             .map_err(|_| Error::new(ErrorKind::Other, "Conversion error"))?
     }
+}
+
+#[inline]
+fn in6_addr_octets(addr: libc::in6_addr) -> [u8; 16] {
+    unsafe { addr.__u6_addr.__u6_addr8 }
 }

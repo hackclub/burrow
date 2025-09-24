@@ -1,6 +1,7 @@
 use std::{
+    ffi::CStr,
     fs::OpenOptions,
-    io::{Error, Write},
+    io::Error,
     mem,
     net::{Ipv4Addr, Ipv6Addr, SocketAddrV4},
     os::{
@@ -10,7 +11,7 @@ use std::{
 };
 
 use fehler::throws;
-use libc::in6_ifreq;
+use libc::{in6_ifreq, AF_INET6};
 use socket2::{Domain, SockAddr, Socket, Type};
 use tracing::{info, instrument};
 
@@ -145,6 +146,46 @@ impl TunInterface {
         iff.ifr6_addr.s6_addr = addr.octets();
         self.perform6(|fd| unsafe { sys::if_set_addr6(fd, &iff) })?;
         info!("ipv6_addr_set: {:?} (fd: {:?})", addr, self.as_raw_fd())
+    }
+
+    #[throws]
+    #[instrument]
+    pub fn ipv6_addrs(&self) -> Vec<Ipv6Addr> {
+        struct IfAddrs(*mut libc::ifaddrs);
+
+        impl Drop for IfAddrs {
+            fn drop(&mut self) {
+                if !self.0.is_null() {
+                    unsafe { libc::freeifaddrs(self.0) };
+                }
+            }
+        }
+
+        let mut ifaddrs = std::ptr::null_mut();
+        unsafe {
+            if libc::getifaddrs(&mut ifaddrs) != 0 {
+                Err(Error::last_os_error())?;
+            }
+        }
+
+        let guard = IfAddrs(ifaddrs);
+        let interface_name = self.name()?;
+        let mut cursor = guard.0;
+        let mut result = Vec::new();
+
+        while let Some(ifa) = unsafe { cursor.as_ref() } {
+            if !ifa.ifa_addr.is_null()
+                && unsafe { (*ifa.ifa_addr).sa_family as i32 } == AF_INET6
+                && unsafe { CStr::from_ptr(ifa.ifa_name) }.to_string_lossy() == interface_name
+            {
+                let sockaddr = unsafe { *(ifa.ifa_addr as *const libc::sockaddr_in6) };
+                result.push(Ipv6Addr::from(sockaddr.sin6_addr.s6_addr));
+            }
+
+            cursor = ifa.ifa_next;
+        }
+
+        result
     }
 
     #[throws]

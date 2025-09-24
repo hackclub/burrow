@@ -1,5 +1,5 @@
 ---
 source: burrow/src/daemon/response.rs
-expression: "serde_json::to_string(&DaemonResponse::new(Ok::<DaemonResponseData,\n                        String>(DaemonResponseData::ServerInfo(ServerInfo {\n                            name: Some(\"burrow\".to_string()),\n                            ip: None,\n                            mtu: Some(1500),\n                        }))))?"
+expression: "serde_json::to_string(&DaemonResponse::new(Ok::<DaemonResponseData,\n                        String>(DaemonResponseData::ServerInfo(ServerInfo {\n                            name: Some(\"burrow\".to_string()),\n                            ip: None,\n                            ipv6: Vec::new(),\n                            mtu: Some(1500),\n                        }))))?"
 ---
-{"result":{"Ok":{"ServerInfo":{"name":"burrow","ip":null,"mtu":1500}}},"id":0}
+{"result":{"Ok":{"ServerInfo":{"name":"burrow","ip":null,"ipv6":[],"mtu":1500}}},"id":0}
