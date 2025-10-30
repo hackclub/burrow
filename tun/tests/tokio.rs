@@ -1,3 +1,4 @@
+#[cfg(all(feature = "tokio", not(target_os = "windows")))]
 use std::net::Ipv4Addr;
 
 #[tokio::test]

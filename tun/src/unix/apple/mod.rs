@@ -1,8 +1,8 @@
 use std::{
     ffi::CStr,
-    io::{Error, IoSlice},
+    io::{Error, ErrorKind, IoSlice},
     mem,
-    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddrV4},
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddrV4, SocketAddrV6},
     os::fd::{AsRawFd, FromRawFd, RawFd},
 };
 
@@ -17,6 +17,7 @@ pub mod sys;
 
 use kern_control::SysControlSocket;
 
+use super::address::{ensure_valid_ipv6_prefix, ipv6_prefix_octets, parse_addr_spec};
 use super::{ifname_to_string, string_to_ifname};
 use crate::TunOptions;
 
@@ -72,11 +73,11 @@ impl TunInterface {
 
     #[throws]
     fn configure(&self, options: TunOptions) {
-        for addr in options.address {
-            if let Ok(addr) = addr.parse::<IpAddr>() {
+        for spec in options.address {
+            if let Some((addr, prefix_len)) = parse_addr_spec(&spec)? {
                 match addr {
                     IpAddr::V4(addr) => self.set_ipv4_addr(addr)?,
-                    IpAddr::V6(addr) => self.set_ipv6_addr(addr)?,
+                    IpAddr::V6(addr) => self.add_ipv6_addr(addr, prefix_len.unwrap_or(128))?,
                 }
             }
         }
@@ -149,18 +150,38 @@ impl TunInterface {
     }
 
     #[throws]
-    pub fn set_ipv6_addr(&self, _addr: Ipv6Addr) {
-        // let addr = SockAddr::from(SocketAddrV6::new(addr, 0, 0, 0));
-        // println!("addr: {:?}", addr);
-        // let mut iff = self.in6_ifreq()?;
-        // let sto = addr.as_storage();
-        // let ifadddr_ptr: *const sockaddr_in6 = addr_of!(sto).cast();
-        // iff.ifr_ifru.ifru_addr = unsafe { *ifadddr_ptr };
-        // println!("ifru addr set");
-        // println!("{:?}", sys::SIOCSIFADDR_IN6);
-        // self.perform6(|fd| unsafe { sys::if_set_addr6(fd, &iff) })?;
-        // tracing::info!("ipv6_addr_set");
-        tracing::warn!("Setting IPV6 address on MacOS CLI mode is not supported yet.");
+    #[instrument]
+    pub fn add_ipv6_addr(&self, addr: Ipv6Addr, prefix_len: u8) {
+        ensure_valid_ipv6_prefix(prefix_len)?;
+
+        let mut req: sys::in6_aliasreq = unsafe { mem::zeroed() };
+        req.ifra_name = string_to_ifname(&self.name()?);
+        req.ifra_addr = ipv6_to_sockaddr(addr);
+        req.ifra_prefixmask = ipv6_prefix_mask(prefix_len)?;
+        self.perform6(|fd| unsafe { sys::if_add_addr6(fd, &req) })?;
+        tracing::info!(
+            "ipv6_addr_added: {:?}/{} (fd: {:?})",
+            addr,
+            prefix_len,
+            self.as_raw_fd()
+        );
+    }
+
+    #[throws]
+    #[instrument]
+    pub fn remove_ipv6_addr(&self, addr: Ipv6Addr, prefix_len: u8) {
+        ensure_valid_ipv6_prefix(prefix_len)?;
+
+        let mut iff = self.in6_ifreq()?;
+        iff.ifr_ifru.ifru_addr = ipv6_to_sockaddr(addr);
+        iff.ifr_ifru.ifru_prefixmask = ipv6_prefix_mask(prefix_len)?;
+        self.perform6(|fd| unsafe { sys::if_del_addr6(fd, &iff) })?;
+        tracing::info!(
+            "ipv6_addr_removed: {:?}/{} (fd: {:?})",
+            addr,
+            prefix_len,
+            self.as_raw_fd()
+        );
     }
 
     #[throws]
@@ -269,7 +290,6 @@ impl TunInterface {
     #[throws]
     #[instrument]
     pub fn send(&self, buf: &[u8]) -> usize {
-        use std::io::ErrorKind;
         let proto = match buf[0] >> 4 {
             6 => Ok(AF_INET6),
             4 => Ok(AF_INET),
@@ -294,5 +314,16 @@ impl TunInterface {
 
 #[inline]
 fn in6_addr_octets(addr: libc::in6_addr) -> [u8; 16] {
-    unsafe { addr.__u6_addr.__u6_addr8 }
+    addr.s6_addr
+}
+
+fn ipv6_to_sockaddr(addr: Ipv6Addr) -> libc::sockaddr_in6 {
+    let sockaddr = SockAddr::from(SocketAddrV6::new(addr, 0, 0, 0));
+    unsafe { *(sockaddr.as_ptr() as *const libc::sockaddr_in6) }
+}
+
+#[throws]
+fn ipv6_prefix_mask(prefix_len: u8) -> libc::sockaddr_in6 {
+    let octets = ipv6_prefix_octets(prefix_len)?;
+    ipv6_to_sockaddr(Ipv6Addr::from(octets))
 }

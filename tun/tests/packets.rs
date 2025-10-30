@@ -1,5 +1,5 @@
-use std::{io::Error, net::Ipv4Addr};
 use std::net::Ipv6Addr;
+use std::{io::Error, net::Ipv4Addr};
 
 use fehler::throws;
 use tun::TunInterface;
@@ -44,5 +44,5 @@ fn set_ipv6() {
     println!("tun name: {:?}", tun.name()?);
     let targ_addr: Ipv6Addr = "::1".parse().unwrap();
     println!("v6 addr: {:?}", targ_addr);
-    tun.set_ipv6_addr(targ_addr)?;
+    tun.add_ipv6_addr(targ_addr, 128)?;
 }

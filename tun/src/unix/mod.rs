@@ -6,6 +6,7 @@ use std::{
 
 use tracing::instrument;
 
+mod address;
 mod queue;
 
 #[cfg(target_vendor = "apple")]

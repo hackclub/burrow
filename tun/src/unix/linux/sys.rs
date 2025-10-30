@@ -20,7 +20,8 @@ ioctl_read_bad!(if_get_mtu, libc::SIOCGIFMTU, libc::ifreq);
 ioctl_read_bad!(if_get_netmask, libc::SIOCGIFNETMASK, libc::ifreq);
 
 ioctl_write_ptr_bad!(if_set_addr, libc::SIOCSIFADDR, libc::ifreq);
-ioctl_write_ptr_bad!(if_set_addr6, libc::SIOCSIFADDR, libc::in6_ifreq);
+ioctl_write_ptr_bad!(if_add_addr6, libc::SIOCSIFADDR, libc::in6_ifreq);
+ioctl_write_ptr_bad!(if_del_addr6, libc::SIOCDIFADDR, libc::in6_ifreq);
 ioctl_write_ptr_bad!(if_set_brdaddr, libc::SIOCSIFBRDADDR, libc::ifreq);
 ioctl_write_ptr_bad!(if_set_mtu, libc::SIOCSIFMTU, libc::ifreq);
 ioctl_write_ptr_bad!(if_set_netmask, libc::SIOCSIFNETMASK, libc::ifreq);

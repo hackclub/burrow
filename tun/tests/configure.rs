@@ -46,7 +46,7 @@ fn test_set_get_ipv6() {
     let tun = TunInterface::new()?;
 
     let addr = Ipv6Addr::new(1, 1, 1, 1, 1, 1, 1, 1);
-    tun.set_ipv6_addr(addr)?;
+    tun.add_ipv6_addr(addr, 128)?;
 
     // let result = tun.ipv6_addr()?;
     // assert_eq!(addr, result);

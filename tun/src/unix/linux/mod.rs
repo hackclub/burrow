@@ -15,6 +15,7 @@ use libc::{in6_ifreq, AF_INET6};
 use socket2::{Domain, SockAddr, Socket, Type};
 use tracing::{info, instrument};
 
+use super::address::ensure_valid_ipv6_prefix;
 use super::{ifname_to_string, string_to_ifname};
 use crate::TunOptions;
 
@@ -141,11 +142,36 @@ impl TunInterface {
 
     #[throws]
     #[instrument]
-    pub fn set_ipv6_addr(&self, addr: Ipv6Addr) {
+    pub fn add_ipv6_addr(&self, addr: Ipv6Addr, prefix_len: u8) {
+        ensure_valid_ipv6_prefix(prefix_len)?;
+
         let mut iff = self.in6_ifreq()?;
         iff.ifr6_addr.s6_addr = addr.octets();
-        self.perform6(|fd| unsafe { sys::if_set_addr6(fd, &iff) })?;
-        info!("ipv6_addr_set: {:?} (fd: {:?})", addr, self.as_raw_fd())
+        iff.ifr6_prefixlen = prefix_len.into();
+        self.perform6(|fd| unsafe { sys::if_add_addr6(fd, &iff) })?;
+        info!(
+            "ipv6_addr_added: {:?}/{} (fd: {:?})",
+            addr,
+            prefix_len,
+            self.as_raw_fd()
+        )
+    }
+
+    #[throws]
+    #[instrument]
+    pub fn remove_ipv6_addr(&self, addr: Ipv6Addr, prefix_len: u8) {
+        ensure_valid_ipv6_prefix(prefix_len)?;
+
+        let mut iff = self.in6_ifreq()?;
+        iff.ifr6_addr.s6_addr = addr.octets();
+        iff.ifr6_prefixlen = prefix_len.into();
+        self.perform6(|fd| unsafe { sys::if_del_addr6(fd, &iff) })?;
+        info!(
+            "ipv6_addr_removed: {:?}/{} (fd: {:?})",
+            addr,
+            prefix_len,
+            self.as_raw_fd()
+        )
     }
 
     #[throws]

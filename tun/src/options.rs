@@ -1,5 +1,7 @@
+#[cfg(all(any(target_os = "linux", target_vendor = "apple"), feature = "tokio"))]
 use std::io::Error;
 
+#[cfg(all(any(target_os = "linux", target_vendor = "apple"), feature = "tokio"))]
 use fehler::throws;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]

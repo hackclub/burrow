@@ -2,20 +2,11 @@ use std::mem;
 
 use libc::{c_char, c_int, c_short, c_uint, c_ulong, sockaddr, sockaddr_in6, time_t};
 pub use libc::{
-    c_void,
-    sockaddr_ctl,
-    sockaddr_in,
-    socklen_t,
-    AF_SYSTEM,
-    AF_SYS_CONTROL,
-    IFNAMSIZ,
+    c_void, sockaddr_ctl, sockaddr_in, socklen_t, AF_SYSTEM, AF_SYS_CONTROL, IFNAMSIZ,
     SYSPROTO_CONTROL,
 };
 use nix::{
-    ioctl_read_bad,
-    ioctl_readwrite,
-    ioctl_write_ptr_bad,
-    request_code_readwrite,
+    ioctl_read_bad, ioctl_readwrite, ioctl_write_ptr_bad, request_code_readwrite,
     request_code_write,
 };
 
@@ -77,7 +68,7 @@ pub struct ifreq {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct in6_addrlifetime{
+pub struct in6_addrlifetime {
     pub ia6t_expire: time_t,
     pub ia6t_preferred: time_t,
     pub ia6t_vltime: u32,
@@ -157,6 +148,7 @@ pub struct icmp6_ifstat {
 pub union ifr_ifru6 {
     pub ifru_addr: sockaddr_in6,
     pub ifru_dstaddr: sockaddr_in6,
+    pub ifru_prefixmask: sockaddr_in6,
     pub ifru_flags: c_int,
     pub ifru_flags6: c_int,
     pub ifru_metric: c_int,
@@ -165,7 +157,7 @@ pub union ifr_ifru6 {
     pub ifru_lifetime: in6_addrlifetime, // ifru_lifetime
     pub ifru_stat: in6_ifstat,
     pub ifru_icmp6stat: icmp6_ifstat,
-    pub ifru_scope_id: [u32; SCOPE6_ID_MAX]
+    pub ifru_scope_id: [u32; SCOPE6_ID_MAX],
 }
 
 #[repr(C)]
@@ -174,8 +166,21 @@ pub struct in6_ifreq {
     pub ifr_ifru: ifr_ifru6,
 }
 
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct in6_aliasreq {
+    pub ifra_name: [c_char; IFNAMSIZ],
+    pub ifra_addr: sockaddr_in6,
+    pub ifra_dstaddr: sockaddr_in6,
+    pub ifra_prefixmask: sockaddr_in6,
+    pub ifra_lifetime: in6_addrlifetime,
+    pub ifra_flags: c_int,
+}
+
 pub const SIOCSIFADDR: c_ulong = request_code_write!(b'i', 12, mem::size_of::<ifreq>());
 pub const SIOCSIFADDR_IN6: c_ulong = request_code_write!(b'i', 12, mem::size_of::<in6_ifreq>());
+pub const SIOCAIFADDR_IN6: c_ulong = request_code_write!(b'i', 30, mem::size_of::<in6_aliasreq>());
+pub const SIOCDIFADDR_IN6: c_ulong = request_code_write!(b'i', 25, mem::size_of::<in6_ifreq>());
 pub const SIOCGIFMTU: c_ulong = request_code_readwrite!(b'i', 51, mem::size_of::<ifreq>());
 pub const SIOCSIFMTU: c_ulong = request_code_write!(b'i', 52, mem::size_of::<ifreq>());
 pub const SIOCGIFNETMASK: c_ulong = request_code_readwrite!(b'i', 37, mem::size_of::<ifreq>());
@@ -198,6 +203,7 @@ ioctl_read_bad!(if_get_addr, libc::SIOCGIFADDR, ifreq);
 ioctl_read_bad!(if_get_mtu, SIOCGIFMTU, ifreq);
 ioctl_read_bad!(if_get_netmask, SIOCGIFNETMASK, ifreq);
 ioctl_write_ptr_bad!(if_set_addr, SIOCSIFADDR, ifreq);
-ioctl_write_ptr_bad!(if_set_addr6, SIOCSIFADDR_IN6, in6_ifreq);
+ioctl_write_ptr_bad!(if_add_addr6, SIOCAIFADDR_IN6, in6_aliasreq);
+ioctl_write_ptr_bad!(if_del_addr6, SIOCDIFADDR_IN6, in6_ifreq);
 ioctl_write_ptr_bad!(if_set_mtu, SIOCSIFMTU, ifreq);
 ioctl_write_ptr_bad!(if_set_netmask, SIOCSIFNETMASK, ifreq);
