@@ -446,32 +446,35 @@ private struct ConfigurationSheetView: View {
 
     @ViewBuilder
     private var tailnetSections: some View {
-        Section("Tailnet Provider") {
+        Section("Connection") {
             Picker("Provider", selection: $draft.tailnetProvider) {
                 ForEach(TailnetProvider.allCases) { provider in
                     Text(provider.title).tag(provider)
                 }
             }
             .pickerStyle(.menu)
-            Text(draft.tailnetProvider.subtitle)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-        }
 
-        Section("Tailnet") {
+            tailnetProviderCard
+
             if draft.tailnetProvider.requiresControlURL {
                 TextField("Server URL", text: $draft.authority)
                     .burrowLoginField()
                     .autocorrectionDisabled()
+            } else {
+                LabeledContent("Server") {
+                    Text("Tailscale managed")
+                        .foregroundStyle(.secondary)
+                }
             }
+
             TextField("Tailnet", text: $draft.tailnet)
                 .burrowLoginField()
                 .autocorrectionDisabled()
+        }
 
+        Section("Authentication") {
             if draft.tailnetProvider.usesWebLogin {
-                Text("Sign-in is brokered by `burrow auth-server` on the host and opens the real Tailscale login page in an in-app authentication session.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                tailnetWebLoginCard
             } else {
                 TextField("Username", text: $draft.username)
                     .burrowLoginField()
@@ -488,40 +491,9 @@ private struct ConfigurationSheetView: View {
                         text: $draft.secret
                     )
                 }
-            }
-        }
-
-        if draft.tailnetProvider.usesWebLogin {
-            Section("Tailscale Sign-In") {
-                if let loginStatus {
-                    labeledValue("State", loginStatus.backendState)
-                    if let tailnetName = loginStatus.tailnetName {
-                        labeledValue("Tailnet", tailnetName)
-                    }
-                    if let dnsName = loginStatus.selfDNSName {
-                        labeledValue("Device", dnsName)
-                    }
-                    if !loginStatus.tailscaleIPs.isEmpty {
-                        labeledValue("Addresses", loginStatus.tailscaleIPs.joined(separator: ", "))
-                    }
-                    if let authURL = loginStatus.authURL {
-                        labeledValue("Login URL", authURL)
-                        Button("Resume Sign-In") {
-                            if let url = URL(string: authURL) {
-                                openLoginURL(url)
-                            }
-                        }
-                    }
-                    if !loginStatus.health.isEmpty {
-                        Text(loginStatus.health.joined(separator: " • "))
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                } else {
-                    Text("Start sign-in to launch a local Tailscale bridge and fetch the real browser login URL.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
+                Text("Credentials stay on-device. Burrow uses them when it needs to register or refresh this identity.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -554,12 +526,106 @@ private struct ConfigurationSheetView: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
+
+            if sheet == .tailnet {
+                HStack(spacing: 8) {
+                    summaryBadge(draft.tailnetProvider.title)
+                    summaryBadge(
+                        draft.tailnetProvider.usesWebLogin ? "Web Sign-In" : draft.authMode.title
+                    )
+                }
+            }
         }
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 18)
                 .fill(.thinMaterial)
         )
+    }
+
+    private var tailnetProviderCard: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                Image(systemName: tailnetProviderIconName)
+                    .font(.headline)
+                    .foregroundStyle(sheetAccentColor)
+                    .frame(width: 28, height: 28)
+                    .background(
+                        Circle()
+                            .fill(sheetAccentColor.opacity(0.14))
+                    )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(draft.tailnetProvider.title)
+                        .font(.headline)
+                    Text(draft.tailnetProvider.subtitle)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.thinMaterial)
+        )
+    }
+
+    @ViewBuilder
+    private var tailnetWebLoginCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Sign in with the shared browser session.")
+                .font(.subheadline.weight(.medium))
+
+            if let loginStatus {
+                labeledValue("State", loginStatus.backendState)
+                if let tailnetName = loginStatus.tailnetName {
+                    labeledValue("Tailnet", tailnetName)
+                }
+                if let dnsName = loginStatus.selfDNSName {
+                    labeledValue("Device", dnsName)
+                }
+                if !loginStatus.tailscaleIPs.isEmpty {
+                    labeledValue("Addresses", loginStatus.tailscaleIPs.joined(separator: ", "))
+                }
+                if let authURL = loginStatus.authURL {
+                    Button("Resume Sign-In") {
+                        if let url = URL(string: authURL) {
+                            openLoginURL(url)
+                        }
+                    }
+                    .buttonStyle(.borderless)
+                }
+                if !loginStatus.health.isEmpty {
+                    Text(loginStatus.health.joined(separator: " • "))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Text("Burrow launches the local bridge, then opens the real Tailscale sign-in page in-app.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.thinMaterial)
+        )
+    }
+
+    private func summaryBadge(_ label: String) -> some View {
+        Text(label)
+            .font(.caption.weight(.medium))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                Capsule()
+                    .fill(.white.opacity(0.5))
+            )
     }
 
     @ViewBuilder
@@ -665,6 +731,17 @@ private struct ConfigurationSheetView: View {
             "Configure Tor"
         case .tailnet:
             "Connect Tailnet"
+        }
+    }
+
+    private var tailnetProviderIconName: String {
+        switch draft.tailnetProvider {
+        case .tailscale:
+            "globe.badge.chevron.backward"
+        case .headscale:
+            "server.rack"
+        case .burrow:
+            "shield"
         }
     }
 
