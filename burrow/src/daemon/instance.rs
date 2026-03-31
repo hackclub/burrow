@@ -1,48 +1,27 @@
 use std::{
-    ops::Deref,
     path::{Path, PathBuf},
     sync::Arc,
-    time::Duration,
 };
 
 use anyhow::Result;
 use rusqlite::Connection;
-use tokio::sync::{mpsc, watch, Notify, RwLock};
+use tokio::sync::{mpsc, watch, RwLock};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status as RspStatus};
-use tracing::{debug, info, warn};
-use tun::{tokio::TunInterface, TunOptions};
+use tracing::warn;
+use tun::tokio::TunInterface;
 
-use super::rpc::grpc_defs::{
-    networks_server::Networks,
-    tunnel_server::Tunnel,
-    Empty,
-    Network,
-    NetworkDeleteRequest,
-    NetworkListResponse,
-    NetworkReorderRequest,
-    State as RPCTunnelState,
-    TunnelConfigurationResponse,
-    TunnelStatusResponse,
+use super::{
+    rpc::grpc_defs::{
+        networks_server::Networks, tunnel_server::Tunnel, Empty, Network, NetworkDeleteRequest,
+        NetworkListResponse, NetworkReorderRequest, State as RPCTunnelState,
+        TunnelConfigurationResponse, TunnelStatusResponse,
+    },
+    runtime::{ActiveTunnel, ResolvedTunnel},
 };
 use crate::{
-    daemon::rpc::{
-        DaemonCommand,
-        DaemonNotification,
-        DaemonResponse,
-        DaemonResponseData,
-        ServerConfig,
-        ServerInfo,
-    },
-    database::{
-        add_network,
-        delete_network,
-        get_connection,
-        list_networks,
-        load_interface,
-        reorder_network,
-    },
-    wireguard::{Config, Interface},
+    daemon::rpc::ServerConfig,
+    database::{add_network, delete_network, get_connection, list_networks, reorder_network},
 };
 
 #[derive(Debug, Clone)]
@@ -52,10 +31,10 @@ enum RunState {
 }
 
 impl RunState {
-    pub fn to_rpc(&self) -> RPCTunnelState {
+    fn to_rpc(&self) -> RPCTunnelState {
         match self {
-            RunState::Running => RPCTunnelState::Running,
-            RunState::Idle => RPCTunnelState::Stopped,
+            Self::Running => RPCTunnelState::Running,
+            Self::Idle => RPCTunnelState::Stopped,
         }
     }
 }
@@ -63,30 +42,24 @@ impl RunState {
 #[derive(Clone)]
 pub struct DaemonRPCServer {
     tun_interface: Arc<RwLock<Option<TunInterface>>>,
-    wg_interface: Arc<RwLock<Interface>>,
-    config: Arc<RwLock<Config>>,
     db_path: Option<PathBuf>,
     wg_state_chan: (watch::Sender<RunState>, watch::Receiver<RunState>),
     network_update_chan: (watch::Sender<()>, watch::Receiver<()>),
+    active_tunnel: Arc<RwLock<Option<ActiveTunnel>>>,
 }
 
 impl DaemonRPCServer {
-    pub fn new(
-        wg_interface: Arc<RwLock<Interface>>,
-        config: Arc<RwLock<Config>>,
-        db_path: Option<&Path>,
-    ) -> Result<Self> {
+    pub fn new(db_path: Option<&Path>) -> Result<Self> {
         Ok(Self {
             tun_interface: Arc::new(RwLock::new(None)),
-            wg_interface,
-            config,
-            db_path: db_path.map(|p| p.to_owned()),
+            db_path: db_path.map(Path::to_owned),
             wg_state_chan: watch::channel(RunState::Idle),
             network_update_chan: watch::channel(()),
+            active_tunnel: Arc::new(RwLock::new(None)),
         })
     }
 
-    pub fn get_connection(&self) -> Result<Connection, RspStatus> {
+    fn get_connection(&self) -> Result<Connection, RspStatus> {
         get_connection(self.db_path.as_deref()).map_err(proc_err)
     }
 
@@ -94,12 +67,70 @@ impl DaemonRPCServer {
         self.wg_state_chan.0.send(state).map_err(proc_err)
     }
 
-    async fn get_wg_state(&self) -> RunState {
-        self.wg_state_chan.1.borrow().to_owned()
-    }
-
     async fn notify_network_update(&self) -> Result<(), RspStatus> {
         self.network_update_chan.0.send(()).map_err(proc_err)
+    }
+
+    async fn resolve_tunnel(&self) -> Result<Option<ResolvedTunnel>, RspStatus> {
+        let conn = self.get_connection()?;
+        let networks = list_networks(&conn).map_err(proc_err)?;
+        ResolvedTunnel::from_networks(&networks).map_err(proc_err)
+    }
+
+    async fn current_tunnel_configuration(&self) -> Result<TunnelConfigurationResponse, RspStatus> {
+        match self.resolve_tunnel().await? {
+            Some(config) => {
+                let config = config.server_config().map_err(proc_err)?;
+                Ok(configuration_rsp(config))
+            }
+            None => Ok(empty_configuration_rsp()),
+        }
+    }
+
+    async fn stop_active_tunnel(&self) -> Result<bool, RspStatus> {
+        let current = { self.active_tunnel.write().await.take() };
+        let Some(current) = current else {
+            return Ok(false);
+        };
+
+        current
+            .shutdown(&self.tun_interface)
+            .await
+            .map_err(proc_err)?;
+        self.set_wg_state(RunState::Idle).await?;
+        Ok(true)
+    }
+
+    async fn replace_active_tunnel(&self, desired: ResolvedTunnel) -> Result<(), RspStatus> {
+        let _ = self.stop_active_tunnel().await?;
+        let active = desired
+            .start(self.tun_interface.clone())
+            .await
+            .map_err(proc_err)?;
+        self.active_tunnel.write().await.replace(active);
+        self.set_wg_state(RunState::Running).await?;
+        Ok(())
+    }
+
+    async fn reconcile_runtime(&self) -> Result<(), RspStatus> {
+        let desired = self.resolve_tunnel().await?;
+        let Some(desired) = desired else {
+            let _ = self.stop_active_tunnel().await?;
+            return Ok(());
+        };
+        let needs_restart = {
+            let guard = self.active_tunnel.read().await;
+            guard
+                .as_ref()
+                .map(|active| active.identity() != desired.identity())
+                .unwrap_or(false)
+        };
+
+        if needs_restart {
+            self.replace_active_tunnel(desired).await?;
+        }
+
+        Ok(())
     }
 }
 
@@ -113,55 +144,49 @@ impl Tunnel for DaemonRPCServer {
         _request: Request<Empty>,
     ) -> Result<Response<Self::TunnelConfigurationStream>, RspStatus> {
         let (tx, rx) = mpsc::channel(10);
+        let server = self.clone();
+        let mut sub = self.network_update_chan.1.clone();
+
         tokio::spawn(async move {
-            let serv_config = ServerConfig::default();
-            tx.send(Ok(TunnelConfigurationResponse {
-                mtu: serv_config.mtu.unwrap_or(1000),
-                addresses: serv_config.address,
-            }))
-            .await
+            loop {
+                let response = server.current_tunnel_configuration().await;
+                if tx.send(response).await.is_err() {
+                    break;
+                }
+                if sub.changed().await.is_err() {
+                    break;
+                }
+            }
         });
+
         Ok(Response::new(ReceiverStream::new(rx)))
     }
 
     async fn tunnel_start(&self, _request: Request<Empty>) -> Result<Response<Empty>, RspStatus> {
-        let wg_state = self.get_wg_state().await;
-        match wg_state {
-            RunState::Idle => {
-                let tun_if = TunOptions::new().open()?;
-                debug!("Setting tun on wg_interface");
-                self.tun_interface.write().await.replace(tun_if);
-                self.wg_interface
-                    .write()
-                    .await
-                    .set_tun_ref(self.tun_interface.clone())
-                    .await;
-                debug!("tun set on wg_interface");
+        let desired = self
+            .resolve_tunnel()
+            .await?
+            .ok_or_else(|| RspStatus::failed_precondition("no stored network configured"))?;
+        let already_running = {
+            let guard = self.active_tunnel.read().await;
+            guard
+                .as_ref()
+                .map(|active| active.identity() == desired.identity())
+                .unwrap_or(false)
+        };
 
-                debug!("Setting tun_interface");
-                debug!("tun_interface set: {:?}", self.tun_interface);
-
-                debug!("Cloning wg_interface");
-                let tmp_wg = self.wg_interface.clone();
-                let run_task = tokio::spawn(async move {
-                    let twlock = tmp_wg.read().await;
-                    twlock.run().await
-                });
-                self.set_wg_state(RunState::Running).await?;
-            }
-
-            RunState::Running => {
-                warn!("Got start, but tun interface already up.");
-            }
+        if already_running {
+            warn!("Got start, but active tunnel already matches desired network.");
+            return Ok(Response::new(Empty {}));
         }
 
-        return Ok(Response::new(Empty {}));
+        self.replace_active_tunnel(desired).await?;
+        Ok(Response::new(Empty {}))
     }
 
     async fn tunnel_stop(&self, _request: Request<Empty>) -> Result<Response<Empty>, RspStatus> {
-        self.wg_interface.write().await.remove_tun().await;
-        self.set_wg_state(RunState::Idle).await?;
-        return Ok(Response::new(Empty {}));
+        let _ = self.stop_active_tunnel().await?;
+        Ok(Response::new(Empty {}))
     }
 
     async fn tunnel_status(
@@ -172,13 +197,16 @@ impl Tunnel for DaemonRPCServer {
         let mut state_rx = self.wg_state_chan.1.clone();
         tokio::spawn(async move {
             let cur = state_rx.borrow_and_update().to_owned();
-            tx.send(Ok(status_rsp(cur))).await;
+            if tx.send(Ok(status_rsp(cur))).await.is_err() {
+                return;
+            }
+
             loop {
-                state_rx.changed().await.unwrap();
+                if state_rx.changed().await.is_err() {
+                    break;
+                }
                 let cur = state_rx.borrow().to_owned();
-                let res = tx.send(Ok(status_rsp(cur))).await;
-                if res.is_err() {
-                    eprintln!("Tunnel status channel closed");
+                if tx.send(Ok(status_rsp(cur))).await.is_err() {
                     break;
                 }
             }
@@ -196,6 +224,7 @@ impl Networks for DaemonRPCServer {
         let network = request.into_inner();
         add_network(&conn, &network).map_err(proc_err)?;
         self.notify_network_update().await?;
+        self.reconcile_runtime().await?;
         Ok(Response::new(Empty {}))
     }
 
@@ -203,7 +232,6 @@ impl Networks for DaemonRPCServer {
         &self,
         _request: Request<Empty>,
     ) -> Result<Response<Self::NetworkListStream>, RspStatus> {
-        debug!("Mock network_list called");
         let (tx, rx) = mpsc::channel(10);
         let conn = self.get_connection()?;
         let mut sub = self.network_update_chan.1.clone();
@@ -212,12 +240,12 @@ impl Networks for DaemonRPCServer {
                 let networks = list_networks(&conn)
                     .map(|res| NetworkListResponse { network: res })
                     .map_err(proc_err);
-                let res = tx.send(networks).await;
-                if res.is_err() {
-                    eprintln!("Network list channel closed");
+                if tx.send(networks).await.is_err() {
                     break;
                 }
-                sub.changed().await.unwrap();
+                if sub.changed().await.is_err() {
+                    break;
+                }
             }
         });
         Ok(Response::new(ReceiverStream::new(rx)))
@@ -230,6 +258,7 @@ impl Networks for DaemonRPCServer {
         let conn = self.get_connection()?;
         reorder_network(&conn, request.into_inner()).map_err(proc_err)?;
         self.notify_network_update().await?;
+        self.reconcile_runtime().await?;
         Ok(Response::new(Empty {}))
     }
 
@@ -240,12 +269,27 @@ impl Networks for DaemonRPCServer {
         let conn = self.get_connection()?;
         delete_network(&conn, request.into_inner()).map_err(proc_err)?;
         self.notify_network_update().await?;
+        self.reconcile_runtime().await?;
         Ok(Response::new(Empty {}))
     }
 }
 
 fn proc_err(err: impl ToString) -> RspStatus {
     RspStatus::internal(err.to_string())
+}
+
+fn configuration_rsp(config: ServerConfig) -> TunnelConfigurationResponse {
+    TunnelConfigurationResponse {
+        mtu: config.mtu.unwrap_or(1000),
+        addresses: config.address,
+    }
+}
+
+fn empty_configuration_rsp() -> TunnelConfigurationResponse {
+    TunnelConfigurationResponse {
+        mtu: 1500,
+        addresses: Vec::new(),
+    }
 }
 
 fn status_rsp(state: RunState) -> TunnelStatusResponse {
