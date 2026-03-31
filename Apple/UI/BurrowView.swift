@@ -1,3 +1,4 @@
+import AuthenticationServices
 import BurrowConfiguration
 import Foundation
 import SwiftUI
@@ -184,7 +185,7 @@ private struct AccountDraft {
 
 private struct ConfigurationSheetView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.openURL) private var openURL
+    @Environment(\.webAuthenticationSession) private var webAuthenticationSession
 
     let sheet: ConfigurationSheet
     let networkViewModel: NetworkViewModel
@@ -197,6 +198,7 @@ private struct ConfigurationSheetView: View {
     @State private var loginStatus: TailnetLoginStatus?
     @State private var pollingTask: Task<Void, Never>?
     @State private var didRunAutomation = false
+    @State private var webAuthenticationTask: Task<Void, Never>?
 
     init(
         sheet: ConfigurationSheet,
@@ -280,6 +282,8 @@ private struct ConfigurationSheetView: View {
         }
         .onDisappear {
             pollingTask?.cancel()
+            webAuthenticationTask?.cancel()
+            webAuthenticationTask = nil
         }
     }
 
@@ -307,7 +311,7 @@ private struct ConfigurationSheetView: View {
                 .autocorrectionDisabled()
 
             if draft.tailnetProvider.usesWebLogin {
-                Text("Sign-in is brokered by `burrow auth-server` on the host and opens the real Tailscale login page in a browser.")
+                Text("Sign-in is brokered by `burrow auth-server` on the host and opens the real Tailscale login page in an in-app authentication session.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             } else {
@@ -343,9 +347,9 @@ private struct ConfigurationSheetView: View {
                     }
                     if let authURL = loginStatus.authURL {
                         labeledValue("Login URL", authURL)
-                        Button("Open Login Page") {
+                        Button("Resume Sign-In") {
                             if let url = URL(string: authURL) {
-                                openURL(url)
+                                openLoginURL(url)
                             }
                         }
                     }
@@ -479,6 +483,8 @@ private struct ConfigurationSheetView: View {
     private func submitTailnet() async throws {
         if draft.tailnetProvider.usesWebLogin {
             if loginStatus?.running == true {
+                webAuthenticationTask?.cancel()
+                webAuthenticationTask = nil
                 try await saveTailnetAccount(secret: nil, username: nil)
                 dismiss()
             } else {
@@ -551,6 +557,8 @@ private struct ConfigurationSheetView: View {
                         openLoginURL(url)
                     }
                     if status.running {
+                        webAuthenticationTask?.cancel()
+                        webAuthenticationTask = nil
                         return
                     }
                 } catch {
@@ -563,12 +571,25 @@ private struct ConfigurationSheetView: View {
     }
 
     private func openLoginURL(_ url: URL) {
-        Task { @MainActor in
+        webAuthenticationTask?.cancel()
+        webAuthenticationTask = Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(300))
-            openURL(url) { accepted in
-                guard !accepted else { return }
-                errorMessage = "Burrow got a Tailscale login URL, but iOS did not open it automatically."
+            do {
+                _ = try await webAuthenticationSession.authenticate(
+                    using: url,
+                    callbackURLScheme: "burrow",
+                    preferredBrowserSession: .shared
+                )
+            } catch is CancellationError {
+                return
+            } catch let error as ASWebAuthenticationSessionError
+                where error.code == .canceledLogin
+            {
+                return
+            } catch {
+                errorMessage = error.localizedDescription
             }
+            webAuthenticationTask = nil
         }
     }
 
