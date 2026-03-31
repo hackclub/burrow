@@ -157,6 +157,13 @@ done
 echo "== intake =="
 ls -l /var/lib/burrow/intake || true
 
+if [[ "${EXPECT_TAILNET}" == "1" ]]; then
+  echo "== agenix =="
+  ls -l /run/agenix || true
+  test -s /run/agenix/burrowAuthentikEnv
+  test -s /run/agenix/burrowHeadscaleOidcClientSecret
+fi
+
 if command -v curl >/dev/null 2>&1; then
   echo "== http-local =="
   curl -fsS -o /dev/null -w 'forgejo_login %{http_code}\n' http://127.0.0.1:3000/user/login

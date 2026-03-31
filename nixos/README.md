@@ -12,6 +12,7 @@ Mail hosting is intentionally not part of this NixOS host in the current plan. B
 - `modules/burrow-forgejo-nsc.nix`: Namespace-backed ephemeral Forgejo runner services
 - `modules/burrow-authentik.nix`: minimal Authentik IdP for Burrow control planes
 - `modules/burrow-headscale.nix`: Headscale control plane rooted in Authentik OIDC
+- `../secrets.nix`: agenix recipient map for tracked Burrow forge secrets
 - `hetzner-cloud-config.yaml`: desired Hetzner host shape
 - `keys/contact_at_burrow_net.pub`: initial operator SSH public key
 - `keys/agent_at_burrow_net.pub`: automation SSH public key
@@ -32,7 +33,7 @@ Mail hosting is intentionally not part of this NixOS host in the current plan. B
 4. Let `burrow-forgejo-bootstrap.service` create or rotate the initial Forgejo admin account.
 5. Let `burrow-forgejo-runner-bootstrap.service` register the self-hosted Forgejo runner and seed Git identity as `agent <agent@burrow.net>`.
 6. Run `Scripts/provision-forgejo-nsc.sh` locally, then `Scripts/sync-forgejo-nsc-config.sh` to place the Namespace dispatcher/autoscaler runtime inputs under `/var/lib/burrow/intake/`.
-7. Ensure `/var/lib/burrow/intake/authentik.env` exists on the host, and let `services.burrow.headscale` generate `/var/lib/burrow/intake/authentik_headscale_client_secret.txt` on first boot if it is absent.
+7. Ensure `/var/lib/agenix/agenix.key` exists on the host, encrypt `secrets/infra/authentik.env.age` and `secrets/infra/headscale-oidc-client-secret.age`, and let agenix materialize them under `/run/agenix/`.
 8. Use `Scripts/cloudflare-upsert-a-record.sh` to point `git.burrow.net`, `burrow.net`, `auth.burrow.net`, `ts.burrow.net`, and `nsc-autoscaler.burrow.net` at the host with Cloudflare proxying disabled for ACME.
 9. Use `Scripts/forge-deploy.sh --allow-dirty` for subsequent remote `nixos-rebuild` runs from the live workspace.
 10. Configure Forward Email custom S3 backups for `burrow.net` and `burrow.rs` out-of-band with `Tools/forwardemail-custom-s3.sh`.
@@ -40,6 +41,7 @@ Mail hosting is intentionally not part of this NixOS host in the current plan. B
 ## Current Constraints
 
 - `burrow-forge` is live on NixOS in `hel1` at `89.167.47.21`, and `Scripts/check-forge-host.sh --expect-nsc` passes locally against that host.
+- Authentik and Headscale secrets now live in tracked agenix blobs under `secrets/infra/` and decrypt to `/run/agenix/` on the forge host.
 - Public Burrow forge cutover completed on March 15, 2026:
   - `burrow.net`, `git.burrow.net`, and `nsc-autoscaler.burrow.net` now publish public `A` records to `89.167.47.21`
   - HTTP redirects to HTTPS on all three names

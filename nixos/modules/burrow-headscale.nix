@@ -191,7 +191,9 @@ in
         set -euo pipefail
 
         list_users() {
-          ${pkgs.headscale}/bin/headscale users list -o json
+          local users_json
+          users_json="$(${pkgs.headscale}/bin/headscale users list -o json)"
+          printf '%s\n' "$users_json" | ${pkgs.jq}/bin/jq -c 'if type == "array" then . else [] end'
         }
 
         ensure_user() {

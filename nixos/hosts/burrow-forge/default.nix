@@ -1,4 +1,4 @@
-{ self, ... }:
+{ config, self, ... }:
 
 {
   imports = [
@@ -19,6 +19,20 @@
     "nix-command"
     "flakes"
   ];
+
+  age.identityPaths = [ "/var/lib/agenix/agenix.key" ];
+  age.secrets.burrowAuthentikEnv = {
+    file = ../../../secrets/infra/authentik.env.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+  age.secrets.burrowHeadscaleOidcClientSecret = {
+    file = ../../../secrets/infra/headscale-oidc-client-secret.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
 
   networking.extraHosts = ''
     127.0.0.1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net nsc-autoscaler.burrow.net
@@ -53,11 +67,12 @@
 
   services.burrow.authentik = {
     enable = true;
-    envFile = "/var/lib/burrow/intake/authentik.env";
-    headscaleClientSecretFile = "/var/lib/burrow/intake/authentik_headscale_client_secret.txt";
+    envFile = config.age.secrets.burrowAuthentikEnv.path;
+    headscaleClientSecretFile = config.age.secrets.burrowHeadscaleOidcClientSecret.path;
   };
 
   services.burrow.headscale = {
     enable = true;
+    oidcClientSecretFile = config.age.secrets.burrowHeadscaleOidcClientSecret.path;
   };
 }

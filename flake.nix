@@ -4,6 +4,10 @@
   inputs = {
     nixpkgs.url = "tarball+https://codeload.github.com/NixOS/nixpkgs/tar.gz/nixos-unstable";
     flake-utils.url = "tarball+https://codeload.github.com/numtide/flake-utils/tar.gz/main";
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     disko = {
       url = "tarball+https://codeload.github.com/nix-community/disko/tar.gz/master";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -14,7 +18,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, disko, hcloud-upload-image-src }:
+  outputs = { self, nixpkgs, flake-utils, agenix, disko, hcloud-upload-image-src }:
     let
       supportedSystems = [
         "x86_64-linux"
@@ -161,6 +165,7 @@
 
         packages =
           {
+            agenix = agenix.packages.${system}.agenix;
             hcloud-upload-image = hcloudUploadImagePkg;
             forgejo-nsc-dispatcher = forgejoNscDispatcher;
             forgejo-nsc-autoscaler = forgejoNscAutoscaler;
@@ -180,6 +185,7 @@
           inherit self;
         };
         modules = [
+          agenix.nixosModules.default
           disko.nixosModules.disko
           ./nixos/hosts/burrow-forge/default.nix
         ];
