@@ -71,20 +71,19 @@ impl DaemonRPCServer {
         self.network_update_chan.0.send(()).map_err(proc_err)
     }
 
-    async fn resolve_tunnel(&self) -> Result<Option<ResolvedTunnel>, RspStatus> {
+    async fn resolve_tunnel(&self) -> Result<ResolvedTunnel, RspStatus> {
         let conn = self.get_connection()?;
         let networks = list_networks(&conn).map_err(proc_err)?;
         ResolvedTunnel::from_networks(&networks).map_err(proc_err)
     }
 
     async fn current_tunnel_configuration(&self) -> Result<TunnelConfigurationResponse, RspStatus> {
-        match self.resolve_tunnel().await? {
-            Some(config) => {
-                let config = config.server_config().map_err(proc_err)?;
-                Ok(configuration_rsp(config))
-            }
-            None => Ok(empty_configuration_rsp()),
-        }
+        let config = self
+            .resolve_tunnel()
+            .await?
+            .server_config()
+            .map_err(proc_err)?;
+        Ok(configuration_rsp(config))
     }
 
     async fn stop_active_tunnel(&self) -> Result<bool, RspStatus> {
@@ -114,10 +113,6 @@ impl DaemonRPCServer {
 
     async fn reconcile_runtime(&self) -> Result<(), RspStatus> {
         let desired = self.resolve_tunnel().await?;
-        let Some(desired) = desired else {
-            let _ = self.stop_active_tunnel().await?;
-            return Ok(());
-        };
         let needs_restart = {
             let guard = self.active_tunnel.read().await;
             guard
@@ -163,10 +158,7 @@ impl Tunnel for DaemonRPCServer {
     }
 
     async fn tunnel_start(&self, _request: Request<Empty>) -> Result<Response<Empty>, RspStatus> {
-        let desired = self
-            .resolve_tunnel()
-            .await?
-            .ok_or_else(|| RspStatus::failed_precondition("no stored network configured"))?;
+        let desired = self.resolve_tunnel().await?;
         let already_running = {
             let guard = self.active_tunnel.read().await;
             guard
@@ -282,13 +274,6 @@ fn configuration_rsp(config: ServerConfig) -> TunnelConfigurationResponse {
     TunnelConfigurationResponse {
         mtu: config.mtu.unwrap_or(1000),
         addresses: config.address,
-    }
-}
-
-fn empty_configuration_rsp() -> TunnelConfigurationResponse {
-    TunnelConfigurationResponse {
-        mtu: 1500,
-        addresses: Vec::new(),
     }
 }
 

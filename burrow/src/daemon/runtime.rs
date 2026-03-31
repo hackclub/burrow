@@ -15,6 +15,7 @@ use crate::{
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RuntimeIdentity {
+    Passthrough,
     Network {
         id: i32,
         network_type: NetworkType,
@@ -24,6 +25,9 @@ pub enum RuntimeIdentity {
 
 #[derive(Clone, Debug)]
 pub enum ResolvedTunnel {
+    Passthrough {
+        identity: RuntimeIdentity,
+    },
     WireGuard {
         identity: RuntimeIdentity,
         config: Config,
@@ -35,9 +39,11 @@ pub enum ResolvedTunnel {
 }
 
 impl ResolvedTunnel {
-    pub fn from_networks(networks: &[Network]) -> Result<Option<Self>> {
+    pub fn from_networks(networks: &[Network]) -> Result<Self> {
         let Some(network) = networks.first() else {
-            return Ok(None);
+            return Ok(Self::Passthrough {
+                identity: RuntimeIdentity::Passthrough,
+            });
         };
 
         let identity = RuntimeIdentity::Network {
@@ -51,23 +57,30 @@ impl ResolvedTunnel {
                 let payload = String::from_utf8(network.payload.clone())
                     .context("wireguard payload must be valid UTF-8")?;
                 let config = Config::from_content_fmt(&payload, "ini")?;
-                Ok(Some(Self::WireGuard { identity, config }))
+                Ok(Self::WireGuard { identity, config })
             }
             NetworkType::HackClub => {
                 let config = HackClubNetworkConfig::from_payload(&network.payload)?;
-                Ok(Some(Self::HackClub { identity, config }))
+                Ok(Self::HackClub { identity, config })
             }
         }
     }
 
     pub fn identity(&self) -> &RuntimeIdentity {
         match self {
-            Self::WireGuard { identity, .. } | Self::HackClub { identity, .. } => identity,
+            Self::Passthrough { identity }
+            | Self::WireGuard { identity, .. }
+            | Self::HackClub { identity, .. } => identity,
         }
     }
 
     pub fn server_config(&self) -> Result<ServerConfig> {
         match self {
+            Self::Passthrough { .. } => Ok(ServerConfig {
+                address: Vec::new(),
+                name: None,
+                mtu: Some(1500),
+            }),
             Self::WireGuard { config, .. } => ServerConfig::try_from(config),
             Self::HackClub { config, .. } => Ok(ServerConfig {
                 address: config.local_addresses.clone(),
@@ -82,6 +95,7 @@ impl ResolvedTunnel {
         tun_interface: Arc<RwLock<Option<TunInterface>>>,
     ) -> Result<ActiveTunnel> {
         match self {
+            Self::Passthrough { identity } => Ok(ActiveTunnel::Passthrough { identity }),
             Self::WireGuard { identity, config } => {
                 let tun = TunOptions::new().open()?;
                 tun_interface.write().await.replace(tun);
@@ -118,6 +132,9 @@ impl ResolvedTunnel {
 }
 
 pub enum ActiveTunnel {
+    Passthrough {
+        identity: RuntimeIdentity,
+    },
     WireGuard {
         identity: RuntimeIdentity,
         interface: Arc<RwLock<WireGuardInterface>>,
@@ -132,12 +149,15 @@ pub enum ActiveTunnel {
 impl ActiveTunnel {
     pub fn identity(&self) -> &RuntimeIdentity {
         match self {
-            Self::WireGuard { identity, .. } | Self::HackClub { identity, .. } => identity,
+            Self::Passthrough { identity }
+            | Self::WireGuard { identity, .. }
+            | Self::HackClub { identity, .. } => identity,
         }
     }
 
     pub async fn shutdown(self, tun_interface: &Arc<RwLock<Option<TunInterface>>>) -> Result<()> {
         match self {
+            Self::Passthrough { .. } => Ok(()),
             Self::WireGuard { interface, task, .. } => {
                 interface.read().await.remove_tun().await;
                 let task_result = task.await;
@@ -174,7 +194,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn no_networks_resolves_to_no_tunnel() {
-        assert!(ResolvedTunnel::from_networks(&[]).unwrap().is_none());
+    fn no_networks_resolve_to_passthrough() {
+        let resolved = ResolvedTunnel::from_networks(&[]).unwrap();
+        assert_eq!(resolved.identity(), &RuntimeIdentity::Passthrough);
+        assert_eq!(
+            resolved.server_config().unwrap().address,
+            Vec::<String>::new()
+        );
     }
 }

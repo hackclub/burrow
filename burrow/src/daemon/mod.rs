@@ -72,7 +72,7 @@ mod tests {
         client::BurrowClient,
         grpc_defs::{
             Empty, Network, NetworkListResponse, NetworkReorderRequest, NetworkType,
-            TunnelConfigurationResponse,
+            TunnelConfigurationResponse, TunnelStatusResponse,
         },
     };
 
@@ -111,6 +111,11 @@ mod tests {
             .network_list(Empty {})
             .await?
             .into_inner();
+        let mut status_stream = client
+            .tunnel_client
+            .tunnel_status(Empty {})
+            .await?
+            .into_inner();
 
         let initial_config = next_configuration(&mut config_stream).await?;
         assert!(initial_config.addresses.is_empty());
@@ -119,12 +124,27 @@ mod tests {
         let initial_networks = next_networks(&mut network_stream).await?;
         assert!(initial_networks.network.is_empty());
 
-        let start_err = client
-            .tunnel_client
-            .tunnel_start(Empty {})
-            .await
-            .expect_err("starting without a stored network should fail");
-        assert_eq!(start_err.code(), tonic::Code::FailedPrecondition);
+        let initial_status = next_status(&mut status_stream).await?;
+        assert_eq!(
+            initial_status.state(),
+            crate::daemon::rpc::grpc_defs::State::Stopped
+        );
+
+        client.tunnel_client.tunnel_start(Empty {}).await?;
+
+        let passthrough_status = next_status(&mut status_stream).await?;
+        assert_eq!(
+            passthrough_status.state(),
+            crate::daemon::rpc::grpc_defs::State::Running
+        );
+
+        client.tunnel_client.tunnel_stop(Empty {}).await?;
+
+        let stopped_status = next_status(&mut status_stream).await?;
+        assert_eq!(
+            stopped_status.state(),
+            crate::daemon::rpc::grpc_defs::State::Stopped
+        );
 
         client
             .networks_client
@@ -244,6 +264,14 @@ Endpoint = wg.burrow.rs:51820
         timeout(Duration::from_secs(5), stream.message())
             .await??
             .ok_or_else(|| anyhow!("network stream ended unexpectedly"))
+    }
+
+    async fn next_status(
+        stream: &mut tonic::Streaming<TunnelStatusResponse>,
+    ) -> Result<TunnelStatusResponse> {
+        timeout(Duration::from_secs(5), stream.message())
+            .await??
+            .ok_or_else(|| anyhow!("status stream ended unexpectedly"))
     }
 
     fn network_ids(response: &NetworkListResponse) -> Vec<(i32, NetworkType)> {
