@@ -15,6 +15,8 @@ tokio = { version = "1.37", features = [
     "macros",
     "sync",
     "io-util",
+    "net",
+    "process",
     "rt-multi-thread",
     "signal",
     "time",
@@ -25,7 +27,6 @@ tun = { version = "0.1", path = "../tun", features = ["serde", "tokio"] }
 clap = { version = "4.4", features = ["derive"] }
 tracing = "0.1"
 tracing-log = "0.1"
-tracing-oslog = { git = "https://github.com/Stormshield-robinc/tracing-oslog" }
 tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
@@ -47,13 +48,14 @@ base64 = "0.21"
 fehler = "1.0"
 ip_network_table = "0.2"
 ip_network = "0.4"
-ipnetwork = "0.21"
+ipnetwork = { version = "0.21", features = ["serde"] }
 async-channel = "2.1"
 schemars = "0.8"
 futures = "0.3.28"
 once_cell = "1.19"
 arti-client = "0.40.0"
 hickory-proto = "0.25.2"
+netstack-smoltcp = "0.2.1"
 tokio-util = { version = "0.7.18", features = ["compat"] }
 tor-rtcompat = "0.40.0"
 console-subscriber = { version = "0.2.0", optional = true }
@@ -65,7 +67,6 @@ reqwest = { version = "0.12", default-features = false, features = [
     "rustls-tls",
 ] }
 rusqlite = { version = "0.38.0", features = ["blob"] }
-iroh = "0.94.0"
 dotenv = "0.15.0"
 tonic = "0.12.0"
 prost = "0.13.1"
@@ -82,11 +83,15 @@ subtle = "2.6"
 caps = "0.5"
 libc = "0.2"
 libsystemd = "0.7"
+nix = { version = "0.27", features = ["fs", "socket", "uio"] }
 tracing-journald = "0.3"
 
 [target.'cfg(target_vendor = "apple")'.dependencies]
 nix = { version = "0.27" }
 rusqlite = { version = "0.38.0", features = ["bundled", "blob"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+tracing-oslog = { git = "https://github.com/Stormshield-robinc/tracing-oslog" }
 
 [dev-dependencies]
 insta = { version = "1.32", features = ["yaml"] }

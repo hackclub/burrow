@@ -5,7 +5,15 @@ import libburrow
 import NetworkExtension
 import os
 
-class PacketTunnelProvider: NEPacketTunnelProvider {
+private final class SendableCallbackBox<Callback>: @unchecked Sendable {
+    let callback: Callback
+
+    init(_ callback: Callback) {
+        self.callback = callback
+    }
+}
+
+final class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
     enum Error: Swift.Error {
         case missingTunnelConfiguration
     }
@@ -30,27 +38,41 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         }
     }
 
-    override func startTunnel(options: [String: NSObject]? = nil) async throws {
-        do {
-            let configuration = try await Array(client.tunnelConfiguration(.init()).prefix(1)).first
-            guard let settings = configuration?.settings else {
-                throw Error.missingTunnelConfiguration
+    override func startTunnel(
+        options: [String: NSObject]?,
+        completionHandler: @escaping (Swift.Error?) -> Void
+    ) {
+        let completion = SendableCallbackBox(completionHandler)
+        Task {
+            do {
+                let configuration = try await Array(client.tunnelConfiguration(.init()).prefix(1)).first
+                guard let settings = configuration?.settings else {
+                    throw Error.missingTunnelConfiguration
+                }
+                try await setTunnelNetworkSettings(settings)
+                _ = try await client.tunnelStart(.init())
+                logger.log("Started tunnel with network settings: \(settings)")
+                completion.callback(nil)
+            } catch {
+                logger.error("Failed to start tunnel: \(error)")
+                completion.callback(error)
             }
-            try await setTunnelNetworkSettings(settings)
-            _ = try await client.tunnelStart(.init())
-            logger.log("Started tunnel with network settings: \(settings)")
-        } catch {
-            logger.error("Failed to start tunnel: \(error)")
-            throw error
         }
     }
 
-    override func stopTunnel(with reason: NEProviderStopReason) async {
-        do {
-            _ = try await client.tunnelStop(.init())
-            logger.log("Stopped client")
-        } catch {
-            logger.error("Failed to stop tunnel: \(error)")
+    override func stopTunnel(
+        with reason: NEProviderStopReason,
+        completionHandler: @escaping () -> Void
+    ) {
+        let completion = SendableCallbackBox(completionHandler)
+        Task {
+            do {
+                _ = try await client.tunnelStop(.init())
+                logger.log("Stopped client")
+            } catch {
+                logger.error("Failed to stop tunnel: \(error)")
+            }
+            completion.callback()
         }
     }
 }

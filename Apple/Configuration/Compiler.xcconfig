@@ -40,5 +40,4 @@ APP_GROUP_IDENTIFIER = group.$(APP_BUNDLE_IDENTIFIER)
 APP_GROUP_IDENTIFIER[sdk=macosx*] = $(DEVELOPMENT_TEAM).$(APP_BUNDLE_IDENTIFIER)
 NETWORK_EXTENSION_BUNDLE_IDENTIFIER = $(APP_BUNDLE_IDENTIFIER).network
 
-// https://github.com/grpc/grpc-swift/issues/683#issuecomment-1130118953
-OTHER_SWIFT_FLAGS = $(inherited) -Xcc -fmodule-map-file=$(GENERATED_MODULEMAP_DIR)/CNIOAtomics.modulemap -Xcc -fmodule-map-file=$(GENERATED_MODULEMAP_DIR)/CNIODarwin.modulemap -Xcc -fmodule-map-file=$(GENERATED_MODULEMAP_DIR)/CGRPCZlib.modulemap
+OTHER_SWIFT_FLAGS = $(inherited)
