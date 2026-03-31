@@ -1,0 +1,27 @@
+listen: ":8080"
+
+forgejo:
+  base_url: "https://forgejo.example.com"
+  token: "${FORGEJO_PERSONAL_ACCESS_TOKEN}"
+  default_scope:
+    level: "organization"
+    owner: "example"
+  default_labels:
+    - namespace-profile-linux-medium
+  timeout: "30s"
+
+namespace:
+  nsc_binary: "/app/bin/nsc"
+  compute_base_url: "https://ord4.compute.namespaceapis.com"
+  image: "ghcr.io/forgejo/runner:3"
+  machine_type: "8x16"
+  macos_base_image_id: "tahoe"
+  macos_machine_arch: "arm64"
+  duration: "30m"
+  workdir: "/var/lib/forgejo-runner"
+  max_parallel: 4
+  network: ""
+
+runner:
+  name_prefix: "nscloud-"
+  executor: "shell"

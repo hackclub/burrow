@@ -1,0 +1,10 @@
+name: burrow-forge
+server_type: ccx23
+location: hel1
+image: ubuntu-24.04
+ssh_keys:
+  - contact@burrow.net
+  - agent@burrow.net
+labels:
+  project: burrow
+  role: forge

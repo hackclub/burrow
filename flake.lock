@@ -1,0 +1,86 @@
+{
+  "nodes": {
+    "disko": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1773506317,
+        "narHash": "sha256-qWKbLUJpavIpvOdX1fhHYm0WGerytFHRoh9lVck6Bh0=",
+        "type": "tarball",
+        "url": "https://codeload.github.com/nix-community/disko/tar.gz/master"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://codeload.github.com/nix-community/disko/tar.gz/master"
+      }
+    },
+    "flake-utils": {
+      "inputs": {
+        "systems": "systems"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "type": "tarball",
+        "url": "https://codeload.github.com/numtide/flake-utils/tar.gz/main"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://codeload.github.com/numtide/flake-utils/tar.gz/main"
+      }
+    },
+    "hcloud-upload-image-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1766413232,
+        "narHash": "sha256-1u9tpzciYjB/EgBI81pg9w0kez7hHZON7+AHvfKW7k0=",
+        "type": "tarball",
+        "url": "https://codeload.github.com/apricote/hcloud-upload-image/tar.gz/v1.3.0"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://codeload.github.com/apricote/hcloud-upload-image/tar.gz/v1.3.0"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1773389992,
+        "narHash": "sha256-wvfdLLWJ2I9oEpDd9PfMA8osfIZicoQ5MT1jIwNs9Tk=",
+        "type": "tarball",
+        "url": "https://codeload.github.com/NixOS/nixpkgs/tar.gz/nixos-unstable"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://codeload.github.com/NixOS/nixpkgs/tar.gz/nixos-unstable"
+      }
+    },
+    "root": {
+      "inputs": {
+        "disko": "disko",
+        "flake-utils": "flake-utils",
+        "hcloud-upload-image-src": "hcloud-upload-image-src",
+        "nixpkgs": "nixpkgs"
+      }
+    },
+    "systems": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

@@ -1,0 +1,30 @@
+listen: ":8090"
+dispatcher:
+  url: "http://localhost:8080"
+
+instances:
+  - name: burrow
+    forgejo:
+      base_url: "https://git.burrow.net"
+      token: "PENDING-FORGEJO-PAT"
+    scope:
+      level: "repository"
+      owner: "burrow"
+      name: "burrow"
+    disable_polling: true
+    poll_interval: "30s"
+    webhook_secret: "supersecret"
+    webhook:
+      url: "https://nsc-autoscaler.burrow.net/webhook/burrow"
+      content_type: "json"
+      events: ["workflow_job"]
+      active: true
+    targets:
+      - labels: ["namespace-profile-linux-medium"]
+        min_idle: 1
+        ttl: "20m"
+        machine_type: "8x16"
+      - labels: ["namespace-profile-windows-large"]
+        min_idle: 0
+        ttl: "45m"
+        machine_type: "windows/amd64:8x16"

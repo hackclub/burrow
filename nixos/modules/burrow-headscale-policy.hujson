@@ -1,0 +1,11 @@
+{
+  // Bootstrap with a simple allow-all policy; Burrow-specific lane segmentation
+  // can be layered on once the control plane is live.
+  acls: [
+    {
+      action: "accept",
+      src: ["*"],
+      dst: ["*:*"],
+    },
+  ],
+}

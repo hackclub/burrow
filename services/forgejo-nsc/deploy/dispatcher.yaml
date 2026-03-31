@@ -1,0 +1,29 @@
+listen: "127.0.0.1:8080"
+
+forgejo:
+  base_url: "http://127.0.0.1:3000"
+  instance_url: "https://git.burrow.net"
+  token: "PENDING-FORGEJO-PAT"
+  default_scope:
+    level: "repository"
+    owner: "burrow"
+    name: "burrow"
+  default_labels:
+    - namespace-profile-linux-medium
+  timeout: "30s"
+
+namespace:
+  nsc_binary: "/run/current-system/sw/bin/nsc"
+  compute_base_url: "https://ord4.compute.namespaceapis.com"
+  image: "code.forgejo.org/forgejo/runner:3"
+  machine_type: "8x16"
+  macos_base_image_id: "tahoe"
+  macos_machine_arch: "arm64"
+  duration: "30m"
+  workdir: "/var/lib/forgejo-runner"
+  max_parallel: 4
+  network: ""
+
+runner:
+  name_prefix: "nscloud-"
+  executor: "shell"
