@@ -20,6 +20,11 @@
     "flakes"
   ];
 
+  networking.extraHosts = ''
+    127.0.0.1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net nsc-autoscaler.burrow.net
+    ::1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net nsc-autoscaler.burrow.net
+  '';
+
   services.burrow.forge = {
     enable = true;
     adminPasswordFile = "/var/lib/burrow/intake/forgejo_pass_contact_at_burrow_net.txt";
