@@ -6,12 +6,28 @@ struct NetworkCarouselView: View {
     var body: some View {
         Group {
             if networks.isEmpty {
+                #if os(iOS)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("No stored networks yet")
+                        .font(.headline)
+                    Text("WireGuard and Tailnet networks show up here as soon as you add one.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 18)
+                        .fill(.thinMaterial)
+                )
+                #else
                 ContentUnavailableView(
                     "No Networks Yet",
                     systemImage: "network.slash",
                     description: Text("Add a WireGuard network, or save a Tailnet account so Burrow can store a managed network when the daemon is reachable.")
                 )
                 .frame(maxWidth: .infinity, minHeight: 175)
+                #endif
             } else {
                 ScrollView(.horizontal) {
                     LazyHStack {

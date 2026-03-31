@@ -18,33 +18,43 @@ public struct BurrowView: View {
                             Text("Burrow")
                                 .font(.largeTitle)
                                 .fontWeight(.bold)
-                            Text("Networks and accounts")
-                                .font(.headline)
-                                .foregroundStyle(.secondary)
+                            if showsHeaderSubtitle {
+                                Text("Networks and accounts")
+                                    .font(.headline)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
-                        Spacer()
-                        Menu {
-                            Button("Add WireGuard Network") {
-                                activeSheet = .wireGuard
+                        if showsToolbarAddMenu {
+                            Spacer()
+                            Menu {
+                                Button("Add WireGuard Network") {
+                                    activeSheet = .wireGuard
+                                }
+                                Button("Save Tor Account") {
+                                    activeSheet = .tor
+                                }
+                                Button("Add Tailnet Account") {
+                                    activeSheet = .tailnet
+                                }
+                            } label: {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.title)
+                                    .accessibilityLabel("Add")
                             }
-                            Button("Save Tor Account") {
-                                activeSheet = .tor
-                            }
-                            Button("Add Tailnet Account") {
-                                activeSheet = .tailnet
-                            }
-                        } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.title)
-                                .accessibilityLabel("Add")
                         }
                     }
                     .padding(.top)
 
+                    if showsInlineQuickActions {
+                        quickAddSection
+                    }
+
                     VStack(alignment: .leading, spacing: 12) {
                         sectionHeader(
                             title: "Networks",
-                            detail: "Stored daemon networks and their active account selectors"
+                            detail: showsInlineQuickActions
+                                ? nil
+                                : "Stored daemon networks and their active account selectors"
                         )
                         if let connectionError = networkViewModel.connectionError {
                             Text(connectionError)
@@ -54,25 +64,29 @@ public struct BurrowView: View {
                         NetworkCarouselView(networks: networkViewModel.cards)
                     }
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        sectionHeader(
-                            title: "Accounts",
-                            detail: "Per-network identities and sign-in state"
-                        )
-                        if accountStore.accounts.isEmpty {
-                            ContentUnavailableView(
-                                "No Accounts Yet",
-                                systemImage: "person.crop.circle.badge.plus",
-                                description: Text("Save a Tor account or sign in to a Tailnet provider to keep network identities ready on this device.")
+                    if showsAccountsSection {
+                        VStack(alignment: .leading, spacing: 12) {
+                            sectionHeader(
+                                title: "Accounts",
+                                detail: showsInlineQuickActions
+                                    ? nil
+                                    : "Per-network identities and sign-in state"
                             )
-                            .frame(maxWidth: .infinity, minHeight: 180)
-                        } else {
-                            LazyVStack(spacing: 12) {
-                                ForEach(accountStore.accounts) { account in
-                                    AccountRowView(
-                                        account: account,
-                                        hasSecret: accountStore.hasStoredSecret(for: account)
-                                    )
+                            if accountStore.accounts.isEmpty {
+                                ContentUnavailableView(
+                                    "No Accounts Yet",
+                                    systemImage: "person.crop.circle.badge.plus",
+                                    description: Text("Save a Tor account or sign in to a Tailnet provider to keep network identities ready on this device.")
+                                )
+                                .frame(maxWidth: .infinity, minHeight: 180)
+                            } else {
+                                LazyVStack(spacing: 12) {
+                                    ForEach(accountStore.accounts) { account in
+                                        AccountRowView(
+                                            account: account,
+                                            hasSecret: accountStore.hasStoredSecret(for: account)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -81,7 +95,7 @@ public struct BurrowView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         sectionHeader(
                             title: "Tunnel",
-                            detail: "Current system extension state"
+                            detail: showsInlineQuickActions ? nil : "Current system extension state"
                         )
                         TunnelStatusView()
                         TunnelButton()
@@ -120,18 +134,58 @@ public struct BurrowView: View {
     }
 
     @ViewBuilder
-    private func sectionHeader(title: String, detail: String) -> some View {
+    private var quickAddSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader(title: "Add", detail: nil)
+            VStack(spacing: 12) {
+                ForEach(ConfigurationSheet.allCases) { sheet in
+                    QuickAddButton(sheet: sheet) {
+                        activeSheet = sheet
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func sectionHeader(title: String, detail: String?) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(.title2.weight(.semibold))
-            Text(detail)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            if let detail, !detail.isEmpty {
+                Text(detail)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
         }
+    }
+
+    private var showsInlineQuickActions: Bool {
+        #if os(iOS)
+        true
+        #else
+        false
+        #endif
+    }
+
+    private var showsToolbarAddMenu: Bool {
+        !showsInlineQuickActions
+    }
+
+    private var showsHeaderSubtitle: Bool {
+        !showsInlineQuickActions
+    }
+
+    private var showsAccountsSection: Bool {
+        #if os(iOS)
+        !accountStore.accounts.isEmpty
+        #else
+        true
+        #endif
     }
 }
 
-private enum ConfigurationSheet: String, Identifiable {
+private enum ConfigurationSheet: String, CaseIterable, Identifiable {
     case wireGuard
     case tor
     case tailnet
@@ -144,6 +198,75 @@ private enum ConfigurationSheet: String, Identifiable {
         case .tor: .tor
         case .tailnet: .headscale
         }
+    }
+
+    var iconName: String {
+        switch self {
+        case .wireGuard:
+            "wave.3.right"
+        case .tor:
+            "shield.lefthalf.filled.badge.checkmark"
+        case .tailnet:
+            "network.badge.shield.half.filled"
+        }
+    }
+
+    var quickActionTitle: String {
+        switch self {
+        case .wireGuard:
+            "WireGuard"
+        case .tor:
+            "Tor"
+        case .tailnet:
+            "Tailnet"
+        }
+    }
+
+    var quickActionSubtitle: String {
+        switch self {
+        case .wireGuard:
+            "Import a tunnel"
+        case .tor:
+            "Save an Arti profile"
+        case .tailnet:
+            "Sign in or save a control plane"
+        }
+    }
+
+    var quickActionColor: Color {
+        switch self {
+        case .wireGuard:
+            .blue
+        case .tor, .tailnet:
+            kind.accentColor
+        }
+    }
+}
+
+private struct QuickAddButton: View {
+    let sheet: ConfigurationSheet
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: sheet.iconName)
+                    .font(.title3.weight(.semibold))
+                    .frame(width: 24)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(sheet.quickActionTitle)
+                        .font(.headline)
+                    Text(sheet.quickActionSubtitle)
+                        .font(.caption)
+                        .opacity(0.88)
+                }
+
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+        }
+        .buttonStyle(.floating(color: sheet.quickActionColor, cornerRadius: 18))
     }
 }
 
