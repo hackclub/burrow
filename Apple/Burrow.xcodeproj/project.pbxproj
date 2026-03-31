@@ -23,7 +23,6 @@
 		D0D4E53A2C8D996F007F820A /* BurrowCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D0D4E5312C8D996F007F820A /* BurrowCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D0D4E56B2C8D9C2F007F820A /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E49A2C8D921A007F820A /* Logging.swift */; };
 		D0D4E5702C8D9C62007F820A /* BurrowCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D4E5312C8D996F007F820A /* BurrowCore.framework */; };
-		D0D4E5712C8D9C6F007F820A /* HackClub.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E49D2C8D921A007F820A /* HackClub.swift */; };
 		D0D4E5722C8D9C6F007F820A /* Network.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E49E2C8D921A007F820A /* Network.swift */; };
 		D0D4E5732C8D9C6F007F820A /* WireGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E49F2C8D921A007F820A /* WireGuard.swift */; };
 		D0D4E5742C8D9C6F007F820A /* BurrowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4A22C8D921A007F820A /* BurrowView.swift */; };
@@ -33,7 +32,6 @@
 		D0D4E5782C8D9C6F007F820A /* NetworkExtension+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4A62C8D921A007F820A /* NetworkExtension+Async.swift */; };
 		D0D4E5792C8D9C6F007F820A /* NetworkExtensionTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4A72C8D921A007F820A /* NetworkExtensionTunnel.swift */; };
 		D0D4E57A2C8D9C6F007F820A /* NetworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4A82C8D921A007F820A /* NetworkView.swift */; };
-		D0D4E57B2C8D9C6F007F820A /* OAuth2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4A92C8D921A007F820A /* OAuth2.swift */; };
 		D0D4E57C2C8D9C6F007F820A /* Tunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4AA2C8D921A007F820A /* Tunnel.swift */; };
 		D0D4E57D2C8D9C6F007F820A /* TunnelButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4AB2C8D921A007F820A /* TunnelButton.swift */; };
 		D0D4E57E2C8D9C6F007F820A /* TunnelStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4AC2C8D921A007F820A /* TunnelStatusView.swift */; };
@@ -160,7 +158,6 @@
 		D0D4E4972C8D921A007F820A /* swift-protobuf-config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "swift-protobuf-config.json"; sourceTree = "<group>"; };
 		D0D4E4992C8D921A007F820A /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
 		D0D4E49A2C8D921A007F820A /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
-		D0D4E49D2C8D921A007F820A /* HackClub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HackClub.swift; sourceTree = "<group>"; };
 		D0D4E49E2C8D921A007F820A /* Network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Network.swift; sourceTree = "<group>"; };
 		D0D4E49F2C8D921A007F820A /* WireGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireGuard.swift; sourceTree = "<group>"; };
 		D0D4E4A12C8D921A007F820A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -171,7 +168,6 @@
 		D0D4E4A62C8D921A007F820A /* NetworkExtension+Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NetworkExtension+Async.swift"; sourceTree = "<group>"; };
 		D0D4E4A72C8D921A007F820A /* NetworkExtensionTunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkExtensionTunnel.swift; sourceTree = "<group>"; };
 		D0D4E4A82C8D921A007F820A /* NetworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkView.swift; sourceTree = "<group>"; };
-		D0D4E4A92C8D921A007F820A /* OAuth2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuth2.swift; sourceTree = "<group>"; };
 		D0D4E4AA2C8D921A007F820A /* Tunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tunnel.swift; sourceTree = "<group>"; };
 		D0D4E4AB2C8D921A007F820A /* TunnelButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelButton.swift; sourceTree = "<group>"; };
 		D0D4E4AC2C8D921A007F820A /* TunnelStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelStatusView.swift; sourceTree = "<group>"; };
@@ -340,7 +336,6 @@
 		D0D4E4A02C8D921A007F820A /* Networks */ = {
 			isa = PBXGroup;
 			children = (
-				D0D4E49D2C8D921A007F820A /* HackClub.swift */,
 				D0D4E49E2C8D921A007F820A /* Network.swift */,
 				D0D4E49F2C8D921A007F820A /* WireGuard.swift */,
 			);
@@ -358,7 +353,6 @@
 				D0D4E4A62C8D921A007F820A /* NetworkExtension+Async.swift */,
 				D0D4E4A72C8D921A007F820A /* NetworkExtensionTunnel.swift */,
 				D0D4E4A82C8D921A007F820A /* NetworkView.swift */,
-				D0D4E4A92C8D921A007F820A /* OAuth2.swift */,
 				D0D4E4AA2C8D921A007F820A /* Tunnel.swift */,
 				D0D4E4AB2C8D921A007F820A /* TunnelButton.swift */,
 				D0D4E4AC2C8D921A007F820A /* TunnelStatusView.swift */,
@@ -634,7 +628,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0D4E5712C8D9C6F007F820A /* HackClub.swift in Sources */,
 				D0D4E5722C8D9C6F007F820A /* Network.swift in Sources */,
 				D0D4E5732C8D9C6F007F820A /* WireGuard.swift in Sources */,
 				D0D4E5742C8D9C6F007F820A /* BurrowView.swift in Sources */,
@@ -644,7 +637,6 @@
 				D0D4E5782C8D9C6F007F820A /* NetworkExtension+Async.swift in Sources */,
 				D0D4E5792C8D9C6F007F820A /* NetworkExtensionTunnel.swift in Sources */,
 				D0D4E57A2C8D9C6F007F820A /* NetworkView.swift in Sources */,
-				D0D4E57B2C8D9C6F007F820A /* OAuth2.swift in Sources */,
 				D0D4E57C2C8D9C6F007F820A /* Tunnel.swift in Sources */,
 				D0D4E57D2C8D9C6F007F820A /* TunnelButton.swift in Sources */,
 				D0D4E57E2C8D9C6F007F820A /* TunnelStatusView.swift in Sources */,

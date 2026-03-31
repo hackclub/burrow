@@ -63,8 +63,6 @@ mod tests {
     };
 
     use anyhow::{anyhow, Result};
-    use iroh::PublicKey;
-    use serde_json::json;
     use tokio::time::{timeout, Duration};
 
     use super::*;
@@ -172,15 +170,15 @@ mod tests {
             .networks_client
             .network_add(Network {
                 id: 2,
-                r#type: NetworkType::HackClub.into(),
-                payload: sample_hackclub_payload(),
+                r#type: NetworkType::WireGuard.into(),
+                payload: sample_wireguard_payload_with("10.77.0.2/32", 1380),
             })
             .await?;
 
-        let networks_after_mesh_add = next_networks(&mut network_stream).await?;
+        let networks_after_second_add = next_networks(&mut network_stream).await?;
         assert_eq!(
-            network_ids(&networks_after_mesh_add),
-            vec![(1, NetworkType::WireGuard), (2, NetworkType::HackClub)]
+            network_ids(&networks_after_second_add),
+            vec![(1, NetworkType::WireGuard), (2, NetworkType::WireGuard)]
         );
 
         let still_wireguard = next_configuration(&mut config_stream).await?;
@@ -194,12 +192,12 @@ mod tests {
         let networks_after_reorder = next_networks(&mut network_stream).await?;
         assert_eq!(
             network_ids(&networks_after_reorder),
-            vec![(2, NetworkType::HackClub), (1, NetworkType::WireGuard)]
+            vec![(2, NetworkType::WireGuard), (1, NetworkType::WireGuard)]
         );
 
-        let mesh_config = next_configuration(&mut config_stream).await?;
-        assert_eq!(mesh_config.addresses, vec!["10.77.0.2/32"]);
-        assert_eq!(mesh_config.mtu, 1380);
+        let second_wireguard_config = next_configuration(&mut config_stream).await?;
+        assert_eq!(second_wireguard_config.addresses, vec!["10.77.0.2/32"]);
+        assert_eq!(second_wireguard_config.mtu, 1380);
 
         daemon_task.abort();
         let _ = daemon_task.await;
@@ -237,16 +235,10 @@ Endpoint = wg.burrow.rs:51820
         .to_vec()
     }
 
-    fn sample_hackclub_payload() -> Vec<u8> {
-        let endpoint_id = PublicKey::from_bytes(&[0; 32]).unwrap().to_string();
-        json!({
-            "endpoint_id": endpoint_id,
-            "addresses": ["127.0.0.1:7777"],
-            "local_addresses": ["10.77.0.2/32"],
-            "mtu": 1380,
-            "tun_name": "burrow-test-mesh",
-        })
-        .to_string()
+    fn sample_wireguard_payload_with(address: &str, mtu: u16) -> Vec<u8> {
+        format!(
+            "[Interface]\nPrivateKey = OEPVdomeLTxTIBvv3TYsJRge0Hp9NMiY0sIrhT8OWG8=\nAddress = {address}\nListenPort = 51820\nMTU = {mtu}\n\n[Peer]\nPublicKey = 8GaFjVO6c4luCHG4ONO+1bFG8tO+Zz5/Gy+Geht1USM=\nPresharedKey = ha7j4BjD49sIzyF9SNlbueK0AMHghlj6+u0G3bzC698=\nAllowedIPs = 0.0.0.0/0, ::/0\nEndpoint = wg.burrow.rs:51820\n"
+        )
         .into_bytes()
     }
 

@@ -31,8 +31,8 @@ struct NetworkView<Content: View>: View {
 }
 
 extension NetworkView where Content == AnyView {
-    init(network: any Network) {
+    init(network: NetworkCardModel) {
         color = network.backgroundColor
-        content = { AnyView(network.label) }
+        content = { network.label }
     }
 }

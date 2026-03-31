@@ -45,7 +45,7 @@ message Network {
 
 enum NetworkType {
     WireGuard = 0;
-    HackClub = 1;
+    Tailnet = 1;
 }
 
 message NetworkListResponse {

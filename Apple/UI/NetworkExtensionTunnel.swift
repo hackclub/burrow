@@ -105,7 +105,7 @@ public final class NetworkExtensionTunnel: Tunnel {
 
         let proto = NETunnelProviderProtocol()
         proto.providerBundleIdentifier = bundleIdentifier
-        proto.serverAddress = "hackclub.com"
+        proto.serverAddress = "burrow.rs"
 
         manager.protocolConfiguration = proto
         try await manager.save()

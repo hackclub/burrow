@@ -4,10 +4,10 @@ use anyhow::Result;
 use rusqlite::{params, Connection};
 
 use crate::{
+    control::TailnetConfig,
     daemon::rpc::grpc_defs::{
         Network as RPCNetwork, NetworkDeleteRequest, NetworkReorderRequest, NetworkType,
     },
-    mesh::iroh::HackClubNetworkConfig,
     wireguard::config::{Config, Interface, Peer},
 };
 
@@ -203,8 +203,8 @@ fn validate_network_payload(network: &RPCNetwork) -> Result<()> {
             let payload_str = String::from_utf8(network.payload.clone())?;
             Config::from_content_fmt(&payload_str, "ini")?;
         }
-        NetworkType::HackClub => {
-            HackClubNetworkConfig::from_payload(&network.payload)?;
+        NetworkType::Tailnet => {
+            TailnetConfig::from_slice(&network.payload)?;
         }
     }
     Ok(())
@@ -243,8 +243,6 @@ fn renumber_networks(conn: &Connection, ordered_ids: &[i32]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use iroh::PublicKey;
-    use serde_json::json;
     use tempfile::tempdir;
 
     fn sample_wireguard_payload() -> Vec<u8> {
@@ -262,17 +260,22 @@ Endpoint = wg.burrow.rs:51820
         .to_vec()
     }
 
-    fn sample_hackclub_payload(name: &str, address: &str) -> Vec<u8> {
-        let endpoint_id = PublicKey::from_bytes(&[0; 32]).unwrap().to_string();
-        json!({
-            "endpoint_id": endpoint_id,
-            "addresses": ["127.0.0.1:7777"],
-            "local_addresses": [address],
-            "mtu": 1380,
-            "tun_name": name,
-        })
-        .to_string()
+    fn sample_wireguard_payload_with_address(address: &str, mtu: u16) -> Vec<u8> {
+        format!(
+            "[Interface]\nPrivateKey = OEPVdomeLTxTIBvv3TYsJRge0Hp9NMiY0sIrhT8OWG8=\nAddress = {address}\nListenPort = 51820\nMTU = {mtu}\n\n[Peer]\nPublicKey = 8GaFjVO6c4luCHG4ONO+1bFG8tO+Zz5/Gy+Geht1USM=\nPresharedKey = ha7j4BjD49sIzyF9SNlbueK0AMHghlj6+u0G3bzC698=\nAllowedIPs = 0.0.0.0/0\nEndpoint = wg.burrow.rs:51820\n"
+        )
         .into_bytes()
+    }
+
+    fn sample_tailnet_payload() -> Vec<u8> {
+        br#"{
+  "provider":"tailscale",
+  "account":"default",
+  "identity":"apple",
+  "tailnet":"example.ts.net",
+  "hostname":"burrow-phone"
+}"#
+        .to_vec()
     }
 
     #[test]
@@ -304,8 +307,18 @@ Endpoint = wg.burrow.rs:51820
             &conn,
             &RPCNetwork {
                 id: 2,
-                r#type: NetworkType::HackClub.into(),
-                payload: sample_hackclub_payload("burrow-test-0", "10.42.0.2/32"),
+                r#type: NetworkType::Tailnet.into(),
+                payload: sample_tailnet_payload(),
+            },
+        )
+        .unwrap();
+
+        add_network(
+            &conn,
+            &RPCNetwork {
+                id: 3,
+                r#type: NetworkType::WireGuard.into(),
+                payload: sample_wireguard_payload_with_address("10.42.0.2/32", 1380),
             },
         )
         .unwrap();
@@ -313,9 +326,19 @@ Endpoint = wg.burrow.rs:51820
         assert!(add_network(
             &conn,
             &RPCNetwork {
-                id: 3,
+                id: 4,
                 r#type: NetworkType::WireGuard.into(),
                 payload: b"not-a-config".to_vec(),
+            },
+        )
+        .is_err());
+
+        assert!(add_network(
+            &conn,
+            &RPCNetwork {
+                id: 5,
+                r#type: NetworkType::Tailnet.into(),
+                payload: b"not-a-tailnet-config".to_vec(),
             },
         )
         .is_err());
@@ -325,7 +348,7 @@ Endpoint = wg.burrow.rs:51820
             .into_iter()
             .map(|n| n.id)
             .collect();
-        assert_eq!(ids, vec![1, 2]);
+        assert_eq!(ids, vec![1, 2, 3]);
     }
 
     #[test]
@@ -333,17 +356,17 @@ Endpoint = wg.burrow.rs:51820
         let conn = Connection::open_in_memory().unwrap();
         initialize_tables(&conn).unwrap();
 
-        for (id, name, address) in [
-            (1, "burrow-test-1", "10.42.0.2/32"),
-            (2, "burrow-test-2", "10.42.0.3/32"),
-            (3, "burrow-test-3", "10.42.0.4/32"),
+        for (id, address, mtu) in [
+            (1, "10.42.0.2/32", 1380),
+            (2, "10.42.0.3/32", 1381),
+            (3, "10.42.0.4/32", 1382),
         ] {
             add_network(
                 &conn,
                 &RPCNetwork {
                     id,
-                    r#type: NetworkType::HackClub.into(),
-                    payload: sample_hackclub_payload(name, address),
+                    r#type: NetworkType::WireGuard.into(),
+                    payload: sample_wireguard_payload_with_address(address, mtu),
                 },
             )
             .unwrap();

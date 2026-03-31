@@ -9,7 +9,7 @@ use super::rpc::{
     ServerConfig,
 };
 use crate::{
-    mesh::iroh::{self as mesh_iroh, HackClubNetworkConfig, MeshHandle},
+    control::TailnetConfig,
     wireguard::{Config, Interface as WireGuardInterface},
 };
 
@@ -28,13 +28,13 @@ pub enum ResolvedTunnel {
     Passthrough {
         identity: RuntimeIdentity,
     },
+    Tailnet {
+        identity: RuntimeIdentity,
+        config: TailnetConfig,
+    },
     WireGuard {
         identity: RuntimeIdentity,
         config: Config,
-    },
-    HackClub {
-        identity: RuntimeIdentity,
-        config: HackClubNetworkConfig,
     },
 }
 
@@ -53,15 +53,15 @@ impl ResolvedTunnel {
         };
 
         match network.r#type() {
+            NetworkType::Tailnet => {
+                let config = TailnetConfig::from_slice(&network.payload)?;
+                Ok(Self::Tailnet { identity, config })
+            }
             NetworkType::WireGuard => {
                 let payload = String::from_utf8(network.payload.clone())
                     .context("wireguard payload must be valid UTF-8")?;
                 let config = Config::from_content_fmt(&payload, "ini")?;
                 Ok(Self::WireGuard { identity, config })
-            }
-            NetworkType::HackClub => {
-                let config = HackClubNetworkConfig::from_payload(&network.payload)?;
-                Ok(Self::HackClub { identity, config })
             }
         }
     }
@@ -69,8 +69,8 @@ impl ResolvedTunnel {
     pub fn identity(&self) -> &RuntimeIdentity {
         match self {
             Self::Passthrough { identity }
-            | Self::WireGuard { identity, .. }
-            | Self::HackClub { identity, .. } => identity,
+            | Self::Tailnet { identity, .. }
+            | Self::WireGuard { identity, .. } => identity,
         }
     }
 
@@ -81,12 +81,12 @@ impl ResolvedTunnel {
                 name: None,
                 mtu: Some(1500),
             }),
-            Self::WireGuard { config, .. } => ServerConfig::try_from(config),
-            Self::HackClub { config, .. } => Ok(ServerConfig {
-                address: config.local_addresses.clone(),
-                name: config.tun_name.clone(),
-                mtu: config.mtu.map(i32::from),
+            Self::Tailnet { .. } => Ok(ServerConfig {
+                address: Vec::new(),
+                name: None,
+                mtu: Some(1280),
             }),
+            Self::WireGuard { config, .. } => ServerConfig::try_from(config),
         }
     }
 
@@ -96,6 +96,10 @@ impl ResolvedTunnel {
     ) -> Result<ActiveTunnel> {
         match self {
             Self::Passthrough { identity } => Ok(ActiveTunnel::Passthrough { identity }),
+            Self::Tailnet { config, .. } => Err(anyhow::anyhow!(
+                "tailnet runtime is not wired in this checkout yet ({:?})",
+                config.provider
+            )),
             Self::WireGuard { identity, config } => {
                 let tun = TunOptions::new().open()?;
                 tun_interface.write().await.replace(tun);
@@ -104,23 +108,6 @@ impl ResolvedTunnel {
                     Ok((interface, task)) => {
                         Ok(ActiveTunnel::WireGuard { identity, interface, task })
                     }
-                    Err(err) => {
-                        tun_interface.write().await.take();
-                        Err(err)
-                    }
-                }
-            }
-            Self::HackClub { identity, config } => {
-                let mut tun_opts = TunOptions::new();
-                if let Some(name) = config.tun_name.as_deref() {
-                    tun_opts = tun_opts.name(name);
-                }
-
-                let tun = tun_opts.open()?;
-                tun_interface.write().await.replace(tun);
-
-                match mesh_iroh::spawn_hackclub_tunnel(config, tun_interface.clone()).await {
-                    Ok(handle) => Ok(ActiveTunnel::HackClub { identity, handle }),
                     Err(err) => {
                         tun_interface.write().await.take();
                         Err(err)
@@ -140,18 +127,13 @@ pub enum ActiveTunnel {
         interface: Arc<RwLock<WireGuardInterface>>,
         task: JoinHandle<Result<()>>,
     },
-    HackClub {
-        identity: RuntimeIdentity,
-        handle: MeshHandle,
-    },
 }
 
 impl ActiveTunnel {
     pub fn identity(&self) -> &RuntimeIdentity {
         match self {
             Self::Passthrough { identity }
-            | Self::WireGuard { identity, .. }
-            | Self::HackClub { identity, .. } => identity,
+            | Self::WireGuard { identity, .. } => identity,
         }
     }
 
@@ -164,11 +146,6 @@ impl ActiveTunnel {
                 tun_interface.write().await.take();
                 task_result??;
                 Ok(())
-            }
-            Self::HackClub { handle, .. } => {
-                let result = handle.shutdown().await;
-                tun_interface.write().await.take();
-                result
             }
         }
     }
