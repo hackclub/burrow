@@ -2,6 +2,11 @@ import AuthenticationServices
 import BurrowConfiguration
 import Foundation
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 public struct BurrowView: View {
     @State private var networkViewModel: NetworkViewModel
@@ -338,15 +343,10 @@ private struct ConfigurationSheetView: View {
         NavigationStack {
             Form {
                 Section {
-                    Text(sheet.kind.subtitle)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                    if let availabilityNote = sheet.kind.availabilityNote {
-                        Text(availabilityNote)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
+                    sheetSummaryCard
                 }
+                .listRowInsets(.init(top: 4, leading: 0, bottom: 4, trailing: 0))
+                .listRowBackground(Color.clear)
 
                 Section("Identity") {
                     TextField("Title", text: $draft.title)
@@ -364,7 +364,10 @@ private struct ConfigurationSheetView: View {
                     Section("WireGuard Configuration") {
                         TextEditor(text: $draft.wireGuardConfig)
                             .font(.body.monospaced())
-                            .frame(minHeight: 220)
+                            .frame(minHeight: wireGuardEditorHeight)
+                            .contextMenu {
+                                wireGuardContextActions
+                            }
                     }
                 case .tor:
                     Section("Tor Preferences") {
@@ -385,23 +388,52 @@ private struct ConfigurationSheetView: View {
                 }
             }
             .navigationTitle(sheet.kind.title)
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(confirmationTitle) {
-                        submit()
+                #if os(iOS)
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        sheetMenuActions
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                     }
-                    .disabled(isSubmitting || submissionDisabled)
+                    .accessibilityLabel("More")
+                }
+                #else
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        sheetMenuActions
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                    .accessibilityLabel("More")
+                }
+                #endif
+                if !showsBottomActionButton {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(confirmationTitle) {
+                            submit()
+                        }
+                        .disabled(isSubmitting || submissionDisabled)
+                    }
                 }
             }
         }
         #if os(macOS)
         .frame(minWidth: 520, minHeight: 620)
         #endif
+        .safeAreaInset(edge: .bottom) {
+            if showsBottomActionButton {
+                bottomActionBar
+            }
+        }
         .onAppear {
             runAutomationIfNeeded()
         }
@@ -420,6 +452,7 @@ private struct ConfigurationSheetView: View {
                     Text(provider.title).tag(provider)
                 }
             }
+            .pickerStyle(.menu)
             Text(draft.tailnetProvider.subtitle)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
@@ -448,6 +481,7 @@ private struct ConfigurationSheetView: View {
                         Text(mode.title).tag(mode)
                     }
                 }
+                .pickerStyle(.menu)
                 if draft.authMode != .none {
                     SecureField(
                         draft.authMode == .password ? "Password" : "Preauth Key",
@@ -490,6 +524,164 @@ private struct ConfigurationSheetView: View {
                 }
             }
         }
+    }
+
+    private var sheetSummaryCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                Image(systemName: sheet.iconName)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(sheetAccentColor)
+                    .frame(width: 28, height: 28)
+                    .background(
+                        Circle()
+                            .fill(sheetAccentColor.opacity(0.14))
+                    )
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(summaryTitle)
+                        .font(.headline)
+                    Text(sheet.kind.subtitle)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+            }
+
+            if let availabilityNote = sheet.kind.availabilityNote {
+                Text(availabilityNote)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(.thinMaterial)
+        )
+    }
+
+    @ViewBuilder
+    private var bottomActionBar: some View {
+        VStack(spacing: 0) {
+            Divider()
+                .overlay(.white.opacity(0.3))
+            Button(confirmationTitle) {
+                submit()
+            }
+            .buttonStyle(.floating(color: sheetAccentColor, cornerRadius: 18))
+            .disabled(isSubmitting || submissionDisabled)
+            .padding(.horizontal)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
+        }
+        .background(.ultraThinMaterial)
+    }
+
+    @ViewBuilder
+    private var sheetMenuActions: some View {
+        Button("Use Suggested Identity") {
+            applySuggestedIdentity()
+        }
+
+        switch sheet {
+        case .wireGuard:
+            Button("Paste Configuration") {
+                pasteWireGuardConfiguration()
+            }
+            .disabled(clipboardString?.isEmpty ?? true)
+
+            Button("Clear Configuration", role: .destructive) {
+                draft.wireGuardConfig = ""
+            }
+            .disabled(draft.wireGuardConfig.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+        case .tor:
+            Menu("Presets") {
+                Button("Recommended Tor Defaults") {
+                    applyTorDefaults()
+                }
+                Button("Restore Suggested Identity") {
+                    applySuggestedIdentity()
+                }
+            }
+
+        case .tailnet:
+            Menu("Provider") {
+                ForEach(TailnetProvider.allCases) { provider in
+                    Button(provider.title) {
+                        applyTailnetProvider(provider)
+                    }
+                }
+            }
+
+            if !draft.tailnetProvider.usesWebLogin {
+                Menu("Authentication") {
+                    ForEach([AccountAuthMode.none, .password, .preauthKey]) { mode in
+                        Button(mode.title) {
+                            draft.authMode = mode
+                            if mode == .none {
+                                draft.secret = ""
+                            }
+                        }
+                    }
+                }
+            }
+
+            Button("Restore Provider Defaults") {
+                applyTailnetDefaults(for: draft.tailnetProvider)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var wireGuardContextActions: some View {
+        Button("Paste Configuration") {
+            pasteWireGuardConfiguration()
+        }
+        .disabled(clipboardString?.isEmpty ?? true)
+
+        Button("Clear", role: .destructive) {
+            draft.wireGuardConfig = ""
+        }
+        .disabled(draft.wireGuardConfig.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+    }
+
+    private var sheetAccentColor: Color {
+        switch sheet {
+        case .wireGuard:
+            .blue
+        case .tor, .tailnet:
+            sheet.kind.accentColor
+        }
+    }
+
+    private var summaryTitle: String {
+        switch sheet {
+        case .wireGuard:
+            "Import WireGuard"
+        case .tor:
+            "Configure Tor"
+        case .tailnet:
+            "Connect Tailnet"
+        }
+    }
+
+    private var showsBottomActionButton: Bool {
+        #if os(iOS)
+        true
+        #else
+        false
+        #endif
+    }
+
+    private var wireGuardEditorHeight: CGFloat {
+        #if os(iOS)
+        180
+        #else
+        220
+        #endif
     }
 
     private var confirmationTitle: String {
@@ -773,6 +965,62 @@ private struct ConfigurationSheetView: View {
             updatedAt: .now
         )
         try accountStore.upsert(record, secret: secret)
+    }
+
+    private func applySuggestedIdentity() {
+        let defaults = AccountDraft(sheet: sheet)
+        if draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            draft.title = defaults.title
+        }
+        draft.accountName = defaults.accountName
+        draft.identityName = defaults.identityName
+        if sheet == .tailnet {
+            draft.hostname = defaults.hostname
+        }
+    }
+
+    private func applyTorDefaults() {
+        let defaults = AccountDraft(sheet: .tor)
+        draft.title = defaults.title
+        draft.accountName = defaults.accountName
+        draft.identityName = defaults.identityName
+        draft.torAddresses = defaults.torAddresses
+        draft.torDNS = defaults.torDNS
+        draft.torMTU = defaults.torMTU
+        draft.torListen = defaults.torListen
+    }
+
+    private func applyTailnetProvider(_ provider: TailnetProvider) {
+        draft.tailnetProvider = provider
+        applyTailnetDefaults(for: provider)
+    }
+
+    private func applyTailnetDefaults(for provider: TailnetProvider) {
+        draft.authority = provider.defaultAuthority ?? ""
+        if provider.usesWebLogin {
+            draft.authMode = .web
+            draft.username = ""
+            draft.secret = ""
+        } else {
+            if draft.authMode == .web {
+                draft.authMode = .none
+            }
+        }
+    }
+
+    private func pasteWireGuardConfiguration() {
+        guard let clipboardString else { return }
+        draft.wireGuardConfig = clipboardString
+    }
+
+    private var clipboardString: String? {
+        #if canImport(UIKit)
+        UIPasteboard.general.string
+        #elseif canImport(AppKit)
+        NSPasteboard.general.string(forType: .string)
+        #else
+        nil
+        #endif
     }
 
     private func normalized(_ value: String, fallback: String) -> String {
