@@ -54,7 +54,7 @@ END;
 pub fn initialize_tables(conn: &Connection) -> Result<()> {
     conn.execute(CREATE_WG_INTERFACE_TABLE, [])?;
     conn.execute(CREATE_WG_PEER_TABLE, [])?;
-    conn.execute(CREATE_NETWORK_TABLE, [])?;
+    conn.execute_batch(CREATE_NETWORK_TABLE)?;
     Ok(())
 }
 

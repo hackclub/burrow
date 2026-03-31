@@ -2,6 +2,8 @@ use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
+mod control;
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
 mod daemon;
 pub(crate) mod tracing;
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
@@ -9,6 +11,11 @@ mod wireguard;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 mod auth;
+
+#[cfg(any(target_os = "linux", target_vendor = "apple"))]
+mod mesh;
+#[cfg(target_os = "linux")]
+mod tor;
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 use daemon::{DaemonClient, DaemonCommand};
@@ -66,6 +73,9 @@ enum Commands {
     NetworkReorder(NetworkReorderArgs),
     /// Delete Network
     NetworkDelete(NetworkDeleteArgs),
+    #[cfg(target_os = "linux")]
+    /// Run a command in a Linux user namespace with Tor-backed networking
+    TorExec(TorExecArgs),
 }
 
 #[derive(Args)]
@@ -96,6 +106,14 @@ struct NetworkReorderArgs {
 #[derive(Args)]
 struct NetworkDeleteArgs {
     id: i32,
+}
+
+#[cfg(target_os = "linux")]
+#[derive(Args)]
+struct TorExecArgs {
+    payload_path: String,
+    #[arg(required = true, num_args = 1.., trailing_var_arg = true)]
+    command: Vec<String>,
 }
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
@@ -209,6 +227,17 @@ async fn try_network_delete(id: i32) -> Result<()> {
     Ok(())
 }
 
+#[cfg(target_os = "linux")]
+async fn try_tor_exec(payload_path: &str, command: Vec<String>) -> Result<()> {
+    let payload = tokio::fs::read(payload_path).await?;
+    let config = tor::Config::from_payload(&payload)?;
+    let exit_code = tor::run_exec(config, command).await?;
+    if exit_code != 0 {
+        std::process::exit(exit_code);
+    }
+    Ok(())
+}
+
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 fn handle_unexpected(res: Result<DaemonResponseData, String>) {
     match res {
@@ -285,6 +314,8 @@ async fn main() -> Result<()> {
         Commands::NetworkList => try_network_list().await?,
         Commands::NetworkReorder(args) => try_network_reorder(args.id, args.index).await?,
         Commands::NetworkDelete(args) => try_network_delete(args.id).await?,
+        #[cfg(target_os = "linux")]
+        Commands::TorExec(args) => try_tor_exec(&args.payload_path, args.command.clone()).await?,
     }
 
     Ok(())
