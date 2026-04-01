@@ -74,6 +74,41 @@ api() {
   fi
 }
 
+api_with_status() {
+  local method="$1"
+  local path="$2"
+  local data="${3:-}"
+  local response_file status
+
+  response_file="$(mktemp)"
+  trap 'rm -f "$response_file"' RETURN
+
+  if [[ -n "$data" ]]; then
+    status="$(
+      curl -sS \
+        -o "$response_file" \
+        -w '%{http_code}' \
+        -X "$method" \
+        -H "Authorization: Bearer ${bootstrap_token}" \
+        -H "Content-Type: application/json" \
+        -d "$data" \
+        "${authentik_url}${path}"
+    )"
+  else
+    status="$(
+      curl -sS \
+        -o "$response_file" \
+        -w '%{http_code}' \
+        -X "$method" \
+        -H "Authorization: Bearer ${bootstrap_token}" \
+        "${authentik_url}${path}"
+    )"
+  fi
+
+  printf '%s\n' "$status"
+  cat "$response_file"
+}
+
 wait_for_authentik() {
   for _ in $(seq 1 90); do
     if curl -fsS "${authentik_url}/-/health/ready/" >/dev/null 2>&1; then
@@ -106,7 +141,6 @@ signing_key="$(printf '%s\n' "$template_provider" | jq -r '.signing_key')"
 provider_payload="$(
   jq -n \
     --arg name "$provider_name" \
-    --arg slug "$application_slug" \
     --arg authorization_flow "$authorization_flow" \
     --arg invalidation_flow "$invalidation_flow" \
     --arg client_id "$client_id" \
@@ -116,7 +150,6 @@ provider_payload="$(
     --argjson redirect_uris "$redirect_uris_json" \
     '{
       name: $name,
-      slug: $slug,
       authorization_flow: $authorization_flow,
       invalidation_flow: $invalidation_flow,
       client_type: "confidential",
@@ -172,18 +205,32 @@ application_payload="$(
 )"
 
 existing_application="$(
-  api GET "/api/v3/core/applications/?slug=${application_slug}" \
-    | jq -c '.results[]? | select(.slug != null)' \
+  api GET "/api/v3/core/applications/?page_size=200" \
+    | jq -c --arg slug "$application_slug" '.results[]? | select(.slug == $slug)' \
     | head -n1
 )"
 
 if [[ -n "$existing_application" ]]; then
   application_pk="$(printf '%s\n' "$existing_application" | jq -r '.pk')"
 else
-  application_pk="$(
-    api POST "/api/v3/core/applications/" "$application_payload" \
-      | jq -r '.pk // empty'
+  create_application_result="$(
+    api_with_status POST "/api/v3/core/applications/" "$application_payload"
   )"
+  create_application_status="$(printf '%s\n' "$create_application_result" | sed -n '1p')"
+  create_application_body="$(printf '%s\n' "$create_application_result" | sed '1d')"
+
+  if [[ "$create_application_status" =~ ^20[01]$ ]]; then
+    application_pk="$(printf '%s\n' "$create_application_body" | jq -r '.pk // empty')"
+  elif [[ "$create_application_status" == "400" ]] && printf '%s\n' "$create_application_body" | jq -e '
+      (.slug // [] | index("Application with this slug already exists.")) != null
+      or (.provider // [] | index("Application with this provider already exists.")) != null
+    ' >/dev/null; then
+    application_pk="existing-duplicate"
+  else
+    printf '%s\n' "$create_application_body" >&2
+    echo "error: could not reconcile Authentik application ${application_slug}" >&2
+    exit 1
+  fi
 fi
 
 if [[ -z "${application_pk:-}" ]]; then

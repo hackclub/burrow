@@ -8,6 +8,7 @@ let
   blueprintFile = "${blueprintDir}/burrow-authentik.yaml";
   postgresVolume = "burrow-authentik-postgresql:/var/lib/postgresql/data";
   dataVolume = "burrow-authentik-data:/data";
+  directorySyncScript = ../../Scripts/authentik-sync-burrow-directory.sh;
   forgejoOidcSyncScript = ../../Scripts/authentik-sync-forgejo-oidc.sh;
   googleSourceSyncScript = ../../Scripts/authentik-sync-google-source.sh;
   authentikBlueprint = pkgs.writeText "burrow-authentik-blueprint.yaml" ''
@@ -31,6 +32,19 @@ let
                 "email_verified": True,
             }
 
+      - model: authentik_providers_oauth2.scopemapping
+        id: burrow-oidc-groups
+        identifiers:
+          name: Burrow OIDC Groups
+        attrs:
+          name: Burrow OIDC Groups
+          scope_name: groups
+          description: Group membership mapping for Burrow
+          expression: |
+            return {
+                "groups": [group.name for group in request.user.ak_groups.all()],
+            }
+
       - model: authentik_providers_oauth2.oauth2provider
         id: burrow-oidc-provider-ts
         identifiers:
@@ -50,6 +64,7 @@ let
           property_mappings:
             - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
             - !KeyOf burrow-oidc-email
+            - !KeyOf burrow-oidc-groups
             - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
           signing_key: !Find [authentik_crypto.certificatekeypair, [name, authentik Self-signed Certificate]]
 
@@ -158,6 +173,54 @@ in
       ];
       default = "redirect";
       description = "Identification-stage behavior for the Google Authentik source.";
+    };
+
+    userGroupName = lib.mkOption {
+      type = lib.types.str;
+      default = "burrow-users";
+      description = "Authentik group granted baseline Burrow access.";
+    };
+
+    adminGroupName = lib.mkOption {
+      type = lib.types.str;
+      default = "burrow-admins";
+      description = "Authentik group granted Burrow administrator access.";
+    };
+
+    bootstrapUsers = lib.mkOption {
+      type = with lib.types; listOf (submodule {
+        options = {
+          username = lib.mkOption {
+            type = str;
+            description = "Authentik username.";
+          };
+          name = lib.mkOption {
+            type = str;
+            description = "Display name for the user.";
+          };
+          email = lib.mkOption {
+            type = str;
+            description = "Canonical email stored in Authentik.";
+          };
+          sourceEmail = lib.mkOption {
+            type = nullOr str;
+            default = null;
+            description = "External Google account email that should map onto this Authentik user.";
+          };
+          groups = lib.mkOption {
+            type = listOf str;
+            default = [ ];
+            description = "Additional Authentik groups for this user.";
+          };
+          isAdmin = lib.mkOption {
+            type = bool;
+            default = false;
+            description = "Whether this user should be in the Burrow admin group.";
+          };
+        };
+      });
+      default = [ ];
+      description = "Declarative Burrow users to create in Authentik.";
     };
   };
 
@@ -295,6 +358,16 @@ EOF
       ];
     };
 
+    systemd.services.podman-burrow-authentik-server.restartTriggers = [
+      blueprintFile
+      envFile
+    ];
+
+    systemd.services.podman-burrow-authentik-worker.restartTriggers = [
+      blueprintFile
+      envFile
+    ];
+
     systemd.services.burrow-authentik-ready = {
       description = "Wait for Burrow Authentik to become ready";
       after = [ "podman-burrow-authentik-server.service" ];
@@ -366,8 +439,63 @@ EOF
         export AUTHENTIK_GOOGLE_USER_MATCHING_MODE=email_link
         export AUTHENTIK_GOOGLE_CLIENT_ID="$(tr -d '\r\n' < ${lib.escapeShellArg cfg.googleClientIDFile})"
         export AUTHENTIK_GOOGLE_CLIENT_SECRET="$(tr -d '\r\n' < ${lib.escapeShellArg cfg.googleClientSecretFile})"
+        export AUTHENTIK_GOOGLE_ACCOUNT_MAP_JSON='${builtins.toJSON (map (user: {
+          source_email = user.sourceEmail;
+          username = user.username;
+          email = user.email;
+          name = user.name;
+        }) (lib.filter (user: user.sourceEmail != null) cfg.bootstrapUsers))}'
 
         ${pkgs.bash}/bin/bash ${googleSourceSyncScript}
+      '';
+    };
+
+    systemd.services.burrow-authentik-directory = lib.mkIf (cfg.bootstrapUsers != [ ]) {
+      description = "Reconcile Burrow Authentik users and groups";
+      after =
+        [
+          "burrow-authentik-ready.service"
+          "network-online.target"
+        ]
+        ++ lib.optionals (cfg.forgejoClientSecretFile != null) [ "burrow-authentik-forgejo-oidc.service" ];
+      wants =
+        [
+          "burrow-authentik-ready.service"
+          "network-online.target"
+        ]
+        ++ lib.optionals (cfg.forgejoClientSecretFile != null) [ "burrow-authentik-forgejo-oidc.service" ];
+      wantedBy = [ "multi-user.target" ];
+      restartTriggers = [
+        directorySyncScript
+        cfg.envFile
+      ];
+      path = [
+        pkgs.bash
+        pkgs.coreutils
+        pkgs.curl
+        pkgs.jq
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "root";
+        Group = "root";
+      };
+      script = ''
+        set -euo pipefail
+        set -a
+        source ${lib.escapeShellArg cfg.envFile}
+        set +a
+
+        export AUTHENTIK_URL=https://${cfg.domain}
+        export AUTHENTIK_BURROW_USERS_GROUP=${lib.escapeShellArg cfg.userGroupName}
+        export AUTHENTIK_BURROW_ADMINS_GROUP=${lib.escapeShellArg cfg.adminGroupName}
+        export AUTHENTIK_FORGEJO_APPLICATION_SLUG=${lib.escapeShellArg cfg.forgejoProviderSlug}
+        export AUTHENTIK_BURROW_DIRECTORY_JSON='${builtins.toJSON (map (user: {
+          inherit (user) username name email isAdmin;
+          groups = user.groups;
+        }) cfg.bootstrapUsers)}'
+
+        ${pkgs.bash}/bin/bash ${directorySyncScript}
       '';
     };
 

@@ -91,6 +91,22 @@
     headscaleClientSecretFile = config.age.secrets.burrowHeadscaleOidcClientSecret.path;
     googleClientIDFile = config.age.secrets.burrowAuthentikGoogleClientId.path;
     googleClientSecretFile = config.age.secrets.burrowAuthentikGoogleClientSecret.path;
+    bootstrapUsers = [
+      {
+        username = "contact";
+        name = "Burrow";
+        email = "contact@burrow.net";
+        sourceEmail = "net.burrow@gmail.com";
+        isAdmin = true;
+      }
+      {
+        username = "conrad";
+        name = "Conrad Kramer";
+        email = "conrad@burrow.net";
+        sourceEmail = "ckrames1234@gmail.com";
+        isAdmin = true;
+      }
+    ];
   };
 
   services.burrow.headscale = {

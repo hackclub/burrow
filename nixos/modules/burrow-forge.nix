@@ -92,6 +92,35 @@ in
       description = "OpenID Connect discovery URL for the Forgejo login source.";
     };
 
+    oidcScopes = lib.mkOption {
+      type = with lib.types; listOf str;
+      default = [
+        "openid"
+        "profile"
+        "email"
+        "groups"
+      ];
+      description = "OIDC scopes requested from Authentik.";
+    };
+
+    oidcGroupClaimName = lib.mkOption {
+      type = lib.types.str;
+      default = "groups";
+      description = "OIDC claim name that carries group membership.";
+    };
+
+    oidcAdminGroup = lib.mkOption {
+      type = lib.types.str;
+      default = "burrow-admins";
+      description = "OIDC group that should grant Forgejo admin access.";
+    };
+
+    oidcRestrictedGroup = lib.mkOption {
+      type = lib.types.str;
+      default = "burrow-users";
+      description = "OIDC group that is required to log into Forgejo.";
+    };
+
     authorizedKeys = lib.mkOption {
       type = with lib.types; listOf str;
       default = [ ];
@@ -339,6 +368,10 @@ in
           --arg client_id ${lib.escapeShellArg cfg.oidcClientId} \
           --arg client_secret "$oidc_secret" \
           --arg discovery_url ${lib.escapeShellArg cfg.oidcDiscoveryUrl} \
+          --argjson scopes '${builtins.toJSON cfg.oidcScopes}' \
+          --arg group_claim_name ${lib.escapeShellArg cfg.oidcGroupClaimName} \
+          --arg admin_group ${lib.escapeShellArg cfg.oidcAdminGroup} \
+          --arg restricted_group ${lib.escapeShellArg cfg.oidcRestrictedGroup} \
           '{
             Provider: "openidConnect",
             ClientID: $client_id,
@@ -346,15 +379,15 @@ in
             OpenIDConnectAutoDiscoveryURL: $discovery_url,
             CustomURLMapping: null,
             IconURL: "",
-            Scopes: ["openid", "profile", "email"],
+            Scopes: $scopes,
             AttributeSSHPublicKey: "",
             RequiredClaimName: "",
             RequiredClaimValue: "",
-            GroupClaimName: "",
-            AdminGroup: "",
+            GroupClaimName: $group_claim_name,
+            AdminGroup: $admin_group,
             GroupTeamMap: "",
             GroupTeamMapRemoval: false,
-            RestrictedGroup: ""
+            RestrictedGroup: $restricted_group
           }')"
 
         ${pkgs.postgresql}/bin/psql -v ON_ERROR_STOP=1 \
