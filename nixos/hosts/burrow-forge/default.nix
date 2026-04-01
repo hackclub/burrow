@@ -33,6 +33,18 @@
     group = "root";
     mode = "0400";
   };
+  age.secrets.burrowAuthentikGoogleClientId = {
+    file = ../../../secrets/infra/authentik-google-client-id.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+  age.secrets.burrowAuthentikGoogleClientSecret = {
+    file = ../../../secrets/infra/authentik-google-client-secret.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
 
   networking.extraHosts = ''
     127.0.0.1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net nsc-autoscaler.burrow.net
@@ -69,6 +81,8 @@
     enable = true;
     envFile = config.age.secrets.burrowAuthentikEnv.path;
     headscaleClientSecretFile = config.age.secrets.burrowHeadscaleOidcClientSecret.path;
+    googleClientIDFile = config.age.secrets.burrowAuthentikGoogleClientId.path;
+    googleClientSecretFile = config.age.secrets.burrowAuthentikGoogleClientSecret.path;
   };
 
   services.burrow.headscale = {

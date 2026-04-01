@@ -8,6 +8,7 @@ let
   blueprintFile = "${blueprintDir}/burrow-authentik.yaml";
   postgresVolume = "burrow-authentik-postgresql:/var/lib/postgresql/data";
   dataVolume = "burrow-authentik-data:/data";
+  googleSourceSyncScript = ../../Scripts/authentik-sync-google-source.sh;
   authentikBlueprint = pkgs.writeText "burrow-authentik-blueprint.yaml" ''
     version: 1
     metadata:
@@ -105,6 +106,33 @@ in
       type = lib.types.str;
       default = "/var/lib/burrow/intake/authentik_headscale_client_secret.txt";
       description = "Host-local file containing the Authentik Headscale OIDC client secret.";
+    };
+
+    googleClientIDFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Host-local file containing the Google OAuth client ID for the Authentik source.";
+    };
+
+    googleClientSecretFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Host-local file containing the Google OAuth client secret for the Authentik source.";
+    };
+
+    googleSourceSlug = lib.mkOption {
+      type = lib.types.str;
+      default = "google";
+      description = "Authentik OAuth source slug used for Google login.";
+    };
+
+    googleLoginMode = lib.mkOption {
+      type = lib.types.enum [
+        "promoted"
+        "redirect"
+      ];
+      default = "redirect";
+      description = "Identification-stage behavior for the Google Authentik source.";
     };
   };
 
@@ -260,6 +288,55 @@ EOF
 
         echo "Authentik did not become ready on ${cfg.domain}" >&2
         exit 1
+      '';
+    };
+
+    systemd.services.burrow-authentik-google-source = lib.mkIf (
+      cfg.googleClientIDFile != null && cfg.googleClientSecretFile != null
+    ) {
+      description = "Reconcile the Burrow Authentik Google OAuth source";
+      after = [
+        "burrow-authentik-ready.service"
+        "network-online.target"
+      ];
+      wants = [
+        "burrow-authentik-ready.service"
+        "network-online.target"
+      ];
+      wantedBy = [ "multi-user.target" ];
+      restartTriggers = [
+        googleSourceSyncScript
+        cfg.envFile
+        cfg.googleClientIDFile
+        cfg.googleClientSecretFile
+      ];
+      path = [
+        pkgs.bash
+        pkgs.coreutils
+        pkgs.curl
+        pkgs.jq
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "root";
+        Group = "root";
+        Restart = "on-failure";
+        RestartSec = 5;
+      };
+      script = ''
+        set -euo pipefail
+        set -a
+        source ${lib.escapeShellArg cfg.envFile}
+        set +a
+
+        export AUTHENTIK_URL=https://${cfg.domain}
+        export AUTHENTIK_GOOGLE_SOURCE_SLUG=${lib.escapeShellArg cfg.googleSourceSlug}
+        export AUTHENTIK_GOOGLE_LOGIN_MODE=${lib.escapeShellArg cfg.googleLoginMode}
+        export AUTHENTIK_GOOGLE_USER_MATCHING_MODE=email_link
+        export AUTHENTIK_GOOGLE_CLIENT_ID="$(tr -d '\r\n' < ${lib.escapeShellArg cfg.googleClientIDFile})"
+        export AUTHENTIK_GOOGLE_CLIENT_SECRET="$(tr -d '\r\n' < ${lib.escapeShellArg cfg.googleClientSecretFile})"
+
+        ${pkgs.bash}/bin/bash ${googleSourceSyncScript}
       '';
     };
 

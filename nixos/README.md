@@ -33,7 +33,7 @@ Mail hosting is intentionally not part of this NixOS host in the current plan. B
 4. Let `burrow-forgejo-bootstrap.service` create or rotate the initial Forgejo admin account.
 5. Let `burrow-forgejo-runner-bootstrap.service` register the self-hosted Forgejo runner and seed Git identity as `agent <agent@burrow.net>`.
 6. Run `Scripts/provision-forgejo-nsc.sh` locally, then `Scripts/sync-forgejo-nsc-config.sh` to place the Namespace dispatcher/autoscaler runtime inputs under `/var/lib/burrow/intake/`.
-7. Ensure `/var/lib/agenix/agenix.key` exists on the host, encrypt `secrets/infra/authentik.env.age` and `secrets/infra/headscale-oidc-client-secret.age`, and let agenix materialize them under `/run/agenix/`.
+7. Ensure `/var/lib/agenix/agenix.key` exists on the host, encrypt `secrets/infra/authentik.env.age`, `secrets/infra/authentik-google-client-id.age`, `secrets/infra/authentik-google-client-secret.age`, and `secrets/infra/headscale-oidc-client-secret.age`, and let agenix materialize them under `/run/agenix/`.
 8. Use `Scripts/cloudflare-upsert-a-record.sh` to point `git.burrow.net`, `burrow.net`, `auth.burrow.net`, `ts.burrow.net`, and `nsc-autoscaler.burrow.net` at the host with Cloudflare proxying disabled for ACME.
 9. Use `Scripts/forge-deploy.sh --allow-dirty` for subsequent remote `nixos-rebuild` runs from the live workspace.
 10. Configure Forward Email custom S3 backups for `burrow.net` and `burrow.rs` out-of-band with `Tools/forwardemail-custom-s3.sh`.

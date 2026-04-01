@@ -10,5 +10,7 @@ let
 in
 {
   "secrets/infra/authentik.env.age".publicKeys = burrowForgeRecipients;
+  "secrets/infra/authentik-google-client-id.age".publicKeys = burrowForgeRecipients;
+  "secrets/infra/authentik-google-client-secret.age".publicKeys = burrowForgeRecipients;
   "secrets/infra/headscale-oidc-client-secret.age".publicKeys = burrowForgeRecipients;
 }
