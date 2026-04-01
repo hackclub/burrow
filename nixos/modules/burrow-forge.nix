@@ -121,6 +121,24 @@ in
       description = "OIDC group that is required to log into Forgejo.";
     };
 
+    oidcAutoRegistration = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Whether Forgejo should automatically create users for new OIDC sign-ins.";
+    };
+
+    oidcAccountLinking = lib.mkOption {
+      type = lib.types.enum [ "disabled" "login" "auto" ];
+      default = "auto";
+      description = "How Forgejo should link existing local accounts for OIDC sign-ins.";
+    };
+
+    oidcUsernameSource = lib.mkOption {
+      type = lib.types.enum [ "userid" "nickname" "email" ];
+      default = "email";
+      description = "Which OIDC claim Forgejo should use to derive usernames for auto-registration.";
+    };
+
     authorizedKeys = lib.mkOption {
       type = with lib.types; listOf str;
       default = [ ];
@@ -199,6 +217,13 @@ in
         openid = {
           ENABLE_OPENID_SIGNIN = false;
           ENABLE_OPENID_SIGNUP = false;
+        };
+
+        oauth2_client = {
+          OPENID_CONNECT_SCOPES = lib.concatStringsSep " " (lib.subtractLists [ "openid" ] cfg.oidcScopes);
+          ENABLE_AUTO_REGISTRATION = cfg.oidcAutoRegistration;
+          ACCOUNT_LINKING = cfg.oidcAccountLinking;
+          USERNAME = cfg.oidcUsernameSource;
         };
 
         actions = {
