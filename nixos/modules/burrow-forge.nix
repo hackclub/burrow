@@ -68,6 +68,30 @@ in
       description = "Host-local path to the plaintext bootstrap password file for the initial Forgejo admin.";
     };
 
+    oidcDisplayName = lib.mkOption {
+      type = lib.types.str;
+      default = "burrow.net";
+      description = "Login button label for the Forgejo OIDC provider.";
+    };
+
+    oidcClientId = lib.mkOption {
+      type = lib.types.str;
+      default = "git.burrow.net";
+      description = "OIDC client ID that Forgejo should use against Authentik.";
+    };
+
+    oidcClientSecretFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Host-local path to the Forgejo OIDC client secret.";
+    };
+
+    oidcDiscoveryUrl = lib.mkOption {
+      type = lib.types.str;
+      default = "https://auth.burrow.net/application/o/git/.well-known/openid-configuration";
+      description = "OpenID Connect discovery URL for the Forgejo login source.";
+    };
+
     authorizedKeys = lib.mkOption {
       type = with lib.types; listOf str;
       default = [ ];
@@ -241,6 +265,114 @@ in
             exit 1
           fi
         fi
+      '';
+    };
+
+    systemd.services.burrow-forgejo-oidc-bootstrap = lib.mkIf (cfg.oidcClientSecretFile != null) {
+      description = "Seed the Burrow Forgejo OIDC login source";
+      after = [
+        "forgejo.service"
+        "postgresql.service"
+      ] ++ lib.optionals config.services.burrow.authentik.enable [
+        "burrow-authentik-ready.service"
+      ];
+      wants = lib.optionals config.services.burrow.authentik.enable [
+        "burrow-authentik-ready.service"
+      ];
+      requires = [
+        "forgejo.service"
+        "postgresql.service"
+      ];
+      wantedBy = [ "multi-user.target" ];
+      restartTriggers = [
+        cfg.oidcClientSecretFile
+      ];
+      path = [
+        pkgs.coreutils
+        pkgs.gnugrep
+        pkgs.jq
+        pkgs.postgresql
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = forgejoCfg.user;
+        Group = forgejoCfg.group;
+        WorkingDirectory = forgejoCfg.stateDir;
+      };
+      script = ''
+        set -euo pipefail
+
+        if [ ! -s ${lib.escapeShellArg cfg.oidcClientSecretFile} ]; then
+          echo "Forgejo OIDC client secret missing: ${cfg.oidcClientSecretFile}" >&2
+          exit 1
+        fi
+
+        ready=0
+        for attempt in $(seq 1 60); do
+          if ${pkgs.postgresql}/bin/psql -h /run/postgresql -U forgejo forgejo -tAc \
+            "SELECT 1 FROM pg_tables WHERE schemaname='public' AND tablename='login_source';" \
+            | grep -q 1; then
+            ready=1
+            break
+          fi
+          sleep 1
+        done
+
+        if [ "$ready" -ne 1 ]; then
+          echo "Forgejo login_source table did not become ready" >&2
+          exit 1
+        fi
+
+        oidc_secret="$(${pkgs.coreutils}/bin/tr -d '\r\n' < ${lib.escapeShellArg cfg.oidcClientSecretFile})"
+        if [ -z "$oidc_secret" ]; then
+          echo "Forgejo OIDC client secret is empty" >&2
+          exit 1
+        fi
+
+        cfg_json="$(${pkgs.jq}/bin/jq -nc \
+          --arg client_id ${lib.escapeShellArg cfg.oidcClientId} \
+          --arg client_secret "$oidc_secret" \
+          --arg discovery_url ${lib.escapeShellArg cfg.oidcDiscoveryUrl} \
+          '{
+            Provider: "openidConnect",
+            ClientID: $client_id,
+            ClientSecret: $client_secret,
+            OpenIDConnectAutoDiscoveryURL: $discovery_url,
+            CustomURLMapping: null,
+            IconURL: "",
+            Scopes: ["openid", "profile", "email"],
+            AttributeSSHPublicKey: "",
+            RequiredClaimName: "",
+            RequiredClaimValue: "",
+            GroupClaimName: "",
+            AdminGroup: "",
+            GroupTeamMap: "",
+            GroupTeamMapRemoval: false,
+            RestrictedGroup: ""
+          }')"
+
+        ${pkgs.postgresql}/bin/psql -v ON_ERROR_STOP=1 \
+          -h /run/postgresql -U forgejo forgejo \
+          -v oidc_name=${lib.escapeShellArg cfg.oidcDisplayName} \
+          -v cfg_json="$cfg_json" <<'SQL'
+        INSERT INTO login_source (
+          type, name, is_active, is_sync_enabled, cfg, created_unix, updated_unix
+        ) VALUES (
+          6,
+          :'oidc_name',
+          TRUE,
+          FALSE,
+          :'cfg_json',
+          EXTRACT(EPOCH FROM NOW())::BIGINT,
+          EXTRACT(EPOCH FROM NOW())::BIGINT
+        )
+        ON CONFLICT (name) DO UPDATE SET
+          type = EXCLUDED.type,
+          is_active = TRUE,
+          is_sync_enabled = FALSE,
+          cfg = EXCLUDED.cfg,
+          updated_unix = EXCLUDED.updated_unix;
+        SQL
       '';
     };
   };

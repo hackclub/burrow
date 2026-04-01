@@ -33,6 +33,12 @@
     group = "root";
     mode = "0400";
   };
+  age.secrets.burrowForgejoOidcClientSecret = {
+    file = ../../../secrets/infra/forgejo-oidc-client-secret.age;
+    owner = "forgejo";
+    group = "forgejo";
+    mode = "0440";
+  };
   age.secrets.burrowAuthentikGoogleClientId = {
     file = ../../../secrets/infra/authentik-google-client-id.age;
     owner = "root";
@@ -54,6 +60,7 @@
   services.burrow.forge = {
     enable = true;
     adminPasswordFile = "/var/lib/burrow/intake/forgejo_pass_contact_at_burrow_net.txt";
+    oidcClientSecretFile = config.age.secrets.burrowForgejoOidcClientSecret.path;
     authorizedKeys = [
       (builtins.readFile ../../keys/contact_at_burrow_net.pub)
       (builtins.readFile ../../keys/agent_at_burrow_net.pub)
@@ -80,6 +87,7 @@
   services.burrow.authentik = {
     enable = true;
     envFile = config.age.secrets.burrowAuthentikEnv.path;
+    forgejoClientSecretFile = config.age.secrets.burrowForgejoOidcClientSecret.path;
     headscaleClientSecretFile = config.age.secrets.burrowHeadscaleOidcClientSecret.path;
     googleClientIDFile = config.age.secrets.burrowAuthentikGoogleClientId.path;
     googleClientSecretFile = config.age.secrets.burrowAuthentikGoogleClientSecret.path;

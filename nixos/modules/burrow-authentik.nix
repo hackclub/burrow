@@ -8,6 +8,7 @@ let
   blueprintFile = "${blueprintDir}/burrow-authentik.yaml";
   postgresVolume = "burrow-authentik-postgresql:/var/lib/postgresql/data";
   dataVolume = "burrow-authentik-data:/data";
+  forgejoOidcSyncScript = ../../Scripts/authentik-sync-forgejo-oidc.sh;
   googleSourceSyncScript = ../../Scripts/authentik-sync-google-source.sh;
   authentikBlueprint = pkgs.writeText "burrow-authentik-blueprint.yaml" ''
     version: 1
@@ -102,6 +103,30 @@ in
       description = "Authentik provider slug for Headscale.";
     };
 
+    forgejoDomain = lib.mkOption {
+      type = lib.types.str;
+      default = "git.burrow.net";
+      description = "Forgejo public domain used for the bundled OIDC client.";
+    };
+
+    forgejoProviderSlug = lib.mkOption {
+      type = lib.types.str;
+      default = "git";
+      description = "Authentik application slug for Forgejo.";
+    };
+
+    forgejoClientId = lib.mkOption {
+      type = lib.types.str;
+      default = "git.burrow.net";
+      description = "Client ID Authentik should present to Forgejo.";
+    };
+
+    forgejoClientSecretFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Host-local file containing the Authentik Forgejo OIDC client secret.";
+    };
+
     headscaleClientSecretFile = lib.mkOption {
       type = lib.types.str;
       default = "/var/lib/burrow/intake/authentik_headscale_client_secret.txt";
@@ -182,6 +207,13 @@ in
           exit 1
         fi
 
+        ${lib.optionalString (cfg.forgejoClientSecretFile != null) ''
+          if [ ! -s ${lib.escapeShellArg cfg.forgejoClientSecretFile} ]; then
+            echo "Forgejo client secret missing: ${cfg.forgejoClientSecretFile}" >&2
+            exit 1
+          fi
+        ''}
+
         install -d -m 0750 -o root -g root ${runtimeDir} ${blueprintDir}
         install -m 0644 -o root -g root ${authentikBlueprint} ${blueprintFile}
 
@@ -208,6 +240,7 @@ AUTHENTIK_SECRET_KEY=$AUTHENTIK_SECRET_KEY
 AUTHENTIK_BOOTSTRAP_PASSWORD=$AUTHENTIK_BOOTSTRAP_PASSWORD
 AUTHENTIK_BOOTSTRAP_TOKEN=$AUTHENTIK_BOOTSTRAP_TOKEN
 AUTHENTIK_BURROW_TS_CLIENT_SECRET=$(read_secret ${lib.escapeShellArg cfg.headscaleClientSecretFile})
+${lib.optionalString (cfg.forgejoClientSecretFile != null) "AUTHENTIK_BURROW_FORGEJO_CLIENT_SECRET=$(read_secret ${lib.escapeShellArg cfg.forgejoClientSecretFile})"}
 EOF
         chown root:root ${envFile}
         chmod 0600 ${envFile}
@@ -320,8 +353,6 @@ EOF
         Type = "oneshot";
         User = "root";
         Group = "root";
-        Restart = "on-failure";
-        RestartSec = 5;
       };
       script = ''
         set -euo pipefail
@@ -337,6 +368,52 @@ EOF
         export AUTHENTIK_GOOGLE_CLIENT_SECRET="$(tr -d '\r\n' < ${lib.escapeShellArg cfg.googleClientSecretFile})"
 
         ${pkgs.bash}/bin/bash ${googleSourceSyncScript}
+      '';
+    };
+
+    systemd.services.burrow-authentik-forgejo-oidc = lib.mkIf (cfg.forgejoClientSecretFile != null) {
+      description = "Reconcile the Burrow Authentik Forgejo OIDC application";
+      after = [
+        "burrow-authentik-ready.service"
+        "network-online.target"
+      ];
+      wants = [
+        "burrow-authentik-ready.service"
+        "network-online.target"
+      ];
+      wantedBy = [ "multi-user.target" ];
+      restartTriggers = [
+        forgejoOidcSyncScript
+        cfg.envFile
+        cfg.forgejoClientSecretFile
+      ];
+      path = [
+        pkgs.bash
+        pkgs.coreutils
+        pkgs.curl
+        pkgs.jq
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "root";
+        Group = "root";
+      };
+      script = ''
+        set -euo pipefail
+        set -a
+        source ${lib.escapeShellArg cfg.envFile}
+        set +a
+
+        export AUTHENTIK_URL=https://${cfg.domain}
+        export AUTHENTIK_FORGEJO_APPLICATION_SLUG=${lib.escapeShellArg cfg.forgejoProviderSlug}
+        export AUTHENTIK_FORGEJO_APPLICATION_NAME=burrow.net
+        export AUTHENTIK_FORGEJO_PROVIDER_NAME=burrow.net
+        export AUTHENTIK_FORGEJO_CLIENT_ID=${lib.escapeShellArg cfg.forgejoClientId}
+        export AUTHENTIK_FORGEJO_CLIENT_SECRET="$(tr -d '\r\n' < ${lib.escapeShellArg cfg.forgejoClientSecretFile})"
+        export AUTHENTIK_FORGEJO_LAUNCH_URL=https://${cfg.forgejoDomain}/
+        export AUTHENTIK_FORGEJO_REDIRECT_URIS_JSON='["https://${cfg.forgejoDomain}/user/oauth2/burrow.net/callback","https://${cfg.forgejoDomain}/user/oauth2/authentik/callback","https://${cfg.forgejoDomain}/user/oauth2/GitHub/callback"]'
+
+        ${pkgs.bash}/bin/bash ${forgejoOidcSyncScript}
       '';
     };
 
