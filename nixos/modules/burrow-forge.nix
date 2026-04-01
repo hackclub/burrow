@@ -199,6 +199,12 @@ in
             reverse_proxy 127.0.0.1:${toString config.services.forgejo.settings.server.HTTP_PORT}
           '';
           "${cfg.siteDomain}".extraConfig = ''
+            encode gzip zstd
+            @oidcConfig path /.well-known/openid-configuration
+            redir @oidcConfig https://${config.services.burrow.authentik.domain}/application/o/${config.services.burrow.authentik.forgejoProviderSlug}/.well-known/openid-configuration 308
+            @webfinger path /.well-known/webfinger
+            header @webfinger Content-Type application/jrd+json
+            respond @webfinger "{\"subject\":\"{query.resource}\",\"links\":[{\"rel\":\"http://openid.net/specs/connect/1.0/issuer\",\"href\":\"https://${config.services.burrow.authentik.domain}/application/o/${config.services.burrow.authentik.forgejoProviderSlug}/\"}]}" 200
             @root path /
             redir @root ${homeRepoUrl} 308
             respond 404
