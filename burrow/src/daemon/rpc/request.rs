@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use tun::TunOptions;
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-#[serde(tag="method", content="params")]
+#[serde(tag = "method", content = "params")]
 pub enum DaemonCommand {
     Start(DaemonStartOptions),
     ServerInfo,

@@ -133,9 +133,9 @@ pub enum Packet<'a> {
 
 impl Tunnel {
     #[inline(always)]
-    pub fn parse_incoming_packet(src: &[u8]) -> Result<Packet, WireGuardError> {
+    pub fn parse_incoming_packet(src: &[u8]) -> Result<Packet<'_>, WireGuardError> {
         if src.len() < 4 {
-            return Err(WireGuardError::InvalidPacket)
+            return Err(WireGuardError::InvalidPacket);
         }
 
         // Checks the type, as well as the reserved zero fields
@@ -177,7 +177,7 @@ impl Tunnel {
 
     pub fn dst_address(packet: &[u8]) -> Option<IpAddr> {
         if packet.is_empty() {
-            return None
+            return None;
         }
 
         match packet[0] >> 4 {
@@ -201,7 +201,7 @@ impl Tunnel {
 
     pub fn src_address(packet: &[u8]) -> Option<IpAddr> {
         if packet.is_empty() {
-            return None
+            return None;
         }
 
         match packet[0] >> 4 {
@@ -296,7 +296,7 @@ impl Tunnel {
                 self.timer_tick(TimerName::TimeLastDataPacketSent);
             }
             self.tx_bytes += src.len();
-            return TunnResult::WriteToNetwork(packet)
+            return TunnResult::WriteToNetwork(packet);
         }
 
         // If there is no session, queue the packet for future retry
@@ -320,7 +320,7 @@ impl Tunnel {
     ) -> TunnResult<'a> {
         if datagram.is_empty() {
             // Indicates a repeated call
-            return self.send_queued_packet(dst)
+            return self.send_queued_packet(dst);
         }
 
         let mut cookie = [0u8; COOKIE_REPLY_SZ];
@@ -331,7 +331,7 @@ impl Tunnel {
             Ok(packet) => packet,
             Err(TunnResult::WriteToNetwork(cookie)) => {
                 dst[..cookie.len()].copy_from_slice(cookie);
-                return TunnResult::WriteToNetwork(&mut dst[..cookie.len()])
+                return TunnResult::WriteToNetwork(&mut dst[..cookie.len()]);
             }
             Err(TunnResult::Err(e)) => return TunnResult::Err(e),
             _ => unreachable!(),
@@ -435,7 +435,7 @@ impl Tunnel {
         let cur_idx = self.current;
         if cur_idx == new_idx {
             // There is nothing to do, already using this session, this is the common case
-            return
+            return;
         }
         if self.sessions[cur_idx % N_SESSIONS].is_none()
             || self.timers.session_timers[new_idx % N_SESSIONS]
@@ -481,7 +481,7 @@ impl Tunnel {
         force_resend: bool,
     ) -> TunnResult<'a> {
         if self.handshake.is_in_progress() && !force_resend {
-            return TunnResult::Done
+            return TunnResult::Done;
         }
 
         if self.handshake.is_expired() {
@@ -540,7 +540,7 @@ impl Tunnel {
         };
 
         if computed_len > packet.len() {
-            return TunnResult::Err(WireGuardError::InvalidPacket)
+            return TunnResult::Err(WireGuardError::InvalidPacket);
         }
 
         self.timer_tick(TimerName::TimeLastDataPacketReceived);

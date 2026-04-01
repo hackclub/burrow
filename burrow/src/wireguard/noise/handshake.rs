@@ -9,20 +9,15 @@ use std::{
 use aead::{Aead, Payload};
 use blake2::{
     digest::{FixedOutput, KeyInit},
-    Blake2s256,
-    Blake2sMac,
-    Digest,
+    Blake2s256, Blake2sMac, Digest,
 };
 use chacha20poly1305::XChaCha20Poly1305;
 use rand_core::OsRng;
 use ring::aead::{Aad, LessSafeKey, Nonce, UnboundKey, CHACHA20_POLY1305};
+use subtle::ConstantTimeEq;
 
 use super::{
-    errors::WireGuardError,
-    session::Session,
-    x25519,
-    HandshakeInit,
-    HandshakeResponse,
+    errors::WireGuardError, session::Session, x25519, HandshakeInit, HandshakeResponse,
     PacketCookieReply,
 };
 
@@ -209,7 +204,7 @@ impl Tai64N {
     /// Parse a timestamp from a 12 byte u8 slice
     fn parse(buf: &[u8; 12]) -> Result<Tai64N, WireGuardError> {
         if buf.len() < 12 {
-            return Err(WireGuardError::InvalidTai64nTimestamp)
+            return Err(WireGuardError::InvalidTai64nTimestamp);
         }
 
         let (sec_bytes, nano_bytes) = buf.split_at(std::mem::size_of::<u64>());
@@ -534,11 +529,14 @@ impl Handshake {
             &hash,
         )?;
 
-        ring::constant_time::verify_slices_are_equal(
-            self.params.peer_static_public.as_bytes(),
-            &peer_static_public_decrypted,
-        )
-        .map_err(|_| WireGuardError::WrongKey)?;
+        if !bool::from(
+            self.params
+                .peer_static_public
+                .as_bytes()
+                .ct_eq(&peer_static_public_decrypted),
+        ) {
+            return Err(WireGuardError::WrongKey);
+        }
 
         // initiator.hash = HASH(initiator.hash || msg.encrypted_static)
         hash = b2s_hash(&hash, packet.encrypted_static);
@@ -556,19 +554,22 @@ impl Handshake {
         let timestamp = Tai64N::parse(&timestamp)?;
         if !timestamp.after(&self.last_handshake_timestamp) {
             // Possibly a replay
-            return Err(WireGuardError::WrongTai64nTimestamp)
+            return Err(WireGuardError::WrongTai64nTimestamp);
         }
         self.last_handshake_timestamp = timestamp;
 
         // initiator.hash = HASH(initiator.hash || msg.encrypted_timestamp)
         hash = b2s_hash(&hash, packet.encrypted_timestamp);
 
-        self.previous = std::mem::replace(&mut self.state, HandshakeState::InitReceived {
-            chaining_key,
-            hash,
-            peer_ephemeral_public,
-            peer_index,
-        });
+        self.previous = std::mem::replace(
+            &mut self.state,
+            HandshakeState::InitReceived {
+                chaining_key,
+                hash,
+                peer_ephemeral_public,
+                peer_index,
+            },
+        );
 
         self.format_handshake_response(dst)
     }
@@ -669,7 +670,7 @@ impl Handshake {
 
         let local_index = self.cookies.index;
         if packet.receiver_idx != local_index {
-            return Err(WireGuardError::WrongIndex)
+            return Err(WireGuardError::WrongIndex);
         }
         // msg.encrypted_cookie = XAEAD(HASH(LABEL_COOKIE || responder.static_public),
         // msg.nonce, cookie, last_received_msg.mac1)
@@ -725,7 +726,7 @@ impl Handshake {
         dst: &'a mut [u8],
     ) -> Result<&'a mut [u8], WireGuardError> {
         if dst.len() < super::HANDSHAKE_INIT_SZ {
-            return Err(WireGuardError::DestinationBufferTooSmall)
+            return Err(WireGuardError::DestinationBufferTooSmall);
         }
 
         let (message_type, rest) = dst.split_at_mut(4);
@@ -808,7 +809,7 @@ impl Handshake {
         dst: &'a mut [u8],
     ) -> Result<(&'a mut [u8], Session), WireGuardError> {
         if dst.len() < super::HANDSHAKE_RESP_SZ {
-            return Err(WireGuardError::DestinationBufferTooSmall)
+            return Err(WireGuardError::DestinationBufferTooSmall);
         }
 
         let state = std::mem::replace(&mut self.state, HandshakeState::None);

@@ -76,13 +76,10 @@ pub async fn spawn(
         }
     });
 
-    Ok(TorDnsHandle {
-        shutdown: shutdown_tx,
-        task,
-    })
+    Ok(TorDnsHandle { shutdown: shutdown_tx, task })
 }
 
-async fn build_response(
+pub(crate) async fn build_response(
     packet: &[u8],
     tor_client: &TorClient<PreferredRuntime>,
 ) -> Result<Vec<u8>> {
@@ -133,9 +130,11 @@ fn record_for_address(
     addr: IpAddr,
 ) -> Option<Record> {
     match (record_type, addr) {
-        (RecordType::A, IpAddr::V4(ip)) => {
-            Some(Record::from_rdata(name, DNS_TTL_SECS, RData::A(A::from(ip))))
-        }
+        (RecordType::A, IpAddr::V4(ip)) => Some(Record::from_rdata(
+            name,
+            DNS_TTL_SECS,
+            RData::A(A::from(ip)),
+        )),
         (RecordType::AAAA, IpAddr::V6(ip)) => Some(Record::from_rdata(
             name,
             DNS_TTL_SECS,

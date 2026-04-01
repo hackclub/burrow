@@ -8,23 +8,13 @@ use aead::{generic_array::GenericArray, AeadInPlace, KeyInit};
 use chacha20poly1305::{Key, XChaCha20Poly1305};
 use parking_lot::Mutex;
 use rand_core::{OsRng, RngCore};
-use ring::constant_time::verify_slices_are_equal;
+use subtle::ConstantTimeEq;
 
 use super::{
     handshake::{
-        b2s_hash,
-        b2s_keyed_mac_16,
-        b2s_keyed_mac_16_2,
-        b2s_mac_24,
-        LABEL_COOKIE,
-        LABEL_MAC1,
+        b2s_hash, b2s_keyed_mac_16, b2s_keyed_mac_16_2, b2s_mac_24, LABEL_COOKIE, LABEL_MAC1,
     },
-    HandshakeInit,
-    HandshakeResponse,
-    Packet,
-    TunnResult,
-    Tunnel,
-    WireGuardError,
+    HandshakeInit, HandshakeResponse, Packet, TunnResult, Tunnel, WireGuardError,
 };
 
 const COOKIE_REFRESH: u64 = 128; // Use 128 and not 120 so the compiler can optimize out the division
@@ -136,7 +126,7 @@ impl RateLimiter {
         dst: &'a mut [u8],
     ) -> Result<&'a mut [u8], WireGuardError> {
         if dst.len() < super::COOKIE_REPLY_SZ {
-            return Err(WireGuardError::DestinationBufferTooSmall)
+            return Err(WireGuardError::DestinationBufferTooSmall);
         }
 
         let (message_type, rest) = dst.split_at_mut(4);
@@ -185,8 +175,9 @@ impl RateLimiter {
             let (mac1, mac2) = macs.split_at(16);
 
             let computed_mac1 = b2s_keyed_mac_16(&self.mac1_key, msg);
-            verify_slices_are_equal(&computed_mac1[..16], mac1)
-                .map_err(|_| TunnResult::Err(WireGuardError::InvalidMac))?;
+            if !bool::from(computed_mac1[..16].ct_eq(mac1)) {
+                return Err(TunnResult::Err(WireGuardError::InvalidMac));
+            }
 
             if self.is_under_load() {
                 let addr = match src_addr {
@@ -198,11 +189,11 @@ impl RateLimiter {
                 let cookie = self.current_cookie(addr);
                 let computed_mac2 = b2s_keyed_mac_16_2(&cookie, msg, mac1);
 
-                if verify_slices_are_equal(&computed_mac2[..16], mac2).is_err() {
+                if !bool::from(computed_mac2[..16].ct_eq(mac2)) {
                     let cookie_packet = self
                         .format_cookie_reply(sender_idx, cookie, mac1, dst)
                         .map_err(TunnResult::Err)?;
-                    return Err(TunnResult::WriteToNetwork(cookie_packet))
+                    return Err(TunnResult::WriteToNetwork(cookie_packet));
                 }
             }
         }

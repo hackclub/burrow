@@ -1,21 +1,23 @@
 tun := $(shell ifconfig -l | sed 's/ /\n/g' | grep utun | tail -n 1)
-cargo_console := RUST_BACKTRACE=1 RUST_LOG=debug RUSTFLAGS='--cfg tokio_unstable' cargo run --all-features
-cargo_norm := RUST_BACKTRACE=1 RUST_LOG=debug cargo run
+cargo_console := env RUST_BACKTRACE=1 RUST_LOG=debug RUSTFLAGS='--cfg tokio_unstable' cargo run --all-features --
+cargo_norm := env RUST_BACKTRACE=1 RUST_LOG=debug cargo run --
+sudo_cargo_console := sudo -E env RUST_BACKTRACE=1 RUST_LOG=debug RUSTFLAGS='--cfg tokio_unstable' cargo run --all-features --
+sudo_cargo_norm := sudo -E env RUST_BACKTRACE=1 RUST_LOG=debug cargo run --
 
 check:
 	@cargo check
 
 build:
-	@cargo run build
+	@cargo build
 
 daemon-console:
-	@$(cargo_console) daemon
+	@$(sudo_cargo_console) daemon
 
 daemon:
-	@$(cargo_norm) daemon
+	@$(sudo_cargo_norm) daemon
 
 start:
-	@$(cargo_norm) start
+	@$(sudo_cargo_norm) start
 
 stop:
 	@$(cargo_norm) stop

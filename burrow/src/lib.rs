@@ -10,11 +10,11 @@ mod auth;
 mod daemon;
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 pub mod database;
-#[cfg(any(target_os = "linux", target_vendor = "apple"))]
-pub mod mesh;
 #[cfg(target_os = "linux")]
 pub mod tor;
 pub(crate) mod tracing;
+#[cfg(target_os = "linux")]
+pub mod usernet;
 
 #[cfg(target_vendor = "apple")]
 pub use daemon::apple::spawn_in_process;

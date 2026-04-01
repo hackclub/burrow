@@ -73,6 +73,21 @@ impl TunInterface {
         ifname_to_string(iff.ifr_name)
     }
 
+    pub(crate) fn packet_information_size(&self) -> usize {
+        let mut iff = unsafe { mem::zeroed::<libc::ifreq>() };
+        match unsafe { sys::tun_get_iff(self.socket.as_raw_fd(), &mut iff) } {
+            Ok(_) => {
+                let flags = unsafe { iff.ifr_ifru.ifru_flags };
+                if flags & libc::IFF_NO_PI as i16 != 0 {
+                    0
+                } else {
+                    4
+                }
+            }
+            Err(_) => 4,
+        }
+    }
+
     #[throws]
     #[instrument]
     fn ifreq(&self) -> sys::ifreq {
@@ -283,6 +298,16 @@ impl TunInterface {
     #[throws]
     #[instrument]
     pub fn send(&self, buf: &[u8]) -> usize {
-        self.socket.send(buf)?
+        let len = unsafe {
+            libc::write(
+                self.as_raw_fd(),
+                buf.as_ptr().cast::<libc::c_void>(),
+                buf.len(),
+            )
+        };
+        if len < 0 {
+            Err(Error::last_os_error())?;
+        }
+        len as usize
     }
 }

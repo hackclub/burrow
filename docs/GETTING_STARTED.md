@@ -98,10 +98,14 @@ code burrow
 You can run burrow on the command line with cargo:
 
 ```
-cargo run
+sudo -E cargo run -- start
 ```
 
-Cargo will ask for your password because burrow needs permission in order to create a tunnel.
+Creating the tunnel requires elevated privileges. Regular checks and tests can run without `sudo`:
+
+```
+cargo test --workspace --all-features
+```
 
 </details>
 

@@ -48,12 +48,26 @@ impl TunInterface {
     #[throws]
     #[instrument]
     pub fn recv(&self, buf: &mut [u8]) -> usize {
-        // Use IoVec to read directly into target buffer
-        let mut tmp_buf = [MaybeUninit::uninit(); 1500];
-        let len = self.socket.recv(&mut tmp_buf)?;
-        let result_buf = unsafe { assume_init(&tmp_buf[4..len]) };
-        buf[..len - 4].copy_from_slice(result_buf);
-        len - 4
+        let packet_information_size = self.packet_information_size();
+        let mut tmp_buf = [MaybeUninit::uninit(); 1504];
+        let len = unsafe {
+            libc::read(
+                self.as_raw_fd(),
+                tmp_buf.as_mut_ptr().cast::<libc::c_void>(),
+                tmp_buf.len(),
+            )
+        };
+        if len < 0 {
+            Err(Error::last_os_error())?;
+        }
+        let len = len as usize;
+        if len < packet_information_size {
+            return 0;
+        }
+
+        let result_buf = unsafe { assume_init(&tmp_buf[packet_information_size..len]) };
+        buf[..len - packet_information_size].copy_from_slice(result_buf);
+        len - packet_information_size
     }
 
     #[throws]

@@ -11,11 +11,7 @@ use tokio::{
 use tracing::{debug, error, info};
 
 use crate::daemon::rpc::{
-    DaemonCommand,
-    DaemonMessage,
-    DaemonNotification,
-    DaemonRequest,
-    DaemonResponse,
+    DaemonCommand, DaemonMessage, DaemonNotification, DaemonRequest, DaemonResponse,
     DaemonResponseData,
 };
 

@@ -114,6 +114,10 @@ impl TunInterface {
         ifname_to_string(buf)
     }
 
+    pub(crate) fn packet_information_size(&self) -> usize {
+        4
+    }
+
     #[throws]
     #[instrument]
     fn ifreq(&self) -> sys::ifreq {

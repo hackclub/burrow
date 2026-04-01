@@ -1,0 +1,31 @@
+name: Build Rust
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "**"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: Cargo Test
+    runs-on: [self-hosted, linux, x86_64, burrow-forge]
+    steps:
+      - name: Checkout
+        uses: https://code.forgejo.org/actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+          fetch-depth: 0
+
+      - name: Test
+        shell: bash
+        run: |
+          set -euo pipefail
+          nix develop .#ci -c cargo test --workspace --all-features

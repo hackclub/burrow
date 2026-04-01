@@ -6,6 +6,9 @@ on:
   pull_request:
     branches:
     - "*"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
     name: Build Crate (${{ matrix.platform }})
@@ -72,14 +75,14 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: stable
+        toolchain: 1.85.0
         components: rustfmt
         targets: ${{ join(matrix.targets, ', ') }}
     - name: Setup Rust Cache
       uses: Swatinem/rust-cache@v2
     - name: Build
       shell: bash
-      run: cargo build --verbose --workspace --all-features --target ${{ join(matrix.targets, ' --target ') }} --target ${{ join(matrix.test-targets, ' --target ') }}
+      run: cargo build --locked --verbose --workspace --all-features --target ${{ join(matrix.targets, ' --target ') }} --target ${{ join(matrix.test-targets, ' --target ') }}
     - name: Test
       shell: bash
-      run: cargo test --verbose --workspace --all-features --target ${{ join(matrix.test-targets, ' --target ') }}
+      run: cargo test --locked --verbose --workspace --all-features --target ${{ join(matrix.test-targets, ' --target ') }}

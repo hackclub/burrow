@@ -118,10 +118,7 @@ pub async fn spawn_with_client(
         }),
     };
 
-    Ok(TorHandle {
-        shutdown: shutdown_tx,
-        task,
-    })
+    Ok(TorHandle { shutdown: shutdown_tx, task })
 }
 
 fn join_error(err: JoinError) -> anyhow::Error {

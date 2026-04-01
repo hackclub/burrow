@@ -33,7 +33,7 @@ impl TunInterface {
                 Ok(result) => return result,
                 Err(_would_block) => {
                     tracing::debug!("WouldBlock");
-                    continue
+                    continue;
                 }
             }
         }

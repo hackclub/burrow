@@ -118,7 +118,10 @@ mod tests {
         };
 
         let parsed = socket_addr_from_storage(&storage, size_of::<libc::sockaddr_in>()).unwrap();
-        assert_eq!(parsed, SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 9040)));
+        assert_eq!(
+            parsed,
+            SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 9040))
+        );
     }
 
     #[test]

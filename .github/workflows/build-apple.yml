@@ -54,6 +54,7 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
+        toolchain: 1.85.0
         targets: ${{ join(matrix.rust-targets, ', ') }}
     - name: Install Protobuf
       shell: bash

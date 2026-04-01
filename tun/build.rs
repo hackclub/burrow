@@ -26,7 +26,7 @@ async fn generate(out_dir: &std::path::Path) -> anyhow::Result<()> {
     println!("cargo:rerun-if-changed={}", binary_path.to_str().unwrap());
 
     if let (Ok(..), Ok(..)) = (File::open(&bindings_path), File::open(&binary_path)) {
-        return Ok(())
+        return Ok(());
     };
 
     let archive = download(out_dir)

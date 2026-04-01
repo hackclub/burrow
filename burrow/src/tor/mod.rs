@@ -1,5 +1,5 @@
 mod config;
-mod dns;
+pub(crate) mod dns;
 mod exec;
 mod runtime;
 mod system;

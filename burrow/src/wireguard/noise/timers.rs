@@ -190,7 +190,7 @@ impl Tunnel {
 
         {
             if self.handshake.is_expired() {
-                return TunnResult::Err(WireGuardError::ConnectionExpired)
+                return TunnResult::Err(WireGuardError::ConnectionExpired);
             }
 
             // Clear cookie after COOKIE_EXPIRATION_TIME
@@ -206,7 +206,7 @@ impl Tunnel {
                 tracing::error!("CONNECTION_EXPIRED(REJECT_AFTER_TIME * 3)");
                 self.handshake.set_expired();
                 self.clear_all();
-                return TunnResult::Err(WireGuardError::ConnectionExpired)
+                return TunnResult::Err(WireGuardError::ConnectionExpired);
             }
 
             if let Some(time_init_sent) = self.handshake.timer() {
@@ -219,7 +219,7 @@ impl Tunnel {
                     tracing::error!("CONNECTION_EXPIRED(REKEY_ATTEMPT_TIME)");
                     self.handshake.set_expired();
                     self.clear_all();
-                    return TunnResult::Err(WireGuardError::ConnectionExpired)
+                    return TunnResult::Err(WireGuardError::ConnectionExpired);
                 }
 
                 if time_init_sent.elapsed() >= REKEY_TIMEOUT {
@@ -299,11 +299,11 @@ impl Tunnel {
         }
 
         if handshake_initiation_required {
-            return self.format_handshake_initiation(dst, true)
+            return self.format_handshake_initiation(dst, true);
         }
 
         if keepalive_required {
-            return self.encapsulate(&[], dst)
+            return self.encapsulate(&[], dst);
         }
 
         TunnResult::Done

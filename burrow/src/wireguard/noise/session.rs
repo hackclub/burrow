@@ -88,11 +88,11 @@ impl ReceivingKeyCounterValidator {
     fn will_accept(&self, counter: u64) -> Result<(), WireGuardError> {
         if counter >= self.next {
             // As long as the counter is growing no replay took place for sure
-            return Ok(())
+            return Ok(());
         }
         if counter + N_BITS < self.next {
             // Drop if too far back
-            return Err(WireGuardError::InvalidCounter)
+            return Err(WireGuardError::InvalidCounter);
         }
         if !self.check_bit(counter) {
             Ok(())
@@ -107,22 +107,22 @@ impl ReceivingKeyCounterValidator {
     fn mark_did_receive(&mut self, counter: u64) -> Result<(), WireGuardError> {
         if counter + N_BITS < self.next {
             // Drop if too far back
-            return Err(WireGuardError::InvalidCounter)
+            return Err(WireGuardError::InvalidCounter);
         }
         if counter == self.next {
             // Usually the packets arrive in order, in that case we simply mark the bit and
             // increment the counter
             self.set_bit(counter);
             self.next += 1;
-            return Ok(())
+            return Ok(());
         }
         if counter < self.next {
             // A packet arrived out of order, check if it is valid, and mark
             if self.check_bit(counter) {
-                return Err(WireGuardError::InvalidCounter)
+                return Err(WireGuardError::InvalidCounter);
             }
             self.set_bit(counter);
-            return Ok(())
+            return Ok(());
         }
         // Packets where dropped, or maybe reordered, skip them and mark unused
         if counter - self.next >= N_BITS {
@@ -247,7 +247,7 @@ impl Session {
             panic!("The destination buffer is too small");
         }
         if packet.receiver_idx != self.receiving_index {
-            return Err(WireGuardError::WrongIndex)
+            return Err(WireGuardError::WrongIndex);
         }
         // Don't reuse counters, in case this is a replay attack we want to quickly
         // check the counter without running expensive decryption

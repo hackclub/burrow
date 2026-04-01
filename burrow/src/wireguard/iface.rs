@@ -148,7 +148,7 @@ impl Interface {
                 debug!("Routing packet to {}", dst_addr);
 
                 let Some(idx) = pcbs.find(dst_addr) else {
-                    continue
+                    continue;
                 };
 
                 debug!("Found peer:{}", idx);
