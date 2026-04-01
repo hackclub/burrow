@@ -131,7 +131,10 @@ public struct BurrowView: View {
     }
 
     private func runAutomationIfNeeded() {
-        guard !didRunAutomation, BurrowAutomationConfig.current?.action == .tailnetLogin else {
+        guard !didRunAutomation,
+              let automation = BurrowAutomationConfig.current,
+              automation.action == .tailnetLogin || automation.action == .headscaleProbe
+        else {
             return
         }
         didRunAutomation = true
@@ -324,6 +327,9 @@ private struct ConfigurationSheetView: View {
     @State private var errorMessage: String?
     @State private var loginSessionID: String?
     @State private var loginStatus: TailnetLoginStatus?
+    @State private var authorityProbeStatus: TailnetAuthorityProbeStatus?
+    @State private var authorityProbeError: String?
+    @State private var isProbingAuthority = false
     @State private var pollingTask: Task<Void, Never>?
     @State private var didRunAutomation = false
     @State private var webAuthenticationTask: Task<Void, Never>?
@@ -437,6 +443,12 @@ private struct ConfigurationSheetView: View {
         .onAppear {
             runAutomationIfNeeded()
         }
+        .onChange(of: draft.tailnetProvider) { _, _ in
+            resetAuthorityProbe()
+        }
+        .onChange(of: draft.authority) { _, _ in
+            resetAuthorityProbe()
+        }
         .onDisappear {
             pollingTask?.cancel()
             webAuthenticationTask?.cancel()
@@ -460,6 +472,24 @@ private struct ConfigurationSheetView: View {
                 TextField("Server URL", text: $draft.authority)
                     .burrowLoginField()
                     .autocorrectionDisabled()
+
+                Button {
+                    probeTailnetAuthority()
+                } label: {
+                    Label {
+                        Text(isProbingAuthority ? "Checking Connection" : "Check Connection")
+                    } icon: {
+                        Image(systemName: isProbingAuthority ? "hourglass" : "bolt.horizontal.circle")
+                    }
+                }
+                .buttonStyle(.borderless)
+                .disabled(isProbingAuthority || normalizedOptional(draft.authority) == nil)
+
+                if let authorityProbeStatus {
+                    tailnetAuthorityProbeCard(status: authorityProbeStatus, failure: nil)
+                } else if let authorityProbeError {
+                    tailnetAuthorityProbeCard(status: nil, failure: authorityProbeError)
+                }
             } else {
                 LabeledContent("Server") {
                     Text("Tailscale managed")
@@ -525,6 +555,28 @@ private struct ConfigurationSheetView: View {
                 Text(availabilityNote)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+            }
+
+            if sheet == .tailnet {
+                if let authorityProbeStatus {
+                    Text(authorityProbeStatus.summary)
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.primary)
+                    if let detail = authorityProbeStatus.detail {
+                        Text(detail)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(3)
+                    }
+                } else if let authorityProbeError {
+                    Text("Connection failed")
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.red)
+                    Text(authorityProbeError)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                }
             }
 
             if sheet == .tailnet {
@@ -605,6 +657,34 @@ private struct ConfigurationSheetView: View {
                 }
             } else {
                 Text("Burrow launches the local bridge, then opens the real Tailscale sign-in page in-app.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.thinMaterial)
+        )
+    }
+
+    private func tailnetAuthorityProbeCard(
+        status: TailnetAuthorityProbeStatus?,
+        failure: String?
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let status {
+                Text(status.summary)
+                    .font(.subheadline.weight(.medium))
+                Text(status.detail ?? "HTTP \(status.statusCode) from \(status.authority)")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+            } else if let failure {
+                Text("Connection failed")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.red)
+                Text(failure)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -914,23 +994,30 @@ private struct ConfigurationSheetView: View {
         guard !didRunAutomation,
               sheet == .tailnet,
               let automation = BurrowAutomationConfig.current,
-              automation.action == .tailnetLogin
+              automation.action == .tailnetLogin || automation.action == .headscaleProbe
         else {
             return
         }
 
         didRunAutomation = true
-        draft.tailnetProvider = .tailscale
         draft.title = automation.title ?? draft.title
         draft.accountName = automation.accountName ?? draft.accountName
         draft.identityName = automation.identityName ?? draft.identityName
         draft.hostname = automation.hostname ?? draft.hostname
 
         Task { @MainActor in
-            do {
-                try await startTailscaleLogin()
-            } catch {
-                errorMessage = error.localizedDescription
+            switch automation.action {
+            case .tailnetLogin:
+                draft.tailnetProvider = .tailscale
+                do {
+                    try await startTailscaleLogin()
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+            case .headscaleProbe:
+                applyTailnetProvider(.headscale)
+                draft.authority = automation.authority ?? TailnetProvider.headscale.defaultAuthority ?? draft.authority
+                probeTailnetAuthority()
             }
         }
     }
@@ -1085,6 +1172,36 @@ private struct ConfigurationSheetView: View {
         }
     }
 
+    private func probeTailnetAuthority() {
+        guard draft.tailnetProvider.requiresControlURL else { return }
+        guard let authority = normalizedOptional(draft.authority) else {
+            authorityProbeStatus = nil
+            authorityProbeError = "Enter a server URL first."
+            return
+        }
+
+        isProbingAuthority = true
+        authorityProbeStatus = nil
+        authorityProbeError = nil
+
+        Task { @MainActor in
+            defer { isProbingAuthority = false }
+            do {
+                authorityProbeStatus = try await TailnetAuthorityProbeClient.probe(
+                    provider: draft.tailnetProvider,
+                    authority: authority
+                )
+            } catch {
+                authorityProbeError = error.localizedDescription
+            }
+        }
+    }
+
+    private func resetAuthorityProbe() {
+        authorityProbeStatus = nil
+        authorityProbeError = nil
+    }
+
     private func pasteWireGuardConfiguration() {
         guard let clipboardString else { return }
         draft.wireGuardConfig = clipboardString
@@ -1228,6 +1345,7 @@ private extension View {
 private struct BurrowAutomationConfig {
     enum Action: String {
         case tailnetLogin = "tailnet-login"
+        case headscaleProbe = "headscale-probe"
     }
 
     let action: Action
@@ -1235,6 +1353,7 @@ private struct BurrowAutomationConfig {
     let accountName: String?
     let identityName: String?
     let hostname: String?
+    let authority: String?
 
     static let current: BurrowAutomationConfig? = {
         let environment = ProcessInfo.processInfo.environment
@@ -1249,7 +1368,8 @@ private struct BurrowAutomationConfig {
             title: environment["BURROW_UI_AUTOMATION_TITLE"],
             accountName: environment["BURROW_UI_AUTOMATION_ACCOUNT"],
             identityName: environment["BURROW_UI_AUTOMATION_IDENTITY"],
-            hostname: environment["BURROW_UI_AUTOMATION_HOSTNAME"]
+            hostname: environment["BURROW_UI_AUTOMATION_HOSTNAME"],
+            authority: environment["BURROW_UI_AUTOMATION_AUTHORITY"]
         )
     }()
 }

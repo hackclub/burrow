@@ -50,6 +50,13 @@ struct TailnetLoginStartResponse: Codable, Sendable {
     var status: TailnetLoginStatus
 }
 
+struct TailnetAuthorityProbeStatus: Sendable {
+    var authority: String
+    var statusCode: Int
+    var summary: String
+    var detail: String?
+}
+
 enum TailnetBridgeClient {
     private static let baseURL = URL(string: "http://127.0.0.1:8080")!
 
@@ -93,6 +100,66 @@ enum TailnetBridgeClient {
                 in: .whitespacesAndNewlines
             )
             throw TailnetBridgeError.server(message?.ifEmpty("HTTP \(http.statusCode)") ?? "HTTP \(http.statusCode)")
+        }
+    }
+}
+
+enum TailnetAuthorityProbeClient {
+    static func probe(provider: TailnetProvider, authority: String) async throws -> TailnetAuthorityProbeStatus {
+        let normalizedAuthority = normalizeAuthority(authority)
+        let baseURL = try validatedBaseURL(normalizedAuthority)
+        let probeURL = probeURL(for: provider, baseURL: baseURL)
+
+        var request = URLRequest(url: probeURL)
+        request.timeoutInterval = 10
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        guard (200..<300).contains(http.statusCode) else {
+            let message = String(data: data, encoding: .utf8)?.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+            throw TailnetBridgeError.server(message?.ifEmpty("HTTP \(http.statusCode)") ?? "HTTP \(http.statusCode)")
+        }
+
+        let body = String(data: data, encoding: .utf8)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let detail = body.flatMap { $0.isEmpty ? nil : $0 }
+
+        return TailnetAuthorityProbeStatus(
+            authority: normalizedAuthority,
+            statusCode: http.statusCode,
+            summary: "\(provider.title) reachable",
+            detail: detail
+        )
+    }
+
+    private static func normalizeAuthority(_ authority: String) -> String {
+        let trimmed = authority.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.contains("://") {
+            return trimmed
+        }
+        return "https://\(trimmed)"
+    }
+
+    private static func validatedBaseURL(_ authority: String) throws -> URL {
+        guard let url = URL(string: authority), url.host != nil else {
+            throw TailnetBridgeError.server("Invalid server URL")
+        }
+        return url
+    }
+
+    private static func probeURL(for provider: TailnetProvider, baseURL: URL) -> URL {
+        switch provider {
+        case .headscale:
+            baseURL.appendingPathComponent("health")
+        case .burrow:
+            baseURL.appendingPathComponent("healthz")
+        case .tailscale:
+            baseURL
         }
     }
 }
@@ -253,7 +320,9 @@ enum TailnetProvider: String, CaseIterable, Codable, Identifiable, Sendable {
         switch self {
         case .tailscale:
             "https://controlplane.tailscale.com"
-        case .headscale, .burrow:
+        case .headscale:
+            "https://ts.burrow.net"
+        case .burrow:
             nil
         }
     }
