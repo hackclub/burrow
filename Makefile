@@ -10,6 +10,12 @@ check:
 build:
 	@cargo build
 
+bep-check:
+	@python3 Scripts/check-bep-metadata.py
+
+bep-list:
+	@Scripts/bep list
+
 daemon-console:
 	@$(sudo_cargo_console) daemon
 

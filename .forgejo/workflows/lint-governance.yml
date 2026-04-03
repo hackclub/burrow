@@ -1,0 +1,27 @@
+name: Lint Governance
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "**"
+  workflow_dispatch:
+
+jobs:
+  governance:
+    name: BEP Metadata
+    runs-on: [self-hosted, linux, x86_64, burrow-forge]
+    steps:
+      - name: Checkout
+        uses: https://code.forgejo.org/actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+          fetch-depth: 0
+
+      - name: Validate BEP metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 Scripts/check-bep-metadata.py

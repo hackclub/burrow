@@ -58,3 +58,17 @@ evolution/
 ```
 
 Use ASCII Markdown. Keep metadata at the top of each proposal so tooling and future agents can parse it quickly.
+
+## BEP Helper
+
+Use the `bep` helper under `Scripts/` to browse or list proposals:
+
+- `Scripts/bep` opens a quick browser for `evolution/`.
+- `Scripts/bep list --status Draft` lists proposals by status.
+- `Scripts/bep open BEP-0005` opens a proposal in `$EDITOR`.
+
+Validate proposal metadata with:
+
+```bash
+python3 Scripts/check-bep-metadata.py
+```

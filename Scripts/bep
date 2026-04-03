@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(git rev-parse --show-toplevel)
+proposals_dir="$repo_root/evolution/proposals"
+
+auto_browse() {
+  if command -v wisu >/dev/null 2>&1; then
+    exec wisu -i -g --icons "$repo_root/evolution"
+  fi
+  exec ls -la "$repo_root/evolution"
+}
+
+usage() {
+  cat <<'USAGE'
+Usage: bep [command]
+
+Commands:
+  list [--status <Status>]   List BEPs, optionally filtered by status.
+  open <BEP-XXXX|XXXX|X>     Open a BEP in $EDITOR.
+  help                       Show this help.
+
+If no command is provided, bep launches a simple browser for evolution/.
+USAGE
+}
+
+normalize_id() {
+  local raw="$1"
+  if [[ "$raw" =~ ^BEP-[0-9]+$ ]]; then
+    printf '%s' "$raw"
+    return 0
+  fi
+  if [[ "$raw" =~ ^[0-9]+$ ]]; then
+    printf 'BEP-%04d' "$raw"
+    return 0
+  fi
+  return 1
+}
+
+read_status() {
+  local file="$1"
+  awk -F ': ' '/^Status:/ {print $2; exit}' "$file"
+}
+
+read_title() {
+  local file="$1"
+  local line
+  line=$(head -n 1 "$file" || true)
+  printf '%s' "$line" | sed -E 's/^# `[^`]+`[[:space:]]+//; s/^[^A-Za-z0-9]+//'
+}
+
+list_bep() {
+  local filter="${1:-}"
+  local filter_lower=""
+  if [[ -n "$filter" ]]; then
+    filter_lower=$(printf '%s' "$filter" | tr '[:upper:]' '[:lower:]')
+  fi
+
+  printf '%-10s %-18s %s\n' "BEP" "Status" "Title"
+  local file
+  local entries=()
+  for file in "$proposals_dir"/BEP-*.md; do
+    [[ -e "$file" ]] || continue
+    local base
+    base=$(basename "$file")
+    local id
+    id=$(printf '%s' "$base" | cut -d- -f1-2)
+    local status
+    status=$(read_status "$file")
+    local status_lower
+    status_lower=$(printf '%s' "$status" | tr '[:upper:]' '[:lower:]')
+    if [[ -n "$filter_lower" && "$status_lower" != "$filter_lower" ]]; then
+      continue
+    fi
+    local title
+    title=$(read_title "$file")
+    entries+=("$(printf '%-10s %-18s %s' "$id" "$status" "$title")")
+  done
+  if [[ ${#entries[@]} -gt 0 ]]; then
+    printf '%s\n' "${entries[@]}" | sort
+  fi
+}
+
+open_bep() {
+  local raw="$1"
+  local id
+  if ! id=$(normalize_id "$raw"); then
+    echo "Unknown BEP id: $raw" >&2
+    exit 1
+  fi
+  local matches
+  matches=("$proposals_dir"/"$id"-*.md)
+  if [[ ${#matches[@]} -eq 0 || ! -e "${matches[0]}" ]]; then
+    echo "No proposal found for $id" >&2
+    exit 1
+  fi
+  if [[ ${#matches[@]} -gt 1 ]]; then
+    echo "Multiple proposals match $id:" >&2
+    printf '  %s\n' "${matches[@]}" >&2
+    exit 1
+  fi
+  local editor="${EDITOR:-vi}"
+  exec "$editor" "${matches[0]}"
+}
+
+command=${1:-}
+case "$command" in
+  "")
+    auto_browse
+    ;;
+  list)
+    if [[ ${2:-} == "--status" && -n ${3:-} ]]; then
+      list_bep "$3"
+    else
+      list_bep
+    fi
+    ;;
+  open)
+    if [[ -z ${2:-} ]]; then
+      echo "bep open requires an id" >&2
+      exit 1
+    fi
+    open_bep "$2"
+    ;;
+  help|-h|--help)
+    usage
+    ;;
+  *)
+    echo "Unknown command: $command" >&2
+    usage
+    exit 1
+    ;;
+esac

@@ -1,0 +1,23 @@
+name: Governance Lint
+
+on:
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  governance:
+    name: BEP Metadata
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Validate BEP metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 Scripts/check-bep-metadata.py

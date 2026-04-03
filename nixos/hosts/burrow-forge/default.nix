@@ -1,4 +1,23 @@
-{ config, self, ... }:
+{ config, lib, self, ... }:
+
+let
+  contributors = import ../../../contributors.nix;
+  identities = contributors.identities;
+  bootstrapUsers = lib.mapAttrsToList
+    (
+      username: identity: {
+        inherit username;
+        name = identity.displayName;
+        email = identity.canonicalEmail;
+        sourceEmail = identity.sourceEmail or null;
+        isAdmin = identity.isAdmin or false;
+      }
+    )
+    (lib.filterAttrs (_: identity: identity.bootstrapAuthentik or false) identities);
+  forgeAuthorizedKeys = map
+    (username: builtins.readFile identities.${username}.sshPublicKeyPath)
+    (builtins.attrNames (lib.filterAttrs (_: identity: identity.forgeAuthorized or false) identities));
+in
 
 {
   imports = [
@@ -59,12 +78,14 @@
 
   services.burrow.forge = {
     enable = true;
+    contactEmail = identities.contact.canonicalEmail;
+    adminUsername = "contact";
+    adminEmail = identities.contact.canonicalEmail;
     adminPasswordFile = "/var/lib/burrow/intake/forgejo_pass_contact_at_burrow_net.txt";
+    oidcAdminGroup = contributors.groups.admins;
+    oidcRestrictedGroup = contributors.groups.users;
     oidcClientSecretFile = config.age.secrets.burrowForgejoOidcClientSecret.path;
-    authorizedKeys = [
-      (builtins.readFile ../../keys/contact_at_burrow_net.pub)
-      (builtins.readFile ../../keys/agent_at_burrow_net.pub)
-    ];
+    authorizedKeys = forgeAuthorizedKeys;
   };
 
   services.burrow.forgeRunner = {
@@ -92,22 +113,9 @@
     googleClientIDFile = config.age.secrets.burrowAuthentikGoogleClientId.path;
     googleClientSecretFile = config.age.secrets.burrowAuthentikGoogleClientSecret.path;
     googleLoginMode = "redirect";
-    bootstrapUsers = [
-      {
-        username = "contact";
-        name = "Burrow";
-        email = "contact@burrow.net";
-        sourceEmail = "net.burrow@gmail.com";
-        isAdmin = true;
-      }
-      {
-        username = "conrad";
-        name = "Conrad Kramer";
-        email = "conrad@burrow.net";
-        sourceEmail = "ckrames1234@gmail.com";
-        isAdmin = true;
-      }
-    ];
+    userGroupName = contributors.groups.users;
+    adminGroupName = contributors.groups.admins;
+    bootstrapUsers = bootstrapUsers;
   };
 
   services.burrow.headscale = {

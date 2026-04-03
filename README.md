@@ -10,6 +10,7 @@ Routine verification now runs unprivileged with `cargo test --workspace --all-fe
 The repository now carries its own design and deployment record:
 
 - [Constitution](./CONSTITUTION.md)
+- [Agent Instructions](./AGENTS.md)
 - [Burrow Evolution](./evolution/README.md)
 - [WireGuard Rust Lineage](./docs/WIREGUARD_LINEAGE.md)
 - [Protocol Roadmap](./docs/PROTOCOL_ROADMAP.md)
@@ -18,6 +19,8 @@ The repository now carries its own design and deployment record:
 ## Contributing
 
 Burrow is fully open source, you can fork the repo and start contributing easily. For more information and in-depth discussions, visit the `#burrow` channel on the [Hack Club Slack](https://hackclub.com/slack/), here you can ask for help and talk with other people interested in burrow. Checkout [GETTING_STARTED.md](./docs/GETTING_STARTED.md) for build instructions and [GTK_APP.md](./docs/GTK_APP.md) for the Linux app. Forge and deployment scaffolding live in [`flake.nix`](./flake.nix), [`nixos/`](./nixos), and [`.forgejo/workflows/`](./.forgejo/workflows/). Hosted mail backup operations live in [`docs/FORWARDEMAIL.md`](./docs/FORWARDEMAIL.md) and [`Tools/forwardemail-custom-s3.sh`](./Tools/forwardemail-custom-s3.sh).
+
+Agent and governance-sensitive work should start with [AGENTS.md](./AGENTS.md), [CONSTITUTION.md](./CONSTITUTION.md), and the relevant BEPs under [`evolution/proposals/`](./evolution/proposals/). Identity and bootstrap metadata now live in [`contributors.nix`](./contributors.nix).
 
 The project structure is divided in the following folders: 
 
