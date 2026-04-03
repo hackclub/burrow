@@ -91,6 +91,7 @@
     headscaleClientSecretFile = config.age.secrets.burrowHeadscaleOidcClientSecret.path;
     googleClientIDFile = config.age.secrets.burrowAuthentikGoogleClientId.path;
     googleClientSecretFile = config.age.secrets.burrowAuthentikGoogleClientSecret.path;
+    googleLoginMode = "redirect";
     bootstrapUsers = [
       {
         username = "contact";

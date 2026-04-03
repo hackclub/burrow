@@ -203,6 +203,9 @@ in
 
         service = {
           DISABLE_REGISTRATION = true;
+          ENABLE_INTERNAL_SIGNIN = false;
+          ENABLE_BASIC_AUTHENTICATION = false;
+          SHOW_REGISTRATION_BUTTON = false;
           REQUIRE_SIGNIN_VIEW = false;
           DEFAULT_ALLOW_CREATE_ORGANIZATION = false;
           ENABLE_NOTIFY_MAIL = false;
