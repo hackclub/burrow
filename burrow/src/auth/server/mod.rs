@@ -5,17 +5,18 @@ use std::{env, path::Path};
 
 use anyhow::{Context, Result};
 use axum::{
-    extract::{Json, Path as AxumPath, State},
+    extract::{Json, Path as AxumPath, Query, State},
     http::{header::AUTHORIZATION, HeaderMap, StatusCode},
     response::IntoResponse,
     routing::{get, post},
     Router,
 };
+use serde::Deserialize;
 use tokio::signal;
 
 use crate::control::{
-    LocalAuthRequest, LocalAuthResponse, MapRequest, MapResponse, RegisterRequest,
-    RegisterResponse, BURROW_TAILNET_DOMAIN,
+    discovery, LocalAuthRequest, LocalAuthResponse, MapRequest, MapResponse, RegisterRequest,
+    RegisterResponse, TailnetDiscovery, BURROW_TAILNET_DOMAIN,
 };
 
 #[derive(Clone, Debug)]
@@ -105,6 +106,11 @@ struct AppState {
     tailscale: tailscale::TailscaleBridgeManager,
 }
 
+#[derive(Debug, Deserialize)]
+struct TailnetDiscoveryQuery {
+    email: String,
+}
+
 type AppResult<T> = Result<T, (StatusCode, String)>;
 
 pub async fn serve() -> Result<()> {
@@ -139,6 +145,7 @@ pub fn build_router(config: AuthServerConfig) -> Router {
         .route("/v1/auth/login", post(login_local))
         .route("/v1/control/register", post(control_register))
         .route("/v1/control/map", post(control_map))
+        .route("/v1/tailnet/discover", get(tailnet_discover))
         .route("/v1/tailscale/login/start", post(tailscale_login_start))
         .route("/v1/tailscale/login/:session_id", get(tailscale_login_status))
         .with_state(AppState {
@@ -203,6 +210,19 @@ async fn control_map(
 
     let response = blocking(move || db::map_for_node(&db_path, &user, &request, &domain)).await?;
     Ok(Json(response))
+}
+
+async fn tailnet_discover(
+    Query(query): Query<TailnetDiscoveryQuery>,
+) -> AppResult<Json<TailnetDiscovery>> {
+    if query.email.trim().is_empty() {
+        return Err((StatusCode::BAD_REQUEST, "email is required".to_owned()));
+    }
+
+    let discovery = discovery::discover_tailnet(&query.email)
+        .await
+        .map_err(|err| (StatusCode::BAD_GATEWAY, err.to_string()))?;
+    Ok(Json(discovery))
 }
 
 async fn tailscale_login_start(
@@ -392,6 +412,19 @@ mod tests {
         assert_eq!(map.domain, "burrow.net");
         assert_eq!(map.node.name, "devbox");
         assert!(map.dns.expect("dns").magic_dns);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn tailnet_discover_requires_email() -> Result<()> {
+        let app = build_router(AuthServerConfig::default());
+        let response = app
+            .oneshot(
+                Request::get("/v1/tailnet/discover?email=")
+                    .body(Body::empty())?,
+            )
+            .await?;
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         Ok(())
     }
 }

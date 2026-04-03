@@ -33,6 +33,13 @@ struct TailnetLoginStartRequest: Codable, Sendable {
     var controlURL: String?
 }
 
+struct TailnetDiscoveryResponse: Codable, Sendable {
+    var domain: String
+    var provider: TailnetProvider
+    var authority: String
+    var oidcIssuer: String?
+}
+
 struct TailnetLoginStatus: Codable, Sendable {
     var backendState: String
     var authURL: String?
@@ -91,7 +98,7 @@ enum TailnetBridgeClient {
         return try decoder.decode(TailnetLoginStatus.self, from: data)
     }
 
-    private static func validate(response: URLResponse, data: Data) throws {
+    fileprivate static func validate(response: URLResponse, data: Data) throws {
         guard let http = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
@@ -101,6 +108,32 @@ enum TailnetBridgeClient {
             )
             throw TailnetBridgeError.server(message?.ifEmpty("HTTP \(http.statusCode)") ?? "HTTP \(http.statusCode)")
         }
+    }
+}
+
+enum TailnetDiscoveryClient {
+    private static let baseURL = URL(string: "http://127.0.0.1:8080")!
+
+    static func discover(email: String) async throws -> TailnetDiscoveryResponse {
+        guard var components = URLComponents(
+            url: baseURL.appendingPathComponent("v1/tailnet/discover"),
+            resolvingAgainstBaseURL: false
+        ) else {
+            throw URLError(.badURL)
+        }
+        components.queryItems = [
+            URLQueryItem(name: "email", value: email)
+        ]
+        guard let url = components.url else {
+            throw URLError(.badURL)
+        }
+
+        let (data, response) = try await URLSession.shared.data(from: url)
+        try TailnetBridgeClient.validate(response: response, data: data)
+
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try decoder.decode(TailnetDiscoveryResponse.self, from: data)
     }
 }
 
@@ -308,8 +341,13 @@ enum TailnetProvider: String, CaseIterable, Codable, Identifiable, Sendable {
         }
     }
 
-    var usesWebLogin: Bool {
-        self == .tailscale
+    var supportsWebLogin: Bool {
+        switch self {
+        case .tailscale, .headscale:
+            true
+        case .burrow:
+            false
+        }
     }
 
     var requiresControlURL: Bool {
@@ -332,7 +370,7 @@ enum TailnetProvider: String, CaseIterable, Codable, Identifiable, Sendable {
         case .tailscale:
             "Use Tailscale's real browser login flow."
         case .headscale:
-            "Store a Headscale control-plane endpoint and credentials."
+            "Use your Headscale control plane with browser or key-based sign-in."
         case .burrow:
             "Store Burrow control-plane credentials."
         }

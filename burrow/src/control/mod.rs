@@ -1,4 +1,5 @@
 pub mod config;
+pub mod discovery;
 
 use std::collections::BTreeMap;
 
@@ -6,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 pub use config::{TailnetConfig, TailnetProvider};
+pub use discovery::{TailnetDiscovery, TAILNET_DISCOVERY_REL};
 
 pub const BURROW_CAPABILITY_VERSION: i32 = 1;
 pub const BURROW_TAILNET_DOMAIN: &str = "burrow.net";

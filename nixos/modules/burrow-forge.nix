@@ -259,9 +259,12 @@ in
             encode gzip zstd
             @oidcConfig path /.well-known/openid-configuration
             redir @oidcConfig https://${config.services.burrow.authentik.domain}/application/o/${config.services.burrow.authentik.forgejoProviderSlug}/.well-known/openid-configuration 308
+            @tailnetConfig path /.well-known/burrow-tailnet
+            header @tailnetConfig Content-Type application/json
+            respond @tailnetConfig "{\"domain\":\"${cfg.siteDomain}\",\"provider\":\"headscale\",\"authority\":\"https://${config.services.burrow.headscale.domain}\",\"oidc_issuer\":\"https://${config.services.burrow.authentik.domain}/application/o/${config.services.burrow.authentik.headscaleProviderSlug}/\"}" 200
             @webfinger path /.well-known/webfinger
             header @webfinger Content-Type application/jrd+json
-            respond @webfinger "{\"subject\":\"{query.resource}\",\"links\":[{\"rel\":\"http://openid.net/specs/connect/1.0/issuer\",\"href\":\"https://${config.services.burrow.authentik.domain}/application/o/${config.services.burrow.authentik.forgejoProviderSlug}/\"}]}" 200
+            respond @webfinger "{\"subject\":\"{query.resource}\",\"links\":[{\"rel\":\"http://openid.net/specs/connect/1.0/issuer\",\"href\":\"https://${config.services.burrow.authentik.domain}/application/o/${config.services.burrow.authentik.forgejoProviderSlug}/\"},{\"rel\":\"https://burrow.net/rel/tailnet-control-server\",\"href\":\"https://${config.services.burrow.headscale.domain}\"}]}" 200
             @root path /
             redir @root ${homeRepoUrl} 308
             respond 404

@@ -3,131 +3,6 @@
 let
   cfg = config.services.burrow.headscale;
   policyFile = ./burrow-headscale-policy.hujson;
-  landingPage = pkgs.writeTextDir "index.html" ''
-    <!DOCTYPE html>
-    <html lang="en">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Burrow Tailnet</title>
-        <style>
-          :root {
-            color-scheme: light dark;
-            --bg: #f7f7f5;
-            --fg: #171717;
-            --muted: #5c5c57;
-            --card: rgba(255, 255, 255, 0.75);
-            --border: rgba(23, 23, 23, 0.12);
-            --accent: #0f766e;
-          }
-          @media (prefers-color-scheme: dark) {
-            :root {
-              --bg: #111311;
-              --fg: #f2f3ee;
-              --muted: #b2b6aa;
-              --card: rgba(20, 23, 20, 0.78);
-              --border: rgba(242, 243, 238, 0.12);
-              --accent: #5eead4;
-            }
-          }
-          * { box-sizing: border-box; }
-          body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-            background:
-              radial-gradient(circle at top left, rgba(15, 118, 110, 0.12), transparent 32rem),
-              linear-gradient(180deg, rgba(255,255,255,0.35), transparent 18rem),
-              var(--bg);
-            color: var(--fg);
-            display: grid;
-            place-items: center;
-            padding: 2rem;
-          }
-          main {
-            width: min(42rem, 100%);
-            border: 1px solid var(--border);
-            background: var(--card);
-            backdrop-filter: blur(16px);
-            border-radius: 1.5rem;
-            padding: 2rem;
-            box-shadow: 0 1.25rem 3rem rgba(0, 0, 0, 0.12);
-          }
-          h1 {
-            margin: 0 0 0.75rem;
-            font-size: clamp(2rem, 5vw, 3rem);
-            line-height: 1;
-          }
-          p {
-            margin: 0;
-            color: var(--muted);
-            font-size: 1rem;
-            line-height: 1.6;
-          }
-          .stack {
-            display: grid;
-            gap: 1rem;
-          }
-          .actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-top: 1rem;
-          }
-          a.button {
-            text-decoration: none;
-            color: inherit;
-            border-radius: 999px;
-            padding: 0.8rem 1.1rem;
-            border: 1px solid var(--border);
-            background: rgba(255, 255, 255, 0.6);
-          }
-          a.button.primary {
-            background: var(--accent);
-            border-color: transparent;
-            color: #06201d;
-            font-weight: 600;
-          }
-          code, pre {
-            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace;
-            font-size: 0.95rem;
-          }
-          pre {
-            margin: 0;
-            padding: 1rem;
-            border-radius: 1rem;
-            border: 1px solid var(--border);
-            overflow-x: auto;
-            background: rgba(0, 0, 0, 0.05);
-          }
-          .eyebrow {
-            color: var(--accent);
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            font-size: 0.78rem;
-          }
-        </style>
-      </head>
-      <body>
-        <main class="stack">
-          <div class="eyebrow">Burrow Tailnet</div>
-          <div class="stack">
-            <h1>Sign-in starts from your client, not this page.</h1>
-            <p>
-              <code>ts.burrow.net</code> is the Burrow Headscale control plane. Headscale does not provide a built-in web UI,
-              so browser authentication starts only after a Tailscale-compatible client initiates login.
-            </p>
-          </div>
-          <pre>tailscale up --login-server https://ts.burrow.net</pre>
-          <div class="actions">
-            <a class="button primary" href="https://tailscale.com/download" rel="noreferrer">Download Tailscale</a>
-            <a class="button" href="/health">Health Check</a>
-          </div>
-        </main>
-      </body>
-    </html>
-  '';
 in
 {
   options.services.burrow.headscale = {
@@ -346,14 +221,7 @@ in
 
     services.caddy.virtualHosts."${cfg.domain}".extraConfig = ''
       encode gzip zstd
-      @root path /
-      handle @root {
-        root * ${landingPage}
-        file_server
-      }
-      handle {
-        reverse_proxy 127.0.0.1:${toString cfg.port}
-      }
+      reverse_proxy 127.0.0.1:${toString cfg.port}
     '';
   };
 }

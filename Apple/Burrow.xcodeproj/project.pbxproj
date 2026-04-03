@@ -42,8 +42,8 @@
 		D0D4E5A62C8D9E65007F820A /* BurrowCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D4E5312C8D996F007F820A /* BurrowCore.framework */; };
 		D0F4FAD32C8DC79C0068730A /* BurrowCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D4E5312C8D996F007F820A /* BurrowCore.framework */; };
 		D0F7594E2C8DAB6B00126CF3 /* GRPC in Frameworks */ = {isa = PBXBuildFile; productRef = D078F7E02C8DA375008A8CEC /* GRPC */; };
-		D0F759612C8DB24B00126CF3 /* grpc-swift-config.json in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4962C8D921A007F820A /* grpc-swift-config.json */; };
-		D0F759622C8DB24B00126CF3 /* swift-protobuf-config.json in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4972C8D921A007F820A /* swift-protobuf-config.json */; };
+		D0FA10012D10200100112233 /* burrow.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FA10032D10200100112233 /* burrow.pb.swift */; };
+		D0FA10022D10200100112233 /* burrow.grpc.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FA10042D10200100112233 /* burrow.grpc.swift */; };
 		D0F7597E2C8DB30500126CF3 /* CGRPCZlib in Frameworks */ = {isa = PBXBuildFile; productRef = D0F7597D2C8DB30500126CF3 /* CGRPCZlib */; };
 		D0F7598D2C8DB3DA00126CF3 /* Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D4E4992C8D921A007F820A /* Client.swift */; };
 /* End PBXBuildFile section */
@@ -154,8 +154,6 @@
 		D0BCC6032A09535900AD070D /* libburrow.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libburrow.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0BF09582C8E6789000D8DEC /* UI.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = UI.xcconfig; sourceTree = "<group>"; };
 		D0D4E4952C8D921A007F820A /* burrow.proto */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.protobuf; path = burrow.proto; sourceTree = "<group>"; };
-		D0D4E4962C8D921A007F820A /* grpc-swift-config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "grpc-swift-config.json"; sourceTree = "<group>"; };
-		D0D4E4972C8D921A007F820A /* swift-protobuf-config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "swift-protobuf-config.json"; sourceTree = "<group>"; };
 		D0D4E4992C8D921A007F820A /* Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Client.swift; sourceTree = "<group>"; };
 		D0D4E49A2C8D921A007F820A /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		D0D4E49E2C8D921A007F820A /* Network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Network.swift; sourceTree = "<group>"; };
@@ -179,6 +177,8 @@
 		D0D4E58E2C8D9D0A007F820A /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		D0D4E58F2C8D9D0A007F820A /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		D0D4E5902C8D9D0A007F820A /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
+		D0FA10032D10200100112233 /* burrow.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Generated/burrow.pb.swift; sourceTree = "<group>"; };
+		D0FA10042D10200100112233 /* burrow.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Generated/burrow.grpc.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -317,8 +317,8 @@
 			isa = PBXGroup;
 			children = (
 				D0D4E4952C8D921A007F820A /* burrow.proto */,
-				D0D4E4962C8D921A007F820A /* grpc-swift-config.json */,
-				D0D4E4972C8D921A007F820A /* swift-protobuf-config.json */,
+				D0FA10032D10200100112233 /* burrow.pb.swift */,
+				D0FA10042D10200100112233 /* burrow.grpc.swift */,
 			);
 			path = Client;
 			sourceTree = "<group>";
@@ -428,8 +428,6 @@
 			);
 			dependencies = (
 				D0F7598A2C8DB34200126CF3 /* PBXTargetDependency */,
-				D0F7595E2C8DB24400126CF3 /* PBXTargetDependency */,
-				D0F759602C8DB24400126CF3 /* PBXTargetDependency */,
 			);
 			name = Core;
 			packageProductDependencies = (
@@ -617,8 +615,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0F759612C8DB24B00126CF3 /* grpc-swift-config.json in Sources */,
-				D0F759622C8DB24B00126CF3 /* swift-protobuf-config.json in Sources */,
+				D0FA10012D10200100112233 /* burrow.pb.swift in Sources */,
+				D0FA10022D10200100112233 /* burrow.grpc.swift in Sources */,
 				D0F7598D2C8DB3DA00126CF3 /* Client.swift in Sources */,
 				D0D4E56B2C8D9C2F007F820A /* Logging.swift in Sources */,
 			);
@@ -688,14 +686,6 @@
 			isa = PBXTargetDependency;
 			target = D0D4E5302C8D996F007F820A /* Core */;
 			targetProxy = D0F4FAD12C8DC7960068730A /* PBXContainerItemProxy */;
-		};
-		D0F7595E2C8DB24400126CF3 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = D0F7595D2C8DB24400126CF3 /* GRPCSwiftPlugin */;
-		};
-		D0F759602C8DB24400126CF3 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = D0F7595F2C8DB24400126CF3 /* SwiftProtobufPlugin */;
 		};
 		D0F7598A2C8DB34200126CF3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -920,16 +910,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D0B1D10E2C436152004B7823 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
 			productName = AsyncAlgorithms;
-		};
-		D0F7595D2C8DB24400126CF3 /* GRPCSwiftPlugin */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D0D4E4822C8D8EF6007F820A /* XCRemoteSwiftPackageReference "grpc-swift" */;
-			productName = "plugin:GRPCSwiftPlugin";
-		};
-		D0F7595F2C8DB24400126CF3 /* SwiftProtobufPlugin */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D0D4E4852C8D8F29007F820A /* XCRemoteSwiftPackageReference "swift-protobuf" */;
-			productName = "plugin:SwiftProtobufPlugin";
 		};
 		D0F7597D2C8DB30500126CF3 /* CGRPCZlib */ = {
 			isa = XCSwiftPackageProductDependency;
