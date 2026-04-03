@@ -13,13 +13,16 @@ use tun::tokio::TunInterface;
 
 use super::{
     rpc::grpc_defs::{
-        networks_server::Networks, tunnel_server::Tunnel, Empty, Network, NetworkDeleteRequest,
-        NetworkListResponse, NetworkReorderRequest, State as RPCTunnelState,
+        networks_server::Networks, tailnet_control_server::TailnetControl,
+        tunnel_server::Tunnel, Empty, Network, NetworkDeleteRequest, NetworkListResponse,
+        NetworkReorderRequest, State as RPCTunnelState, TailnetDiscoverRequest,
+        TailnetDiscoverResponse, TailnetProbeRequest, TailnetProbeResponse,
         TunnelConfigurationResponse, TunnelStatusResponse,
     },
     runtime::{ActiveTunnel, ResolvedTunnel},
 };
 use crate::{
+    control::discovery,
     daemon::rpc::ServerConfig,
     database::{add_network, delete_network, get_connection, list_networks, reorder_network},
 };
@@ -263,6 +266,47 @@ impl Networks for DaemonRPCServer {
         self.notify_network_update().await?;
         self.reconcile_runtime().await?;
         Ok(Response::new(Empty {}))
+    }
+}
+
+#[tonic::async_trait]
+impl TailnetControl for DaemonRPCServer {
+    async fn discover(
+        &self,
+        request: Request<TailnetDiscoverRequest>,
+    ) -> Result<Response<TailnetDiscoverResponse>, RspStatus> {
+        let request = request.into_inner();
+        let discovery = discovery::discover_tailnet(&request.email)
+            .await
+            .map_err(proc_err)?;
+
+        Ok(Response::new(TailnetDiscoverResponse {
+            domain: discovery.domain,
+            authority: discovery.authority.clone(),
+            oidc_issuer: discovery.oidc_issuer.unwrap_or_default(),
+            managed: matches!(
+                discovery::inferred_provider(Some(&discovery.authority), Some(&discovery.provider)),
+                crate::control::TailnetProvider::Tailscale
+            ),
+        }))
+    }
+
+    async fn probe(
+        &self,
+        request: Request<TailnetProbeRequest>,
+    ) -> Result<Response<TailnetProbeResponse>, RspStatus> {
+        let request = request.into_inner();
+        let status = discovery::probe_tailnet_authority(&request.authority)
+            .await
+            .map_err(proc_err)?;
+
+        Ok(Response::new(TailnetProbeResponse {
+            authority: status.authority,
+            status_code: status.status_code,
+            summary: status.summary,
+            detail: status.detail,
+            reachable: status.reachable,
+        }))
     }
 }
 

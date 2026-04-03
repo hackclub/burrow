@@ -1,4 +1,3 @@
-import AuthenticationServices
 import BurrowConfiguration
 import Foundation
 import SwiftUI
@@ -204,7 +203,7 @@ private enum ConfigurationSheet: String, CaseIterable, Identifiable {
         switch self {
         case .wireGuard: .wireGuard
         case .tor: .tor
-        case .tailnet: .headscale
+        case .tailnet: .tailnet
         }
     }
 
@@ -285,13 +284,12 @@ private struct AccountDraft {
     var wireGuardConfig = ""
 
     var discoveryEmail = ""
-    var tailnetProvider: TailnetProvider = .tailscale
     var authority = ""
     var tailnet = ""
     var hostname = ProcessInfo.processInfo.hostName
     var username = ""
     var secret = ""
-    var authMode: AccountAuthMode = .web
+    var authMode: AccountAuthMode = .none
 
     var torAddresses = "100.64.0.2/32"
     var torDNS = "1.1.1.1, 1.0.0.1"
@@ -317,7 +315,6 @@ private struct AccountDraft {
 
 private struct ConfigurationSheetView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.webAuthenticationSession) private var webAuthenticationSession
 
     let sheet: ConfigurationSheet
     let networkViewModel: NetworkViewModel
@@ -326,17 +323,13 @@ private struct ConfigurationSheetView: View {
     @State private var draft: AccountDraft
     @State private var isSubmitting = false
     @State private var errorMessage: String?
-    @State private var loginSessionID: String?
-    @State private var loginStatus: TailnetLoginStatus?
     @State private var discoveryStatus: TailnetDiscoveryResponse?
     @State private var discoveryError: String?
     @State private var isDiscoveringTailnet = false
     @State private var authorityProbeStatus: TailnetAuthorityProbeStatus?
     @State private var authorityProbeError: String?
     @State private var isProbingAuthority = false
-    @State private var pollingTask: Task<Void, Never>?
     @State private var didRunAutomation = false
-    @State private var webAuthenticationTask: Task<Void, Never>?
 
     init(
         sheet: ConfigurationSheet,
@@ -447,19 +440,11 @@ private struct ConfigurationSheetView: View {
         .onAppear {
             runAutomationIfNeeded()
         }
-        .onChange(of: draft.tailnetProvider) { _, _ in
-            resetAuthorityProbe()
-        }
         .onChange(of: draft.authority) { _, _ in
             resetAuthorityProbe()
         }
         .onChange(of: draft.discoveryEmail) { _, _ in
             resetTailnetDiscoveryFeedback()
-        }
-        .onDisappear {
-            pollingTask?.cancel()
-            webAuthenticationTask?.cancel()
-            webAuthenticationTask = nil
         }
     }
 
@@ -490,48 +475,30 @@ private struct ConfigurationSheetView: View {
                 tailnetDiscoveryCard(status: nil, failure: discoveryError)
             }
 
-            Picker(
-                "Provider",
-                selection: Binding(
-                    get: { draft.tailnetProvider },
-                    set: { applyTailnetProvider($0) }
-                )
-            ) {
-                ForEach(TailnetProvider.allCases) { provider in
-                    Text(provider.title).tag(provider)
+            TextField("Authority URL", text: $draft.authority)
+                .burrowLoginField()
+                .autocorrectionDisabled()
+
+            Text("Use the managed Tailnet authority or enter a custom Tailnet control server.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+
+            Button {
+                probeTailnetAuthority()
+            } label: {
+                Label {
+                    Text(isProbingAuthority ? "Checking Connection" : "Check Connection")
+                } icon: {
+                    Image(systemName: isProbingAuthority ? "hourglass" : "bolt.horizontal.circle")
                 }
             }
-            .pickerStyle(.menu)
+            .buttonStyle(.borderless)
+            .disabled(isProbingAuthority || normalizedOptional(draft.authority) == nil)
 
-            tailnetProviderCard
-
-            if draft.tailnetProvider.requiresControlURL {
-                TextField("Server URL", text: $draft.authority)
-                    .burrowLoginField()
-                    .autocorrectionDisabled()
-
-                Button {
-                    probeTailnetAuthority()
-                } label: {
-                    Label {
-                        Text(isProbingAuthority ? "Checking Connection" : "Check Connection")
-                    } icon: {
-                        Image(systemName: isProbingAuthority ? "hourglass" : "bolt.horizontal.circle")
-                    }
-                }
-                .buttonStyle(.borderless)
-                .disabled(isProbingAuthority || normalizedOptional(draft.authority) == nil)
-
-                if let authorityProbeStatus {
-                    tailnetAuthorityProbeCard(status: authorityProbeStatus, failure: nil)
-                } else if let authorityProbeError {
-                    tailnetAuthorityProbeCard(status: nil, failure: authorityProbeError)
-                }
-            } else {
-                LabeledContent("Server") {
-                    Text("Tailscale managed")
-                        .foregroundStyle(.secondary)
-                }
+            if let authorityProbeStatus {
+                tailnetAuthorityProbeCard(status: authorityProbeStatus, failure: nil)
+            } else if let authorityProbeError {
+                tailnetAuthorityProbeCard(status: nil, failure: authorityProbeError)
             }
 
             TextField("Tailnet", text: $draft.tailnet)
@@ -540,28 +507,24 @@ private struct ConfigurationSheetView: View {
         }
 
         Section("Authentication") {
-            if tailnetUsesWebLogin {
-                tailnetWebLoginCard
-            } else {
-                TextField("Username", text: $draft.username)
-                    .burrowLoginField()
-                    .autocorrectionDisabled()
-                Picker("Authentication", selection: $draft.authMode) {
-                    ForEach(availableTailnetAuthModes) { mode in
-                        Text(mode.title).tag(mode)
-                    }
+            TextField("Username", text: $draft.username)
+                .burrowLoginField()
+                .autocorrectionDisabled()
+            Picker("Authentication", selection: $draft.authMode) {
+                ForEach(availableTailnetAuthModes) { mode in
+                    Text(mode.title).tag(mode)
                 }
-                .pickerStyle(.menu)
-                if draft.authMode != .none {
-                    SecureField(
-                        draft.authMode == .password ? "Password" : "Preauth Key",
-                        text: $draft.secret
-                    )
-                }
-                Text("Credentials stay on-device. Burrow uses them when it needs to register or refresh this identity.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
             }
+            .pickerStyle(.menu)
+            if draft.authMode != .none {
+                SecureField(
+                    draft.authMode == .password ? "Password" : "Preauth Key",
+                    text: $draft.secret
+                )
+            }
+            Text("Tailnet account material stays on-device. Burrow stores the authority and credentials for daemon-managed registration and refresh.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -618,89 +581,14 @@ private struct ConfigurationSheetView: View {
 
             if sheet == .tailnet {
                 HStack(spacing: 8) {
-                    summaryBadge(draft.tailnetProvider.title)
-                    summaryBadge(
-                        tailnetUsesWebLogin ? "Web Sign-In" : draft.authMode.title
-                    )
+                    summaryBadge(isManagedTailnetAuthority ? "Managed" : "Custom")
+                    summaryBadge(draft.authMode.title)
                 }
             }
         }
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 18)
-                .fill(.thinMaterial)
-        )
-    }
-
-    private var tailnetProviderCard: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 10) {
-                Image(systemName: tailnetProviderIconName)
-                    .font(.headline)
-                    .foregroundStyle(sheetAccentColor)
-                    .frame(width: 28, height: 28)
-                    .background(
-                        Circle()
-                            .fill(sheetAccentColor.opacity(0.14))
-                    )
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(draft.tailnetProvider.title)
-                        .font(.headline)
-                    Text(draft.tailnetProvider.subtitle)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-            }
-        }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.thinMaterial)
-        )
-    }
-
-    @ViewBuilder
-    private var tailnetWebLoginCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Sign in with the shared browser session.")
-                .font(.subheadline.weight(.medium))
-
-            if let loginStatus {
-                labeledValue("State", loginStatus.backendState)
-                if let tailnetName = loginStatus.tailnetName {
-                    labeledValue("Tailnet", tailnetName)
-                }
-                if let dnsName = loginStatus.selfDNSName {
-                    labeledValue("Device", dnsName)
-                }
-                if !loginStatus.tailscaleIPs.isEmpty {
-                    labeledValue("Addresses", loginStatus.tailscaleIPs.joined(separator: ", "))
-                }
-                if let authURL = loginStatus.authURL {
-                    Button("Resume Sign-In") {
-                        if let url = URL(string: authURL) {
-                            openLoginURL(url)
-                        }
-                    }
-                    .buttonStyle(.borderless)
-                }
-                if !loginStatus.health.isEmpty {
-                    Text(loginStatus.health.joined(separator: " • "))
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-            } else {
-                Text("Burrow launches the local bridge, then opens the real provider sign-in page in-app.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
                 .fill(.thinMaterial)
         )
     }
@@ -739,12 +627,15 @@ private struct ConfigurationSheetView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             if let status {
-                Text("Discovered \(status.provider.title)")
+                Text("Discovered Tailnet Server")
                     .font(.subheadline.weight(.medium))
                 Text(status.authority)
                     .font(.footnote.monospaced())
                     .foregroundStyle(.secondary)
                     .textSelection(.enabled)
+                Text(status.provider == .tailscale ? "Managed authority" : "Custom authority")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
                 if let oidcIssuer = status.oidcIssuer {
                     Text("OIDC: \(oidcIssuer)")
                         .font(.footnote)
@@ -826,12 +717,8 @@ private struct ConfigurationSheetView: View {
             }
 
         case .tailnet:
-            Menu("Provider") {
-                ForEach(TailnetProvider.allCases) { provider in
-                    Button(provider.title) {
-                        applyTailnetProvider(provider)
-                    }
-                }
+            Button("Use Tailscale Managed Server") {
+                applyTailnetDefaults(for: .tailscale)
             }
 
             if availableTailnetAuthModes.count > 1 {
@@ -839,7 +726,7 @@ private struct ConfigurationSheetView: View {
                     ForEach(availableTailnetAuthModes) { mode in
                         Button(mode.title) {
                             draft.authMode = mode
-                            if mode == .none || mode == .web {
+                            if mode == .none {
                                 draft.secret = ""
                             }
                         }
@@ -847,8 +734,8 @@ private struct ConfigurationSheetView: View {
                 }
             }
 
-            Button("Restore Provider Defaults") {
-                applyTailnetDefaults(for: draft.tailnetProvider)
+            Button("Clear Discovery Result") {
+                resetTailnetDiscoveryFeedback()
             }
         }
     }
@@ -886,17 +773,6 @@ private struct ConfigurationSheetView: View {
         }
     }
 
-    private var tailnetProviderIconName: String {
-        switch draft.tailnetProvider {
-        case .tailscale:
-            "globe.badge.chevron.backward"
-        case .headscale:
-            "server.rack"
-        case .burrow:
-            "shield"
-        }
-    }
-
     private var showsBottomActionButton: Bool {
         #if os(iOS)
         true
@@ -920,9 +796,6 @@ private struct ConfigurationSheetView: View {
         case .tor:
             return "Save Account"
         case .tailnet:
-            if tailnetUsesWebLogin {
-                return loginStatus?.running == true ? "Save Account" : "Start Sign-In"
-            }
             return "Save Account"
         }
     }
@@ -937,11 +810,8 @@ private struct ConfigurationSheetView: View {
             if normalizedOptional(draft.accountName) == nil || normalizedOptional(draft.identityName) == nil {
                 return true
             }
-            if draft.tailnetProvider.requiresControlURL && normalizedOptional(draft.authority) == nil {
+            if normalizedOptional(draft.authority) == nil {
                 return true
-            }
-            if tailnetUsesWebLogin {
-                return false
             }
             if draft.authMode != .none && normalizedOptional(draft.secret) == nil {
                 return true
@@ -1027,39 +897,10 @@ private struct ConfigurationSheetView: View {
     }
 
     private func submitTailnet() async throws {
-        if tailnetUsesWebLogin {
-            if loginStatus?.running == true {
-                webAuthenticationTask?.cancel()
-                webAuthenticationTask = nil
-                try await saveTailnetAccount(secret: nil, username: nil)
-                dismiss()
-            } else {
-                try await startTailnetLogin()
-            }
-            return
-        }
-
         let secret = draft.authMode == .none ? nil : draft.secret
         let username = normalizedOptional(draft.username)
         try await saveTailnetAccount(secret: secret, username: username)
         dismiss()
-    }
-
-    private func startTailnetLogin() async throws {
-        let response = try await TailnetBridgeClient.startLogin(
-            TailnetLoginStartRequest(
-                accountName: normalized(draft.accountName, fallback: "default"),
-                identityName: normalized(draft.identityName, fallback: "apple"),
-                hostname: normalizedOptional(draft.hostname),
-                controlURL: normalizedOptional(draft.authority) ?? draft.tailnetProvider.defaultAuthority
-            )
-        )
-        loginSessionID = response.sessionID
-        loginStatus = response.status
-        if let authURL = response.status.authURL, let url = URL(string: authURL) {
-            openLoginURL(url)
-        }
-        startPollingTailscaleLogin()
     }
 
     private func runAutomationIfNeeded() {
@@ -1080,79 +921,19 @@ private struct ConfigurationSheetView: View {
         Task { @MainActor in
             switch automation.action {
             case .tailnetLogin:
-                draft.tailnetProvider = .tailscale
-                do {
-                    try await startTailnetLogin()
-                } catch {
-                    errorMessage = error.localizedDescription
-                }
+                applyTailnetDefaults(for: .tailscale)
+                probeTailnetAuthority()
             case .headscaleProbe:
-                applyTailnetProvider(.headscale)
                 draft.authority = automation.authority ?? TailnetProvider.headscale.defaultAuthority ?? draft.authority
                 probeTailnetAuthority()
             }
         }
     }
 
-    private func startPollingTailscaleLogin() {
-        pollingTask?.cancel()
-        guard let loginSessionID else { return }
-        pollingTask = Task { @MainActor in
-            while !Task.isCancelled {
-                do {
-                    let status = try await TailnetBridgeClient.status(sessionID: loginSessionID)
-                    let previousAuthURL = loginStatus?.authURL
-                    loginStatus = status
-                    if previousAuthURL == nil,
-                       let authURL = status.authURL,
-                       let url = URL(string: authURL)
-                    {
-                        openLoginURL(url)
-                    }
-                    if status.running {
-                        webAuthenticationTask?.cancel()
-                        webAuthenticationTask = nil
-                        return
-                    }
-                } catch {
-                    errorMessage = error.localizedDescription
-                    return
-                }
-                try? await Task.sleep(for: .seconds(2))
-            }
-        }
-    }
-
-    private func openLoginURL(_ url: URL) {
-        webAuthenticationTask?.cancel()
-        webAuthenticationTask = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(300))
-            do {
-                _ = try await webAuthenticationSession.authenticate(
-                    using: url,
-                    callbackURLScheme: "burrow",
-                    preferredBrowserSession: .shared
-                )
-            } catch is CancellationError {
-                return
-            } catch let error as ASWebAuthenticationSessionError
-                where error.code == .canceledLogin
-            {
-                return
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-            webAuthenticationTask = nil
-        }
-    }
-
     private func saveTailnetAccount(secret: String?, username: String?) async throws {
-        let provider = draft.tailnetProvider
+        let provider = inferredTailnetProvider
         let title = titleOrFallback(
-            hostnameFallback(
-                from: tailnetUsesWebLogin ? (loginStatus?.tailnetName ?? "") : draft.authority,
-                fallback: provider.title
-            )
+            hostnameFallback(from: draft.authority, fallback: "Tailnet")
         )
 
         let payload = TailnetNetworkPayload(
@@ -1160,22 +941,14 @@ private struct ConfigurationSheetView: View {
             authority: normalizedOptional(draft.authority) ?? normalizedOptional(provider.defaultAuthority ?? ""),
             account: normalized(draft.accountName, fallback: "default"),
             identity: normalized(draft.identityName, fallback: "apple"),
-            tailnet: normalizedOptional(loginStatus?.tailnetName ?? draft.tailnet),
+            tailnet: normalizedOptional(draft.tailnet),
             hostname: normalizedOptional(draft.hostname)
         )
 
         var noteParts: [String] = [
-            provider.title,
-            tailnetUsesWebLogin
-                ? "State: \(loginStatus?.backendState ?? "NeedsLogin")"
-                : "Auth: \(draft.authMode.title)",
+            isManagedTailnetAuthority ? "Managed Tailnet" : "Custom Tailnet",
+            "Auth: \(draft.authMode.title)",
         ]
-        if let dnsName = loginStatus?.selfDNSName {
-            noteParts.append("Device: \(dnsName)")
-        }
-        if let magicDNSSuffix = loginStatus?.magicDNSSuffix {
-            noteParts.append("MagicDNS: \(magicDNSSuffix)")
-        }
 
         do {
             let networkID = try await networkViewModel.addTailnetNetwork(payload: payload)
@@ -1186,7 +959,7 @@ private struct ConfigurationSheetView: View {
 
         let record = NetworkAccountRecord(
             id: UUID(),
-            kind: .headscale,
+            kind: .tailnet,
             title: title,
             authority: payload.authority,
             provider: provider,
@@ -1195,7 +968,7 @@ private struct ConfigurationSheetView: View {
             hostname: payload.hostname,
             username: username,
             tailnet: payload.tailnet,
-            authMode: tailnetUsesWebLogin ? .web : draft.authMode,
+            authMode: draft.authMode,
             note: noteParts.joined(separator: " • "),
             createdAt: .now,
             updatedAt: .now
@@ -1226,33 +999,15 @@ private struct ConfigurationSheetView: View {
         draft.torListen = defaults.torListen
     }
 
-    private func applyTailnetProvider(_ provider: TailnetProvider) {
-        resetTailnetDiscoveryFeedback()
-        draft.tailnetProvider = provider
-        applyTailnetDefaults(for: provider)
-    }
-
     private func applyTailnetDefaults(for provider: TailnetProvider) {
+        resetTailnetDiscoveryFeedback()
         draft.authority = provider.defaultAuthority ?? ""
-        loginStatus = nil
-        loginSessionID = nil
-        pollingTask?.cancel()
-        if provider == .tailscale {
-            draft.authMode = .web
-            draft.username = ""
-            draft.secret = ""
-        } else {
-            if !availableTailnetAuthModes.contains(draft.authMode) {
-                draft.authMode = provider.supportsWebLogin ? .web : .none
-            }
-            if draft.authMode == .web && !provider.supportsWebLogin {
-                draft.authMode = .none
-            }
+        if !availableTailnetAuthModes.contains(draft.authMode) {
+            draft.authMode = .none
         }
     }
 
     private func probeTailnetAuthority() {
-        guard draft.tailnetProvider.requiresControlURL else { return }
         guard let authority = normalizedOptional(draft.authority) else {
             authorityProbeStatus = nil
             authorityProbeError = "Enter a server URL first."
@@ -1266,10 +1021,7 @@ private struct ConfigurationSheetView: View {
         Task { @MainActor in
             defer { isProbingAuthority = false }
             do {
-                authorityProbeStatus = try await TailnetAuthorityProbeClient.probe(
-                    provider: draft.tailnetProvider,
-                    authority: authority
-                )
+                authorityProbeStatus = try await networkViewModel.probeTailnetAuthority(authority)
             } catch {
                 authorityProbeError = error.localizedDescription
             }
@@ -1300,15 +1052,9 @@ private struct ConfigurationSheetView: View {
         Task { @MainActor in
             defer { isDiscoveringTailnet = false }
             do {
-                let discovery = try await TailnetDiscoveryClient.discover(email: email)
+                let discovery = try await networkViewModel.discoverTailnet(email: email)
                 discoveryStatus = discovery
-                draft.tailnetProvider = discovery.provider
                 draft.authority = discovery.authority
-                if discovery.provider.supportsWebLogin, discovery.oidcIssuer != nil {
-                    draft.authMode = .web
-                    draft.username = ""
-                    draft.secret = ""
-                }
                 probeTailnetAuthority()
             } catch {
                 discoveryError = error.localizedDescription
@@ -1361,19 +1107,19 @@ private struct ConfigurationSheetView: View {
         return host
     }
 
-    private var tailnetUsesWebLogin: Bool {
-        draft.authMode == .web && draft.tailnetProvider.supportsWebLogin
+    private var availableTailnetAuthModes: [AccountAuthMode] {
+        [.none, .password, .preauthKey]
     }
 
-    private var availableTailnetAuthModes: [AccountAuthMode] {
-        switch draft.tailnetProvider {
-        case .tailscale:
-            [.web]
-        case .headscale:
-            [.web, .none, .password, .preauthKey]
-        case .burrow:
-            [.none, .password, .preauthKey]
-        }
+    private var inferredTailnetProvider: TailnetProvider {
+        TailnetProvider.inferred(
+            authority: normalizedOptional(draft.authority),
+            explicit: discoveryStatus?.provider
+        )
+    }
+
+    private var isManagedTailnetAuthority: Bool {
+        TailnetProvider.isManagedTailscaleAuthority(normalizedOptional(draft.authority))
     }
 
     @ViewBuilder

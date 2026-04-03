@@ -17,6 +17,11 @@ service Networks {
     rpc NetworkDelete (NetworkDeleteRequest) returns (Empty);
 }
 
+service TailnetControl {
+    rpc Discover (TailnetDiscoverRequest) returns (TailnetDiscoverResponse);
+    rpc Probe (TailnetProbeRequest) returns (TailnetProbeResponse);
+}
+
 message NetworkReorderRequest {
     int32 id = 1;
     int32 index = 2;
@@ -54,6 +59,29 @@ message NetworkListResponse {
 
 message Empty {
 
+}
+
+message TailnetDiscoverRequest {
+    string email = 1;
+}
+
+message TailnetDiscoverResponse {
+    string domain = 1;
+    string authority = 2;
+    string oidc_issuer = 3;
+    bool managed = 4;
+}
+
+message TailnetProbeRequest {
+    string authority = 1;
+}
+
+message TailnetProbeResponse {
+    string authority = 1;
+    int32 status_code = 2;
+    string summary = 3;
+    string detail = 4;
+    bool reachable = 5;
 }
 
 enum State {

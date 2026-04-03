@@ -16,7 +16,10 @@ use tonic::transport::Server;
 use tracing::info;
 
 use crate::{
-    daemon::rpc::grpc_defs::{networks_server::NetworksServer, tunnel_server::TunnelServer},
+    daemon::rpc::grpc_defs::{
+        networks_server::NetworksServer, tailnet_control_server::TailnetControlServer,
+        tunnel_server::TunnelServer,
+    },
     database::get_connection,
 };
 
@@ -36,9 +39,11 @@ pub async fn daemon_main(
     let uds = UnixListener::bind(sock_path)?;
     let serve_job = tokio::spawn(async move {
         let uds_stream = UnixListenerStream::new(uds);
+        let tailnet_server = burrow_server.clone();
         let _srv = Server::builder()
             .add_service(TunnelServer::new(burrow_server.clone()))
             .add_service(NetworksServer::new(burrow_server))
+            .add_service(TailnetControlServer::new(tailnet_server))
             .serve_with_incoming(uds_stream)
             .await?;
         Ok::<(), AhError>(())

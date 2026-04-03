@@ -7,6 +7,7 @@ use super::TailnetProvider;
 pub const TAILNET_DISCOVERY_REL: &str = "https://burrow.net/rel/tailnet-control-server";
 const TAILNET_DISCOVERY_PATH: &str = "/.well-known/burrow-tailnet";
 const WEBFINGER_PATH: &str = "/.well-known/webfinger";
+const MANAGED_TAILSCALE_AUTHORITY: &str = "controlplane.tailscale.com";
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct TailnetDiscovery {
@@ -15,6 +16,15 @@ pub struct TailnetDiscovery {
     pub authority: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub oidc_issuer: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct TailnetAuthorityProbe {
+    pub authority: String,
+    pub status_code: i32,
+    pub summary: String,
+    pub detail: String,
+    pub reachable: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -43,6 +53,63 @@ pub async fn discover_tailnet(email: &str) -> Result<TailnetDiscovery> {
     discover_tailnet_at(&client, email, &base_url).await
 }
 
+pub fn normalize_authority(authority: &str) -> String {
+    let trimmed = authority.trim();
+    if trimmed.contains("://") {
+        trimmed.to_owned()
+    } else {
+        format!("https://{trimmed}")
+    }
+}
+
+pub fn is_managed_tailscale_authority(authority: &str) -> bool {
+    let normalized = normalize_authority(authority)
+        .trim_end_matches('/')
+        .to_ascii_lowercase();
+    normalized == format!("https://{MANAGED_TAILSCALE_AUTHORITY}")
+        || normalized == format!("http://{MANAGED_TAILSCALE_AUTHORITY}")
+}
+
+pub async fn probe_tailnet_authority(authority: &str) -> Result<TailnetAuthorityProbe> {
+    let authority = normalize_authority(authority);
+    if is_managed_tailscale_authority(&authority) {
+        return Ok(TailnetAuthorityProbe {
+            authority,
+            status_code: 200,
+            summary: "Tailscale-managed control plane".to_owned(),
+            detail: "Using Tailscale's default login server.".to_owned(),
+            reachable: true,
+        });
+    }
+
+    let base_url =
+        Url::parse(&authority).with_context(|| format!("invalid tailnet authority {authority}"))?;
+    let client = Client::builder()
+        .user_agent("burrow-tailnet-probe")
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .context("failed to build tailnet authority probe client")?;
+
+    if let Some(status) =
+        probe_url(&client, base_url.join("/health")?, &authority, "Tailnet server reachable").await?
+    {
+        return Ok(status);
+    }
+
+    if let Some(status) = probe_url(
+        &client,
+        base_url.clone(),
+        &authority,
+        "Tailnet server reachable",
+    )
+    .await?
+    {
+        return Ok(status);
+    }
+
+    Err(anyhow!("could not connect to the server"))
+}
+
 pub async fn discover_tailnet_at(
     client: &Client,
     email: &str,
@@ -57,7 +124,7 @@ pub async fn discover_tailnet_at(
     if let Some(authority) = discover_webfinger(client, email, base_url).await? {
         return Ok(TailnetDiscovery {
             domain,
-            provider: TailnetProvider::Headscale,
+            provider: inferred_provider(Some(&authority), None),
             authority,
             oidc_issuer: None,
         });
@@ -76,6 +143,19 @@ pub fn email_domain(email: &str) -> Result<String> {
         return Err(anyhow!("email address must include a domain"));
     }
     Ok(domain)
+}
+
+pub fn inferred_provider(
+    authority: Option<&str>,
+    explicit: Option<&TailnetProvider>,
+) -> TailnetProvider {
+    if matches!(explicit, Some(TailnetProvider::Burrow)) {
+        return TailnetProvider::Burrow;
+    }
+    if authority.is_some_and(is_managed_tailscale_authority) {
+        return TailnetProvider::Tailscale;
+    }
+    TailnetProvider::Headscale
 }
 
 async fn discover_well_known(client: &Client, base_url: &Url) -> Result<Option<TailnetDiscovery>> {
@@ -133,6 +213,37 @@ async fn discover_webfinger(client: &Client, email: &str, base_url: &Url) -> Res
     }
 }
 
+async fn probe_url(
+    client: &Client,
+    url: Url,
+    authority: &str,
+    summary: &str,
+) -> Result<Option<TailnetAuthorityProbe>> {
+    let response = match client
+        .get(url)
+        .header("accept", "application/json")
+        .send()
+        .await
+    {
+        Ok(response) => response,
+        Err(_) => return Ok(None),
+    };
+
+    let status = response.status();
+    if !status.is_success() {
+        return Ok(None);
+    }
+
+    let detail = response.text().await.unwrap_or_default().trim().to_owned();
+    Ok(Some(TailnetAuthorityProbe {
+        authority: authority.to_owned(),
+        status_code: i32::from(status.as_u16()),
+        summary: summary.to_owned(),
+        detail,
+        reachable: true,
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use axum::{routing::get, Router};
@@ -145,6 +256,13 @@ mod tests {
     fn extracts_domain_from_email() {
         assert_eq!(email_domain("Contact@Burrow.net").unwrap(), "burrow.net");
         assert!(email_domain("contact").is_err());
+    }
+
+    #[test]
+    fn detects_managed_tailscale_authority() {
+        assert!(is_managed_tailscale_authority("controlplane.tailscale.com"));
+        assert!(is_managed_tailscale_authority("https://controlplane.tailscale.com/"));
+        assert!(!is_managed_tailscale_authority("https://ts.burrow.net"));
     }
 
     #[tokio::test]
@@ -205,6 +323,22 @@ mod tests {
         let discovery = discover_tailnet_at(&client, "contact@burrow.net", &base_url).await?;
         assert_eq!(discovery.provider, TailnetProvider::Headscale);
         assert_eq!(discovery.authority, "https://ts.burrow.net");
+
+        server.abort();
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn probes_custom_authority() -> Result<()> {
+        let router = Router::new().route("/health", get(|| async { "ok" }));
+        let listener = TcpListener::bind("127.0.0.1:0").await?;
+        let authority = format!("http://{}", listener.local_addr()?);
+        let server = tokio::spawn(async move { axum::serve(listener, router).await });
+
+        let status = probe_tailnet_authority(&authority).await?;
+        assert_eq!(status.authority, authority);
+        assert_eq!(status.status_code, 200);
+        assert!(status.reachable);
 
         server.abort();
         Ok(())

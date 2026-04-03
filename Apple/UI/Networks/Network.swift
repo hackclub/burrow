@@ -26,35 +26,11 @@ struct TailnetNetworkPayload: Codable, Sendable {
     }
 }
 
-struct TailnetLoginStartRequest: Codable, Sendable {
-    var accountName: String
-    var identityName: String
-    var hostname: String?
-    var controlURL: String?
-}
-
 struct TailnetDiscoveryResponse: Codable, Sendable {
     var domain: String
     var provider: TailnetProvider
     var authority: String
     var oidcIssuer: String?
-}
-
-struct TailnetLoginStatus: Codable, Sendable {
-    var backendState: String
-    var authURL: String?
-    var running: Bool
-    var needsLogin: Bool
-    var tailnetName: String?
-    var magicDNSSuffix: String?
-    var selfDNSName: String?
-    var tailscaleIPs: [String]
-    var health: [String]
-}
-
-struct TailnetLoginStartResponse: Codable, Sendable {
-    var sessionID: String
-    var status: TailnetLoginStatus
 }
 
 struct TailnetAuthorityProbeStatus: Sendable {
@@ -64,147 +40,37 @@ struct TailnetAuthorityProbeStatus: Sendable {
     var detail: String?
 }
 
-enum TailnetBridgeClient {
-    private static let baseURL = URL(string: "http://127.0.0.1:8080")!
-
-    static func startLogin(_ request: TailnetLoginStartRequest) async throws -> TailnetLoginStartResponse {
-        var urlRequest = URLRequest(
-            url: baseURL.appendingPathComponent("v1/tailscale/login/start")
-        )
-        urlRequest.httpMethod = "POST"
-        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        let encoder = JSONEncoder()
-        encoder.keyEncodingStrategy = .convertToSnakeCase
-        urlRequest.httpBody = try encoder.encode(request)
-
-        let (data, response) = try await URLSession.shared.data(for: urlRequest)
-        try validate(response: response, data: data)
-
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        return try decoder.decode(TailnetLoginStartResponse.self, from: data)
-    }
-
-    static func status(sessionID: String) async throws -> TailnetLoginStatus {
-        let url = baseURL
-            .appendingPathComponent("v1/tailscale/login")
-            .appendingPathComponent(sessionID)
-        let (data, response) = try await URLSession.shared.data(from: url)
-        try validate(response: response, data: data)
-
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        return try decoder.decode(TailnetLoginStatus.self, from: data)
-    }
-
-    fileprivate static func validate(response: URLResponse, data: Data) throws {
-        guard let http = response as? HTTPURLResponse else {
-            throw URLError(.badServerResponse)
-        }
-        guard (200..<300).contains(http.statusCode) else {
-            let message = String(data: data, encoding: .utf8)?.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            )
-            throw TailnetBridgeError.server(message?.ifEmpty("HTTP \(http.statusCode)") ?? "HTTP \(http.statusCode)")
-        }
-    }
-}
-
 enum TailnetDiscoveryClient {
-    private static let baseURL = URL(string: "http://127.0.0.1:8080")!
+    static func discover(email: String, socketURL: URL) async throws -> TailnetDiscoveryResponse {
+        var request = Burrow_TailnetDiscoverRequest()
+        request.email = email
 
-    static func discover(email: String) async throws -> TailnetDiscoveryResponse {
-        guard var components = URLComponents(
-            url: baseURL.appendingPathComponent("v1/tailnet/discover"),
-            resolvingAgainstBaseURL: false
-        ) else {
-            throw URLError(.badURL)
-        }
-        components.queryItems = [
-            URLQueryItem(name: "email", value: email)
-        ]
-        guard let url = components.url else {
-            throw URLError(.badURL)
-        }
-
-        let (data, response) = try await URLSession.shared.data(from: url)
-        try TailnetBridgeClient.validate(response: response, data: data)
-
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        return try decoder.decode(TailnetDiscoveryResponse.self, from: data)
+        let response = try await TailnetClient.unix(socketURL: socketURL).discover(request)
+        return TailnetDiscoveryResponse(
+            domain: response.domain,
+            provider: response.managed ? .tailscale : .headscale,
+            authority: response.authority,
+            oidcIssuer: response.oidcIssuer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? nil
+                : response.oidcIssuer
+        )
     }
 }
 
 enum TailnetAuthorityProbeClient {
-    static func probe(provider: TailnetProvider, authority: String) async throws -> TailnetAuthorityProbeStatus {
-        let normalizedAuthority = normalizeAuthority(authority)
-        let baseURL = try validatedBaseURL(normalizedAuthority)
-        let probeURL = probeURL(for: provider, baseURL: baseURL)
+    static func probe(authority: String, socketURL: URL) async throws -> TailnetAuthorityProbeStatus {
+        var request = Burrow_TailnetProbeRequest()
+        request.authority = authority
 
-        var request = URLRequest(url: probeURL)
-        request.timeoutInterval = 10
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse else {
-            throw URLError(.badServerResponse)
-        }
-        guard (200..<300).contains(http.statusCode) else {
-            let message = String(data: data, encoding: .utf8)?.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            )
-            throw TailnetBridgeError.server(message?.ifEmpty("HTTP \(http.statusCode)") ?? "HTTP \(http.statusCode)")
-        }
-
-        let body = String(data: data, encoding: .utf8)?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        let detail = body.flatMap { $0.isEmpty ? nil : $0 }
-
+        let response = try await TailnetClient.unix(socketURL: socketURL).probe(request)
         return TailnetAuthorityProbeStatus(
-            authority: normalizedAuthority,
-            statusCode: http.statusCode,
-            summary: "\(provider.title) reachable",
-            detail: detail
+            authority: response.authority,
+            statusCode: Int(response.statusCode),
+            summary: response.summary,
+            detail: response.detail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? nil
+                : response.detail
         )
-    }
-
-    private static func normalizeAuthority(_ authority: String) -> String {
-        let trimmed = authority.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.contains("://") {
-            return trimmed
-        }
-        return "https://\(trimmed)"
-    }
-
-    private static func validatedBaseURL(_ authority: String) throws -> URL {
-        guard let url = URL(string: authority), url.host != nil else {
-            throw TailnetBridgeError.server("Invalid server URL")
-        }
-        return url
-    }
-
-    private static func probeURL(for provider: TailnetProvider, baseURL: URL) -> URL {
-        switch provider {
-        case .headscale:
-            baseURL.appendingPathComponent("health")
-        case .burrow:
-            baseURL.appendingPathComponent("healthz")
-        case .tailscale:
-            baseURL
-        }
-    }
-}
-
-enum TailnetBridgeError: LocalizedError {
-    case server(String)
-
-    var errorDescription: String? {
-        switch self {
-        case .server(let message):
-            message
-        }
     }
 }
 
@@ -215,7 +81,7 @@ final class NetworkViewModel: Sendable {
     private(set) var connectionError: String?
     private let socketURLResult: Result<URL, Error>
 
-    nonisolated(unsafe) private var task: Task<Void, Never>?
+    @ObservationIgnored private var task: Task<Void, Never>?
 
     init(socketURLResult: Result<URL, Error>) {
         self.socketURLResult = socketURLResult
@@ -240,6 +106,16 @@ final class NetworkViewModel: Sendable {
 
     func addTailnetNetwork(payload: TailnetNetworkPayload) async throws -> Int32 {
         try await addNetwork(type: .tailnet, payload: payload.encoded())
+    }
+
+    func discoverTailnet(email: String) async throws -> TailnetDiscoveryResponse {
+        let socketURL = try socketURLResult.get()
+        return try await TailnetDiscoveryClient.discover(email: email, socketURL: socketURL)
+    }
+
+    func probeTailnetAuthority(_ authority: String) async throws -> TailnetAuthorityProbeStatus {
+        let socketURL = try socketURLResult.get()
+        return try await TailnetAuthorityProbeClient.probe(authority: authority, socketURL: socketURL)
     }
 
     private func addNetwork(type: Burrow_NetworkType, payload: Data) async throws -> Int32 {
@@ -341,19 +217,6 @@ enum TailnetProvider: String, CaseIterable, Codable, Identifiable, Sendable {
         }
     }
 
-    var supportsWebLogin: Bool {
-        switch self {
-        case .tailscale, .headscale:
-            true
-        case .burrow:
-            false
-        }
-    }
-
-    var requiresControlURL: Bool {
-        self != .tailscale
-    }
-
     var defaultAuthority: String? {
         switch self {
         case .tailscale:
@@ -368,19 +231,44 @@ enum TailnetProvider: String, CaseIterable, Codable, Identifiable, Sendable {
     var subtitle: String {
         switch self {
         case .tailscale:
-            "Use Tailscale's real browser login flow."
+            "Managed Tailnet authority."
         case .headscale:
-            "Use your Headscale control plane with browser or key-based sign-in."
+            "Custom Tailnet control server."
         case .burrow:
-            "Store Burrow control-plane credentials."
+            "Burrow-native Tailnet authority."
         }
+    }
+
+    static func inferred(authority: String?, explicit: TailnetProvider?) -> TailnetProvider {
+        if explicit == .burrow {
+            return .burrow
+        }
+        if isManagedTailscaleAuthority(authority) {
+            return .tailscale
+        }
+        return .headscale
+    }
+
+    static func isManagedTailscaleAuthority(_ authority: String?) -> Bool {
+        guard let normalized = authority?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/")),
+              !normalized.isEmpty
+        else {
+            return false
+        }
+
+        return normalized == "https://controlplane.tailscale.com"
+            || normalized == "http://controlplane.tailscale.com"
+            || normalized == "controlplane.tailscale.com"
     }
 }
 
 enum AccountNetworkKind: String, CaseIterable, Codable, Identifiable, Sendable {
     case wireGuard
     case tor
-    case headscale
+    case tailnet
 
     var id: String { rawValue }
 
@@ -388,7 +276,7 @@ enum AccountNetworkKind: String, CaseIterable, Codable, Identifiable, Sendable {
         switch self {
         case .wireGuard: "WireGuard"
         case .tor: "Tor"
-        case .headscale: "Tailnet"
+        case .tailnet: "Tailnet"
         }
     }
 
@@ -396,7 +284,7 @@ enum AccountNetworkKind: String, CaseIterable, Codable, Identifiable, Sendable {
         switch self {
         case .wireGuard: "Import a tunnel and optional account metadata."
         case .tor: "Store Arti account and identity preferences."
-        case .headscale: "Save Tailscale, Headscale, or Burrow control-plane identities."
+        case .tailnet: "Save Tailnet authority, identity, and login material."
         }
     }
 
@@ -404,7 +292,7 @@ enum AccountNetworkKind: String, CaseIterable, Codable, Identifiable, Sendable {
         switch self {
         case .wireGuard: .init("WireGuard")
         case .tor: .orange
-        case .headscale: .mint
+        case .tailnet: .mint
         }
     }
 
@@ -412,7 +300,7 @@ enum AccountNetworkKind: String, CaseIterable, Codable, Identifiable, Sendable {
         switch self {
         case .wireGuard: "Add Network"
         case .tor: "Save Account"
-        case .headscale: "Save Account"
+        case .tailnet: "Save Account"
         }
     }
 
@@ -422,7 +310,7 @@ enum AccountNetworkKind: String, CaseIterable, Codable, Identifiable, Sendable {
             nil
         case .tor:
             "Tor account preferences are stored on Apple now. The managed Tor runtime is not wired on Apple in this branch yet."
-        case .headscale:
+        case .tailnet:
             "Tailnet accounts can sign in from Apple now. The managed Apple runtime is still pending, but Tailnet networks can be stored in the daemon."
         }
     }
@@ -430,7 +318,6 @@ enum AccountNetworkKind: String, CaseIterable, Codable, Identifiable, Sendable {
 
 enum AccountAuthMode: String, CaseIterable, Codable, Identifiable, Sendable {
     case none
-    case web
     case password
     case preauthKey
 
@@ -439,7 +326,6 @@ enum AccountAuthMode: String, CaseIterable, Codable, Identifiable, Sendable {
     var title: String {
         switch self {
         case .none: "None"
-        case .web: "Web Login"
         case .password: "Password"
         case .preauthKey: "Preauth Key"
         }
@@ -465,17 +351,15 @@ struct NetworkAccountRecord: Codable, Identifiable, Hashable, Sendable {
 
 struct TailnetCard {
     var id: Int32
-    var provider: String
     var title: String
     var detail: String
 
     init(network: Burrow_Network) {
         let payload = (try? JSONDecoder().decode(TailnetNetworkPayload.self, from: network.payload))
         id = network.id
-        provider = payload?.provider.title ?? "Tailnet"
         title = payload?.tailnet ?? payload?.hostname ?? "Tailnet"
         detail = [
-            payload?.provider.title,
+            payload?.authority.flatMap { URL(string: $0)?.host } ?? payload?.authority,
             payload?.authority,
             payload.map { "Account: \($0.account)" },
         ]
@@ -492,7 +376,7 @@ struct TailnetCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(provider)
+                            Text("Tailnet")
                                 .font(.headline)
                                 .foregroundStyle(.white.opacity(0.85))
                             Text(title)

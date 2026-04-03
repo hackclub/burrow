@@ -5,11 +5,15 @@ use tokio::net::UnixStream;
 use tonic::transport::{Endpoint, Uri};
 use tower::service_fn;
 
-use super::grpc_defs::{networks_client::NetworksClient, tunnel_client::TunnelClient};
+use super::grpc_defs::{
+    networks_client::NetworksClient, tailnet_control_client::TailnetControlClient,
+    tunnel_client::TunnelClient,
+};
 use crate::daemon::get_socket_path;
 
 pub struct BurrowClient<T> {
     pub networks_client: NetworksClient<T>,
+    pub tailnet_client: TailnetControlClient<T>,
     pub tunnel_client: TunnelClient<T>,
 }
 
@@ -31,9 +35,11 @@ impl BurrowClient<tonic::transport::Channel> {
             }))
             .await?;
         let nw_client = NetworksClient::new(channel.clone());
+        let tailnet_client = TailnetControlClient::new(channel.clone());
         let tun_client = TunnelClient::new(channel.clone());
         Ok(BurrowClient {
             networks_client: nw_client,
+            tailnet_client,
             tunnel_client: tun_client,
         })
     }
