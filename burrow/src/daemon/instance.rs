@@ -13,15 +13,19 @@ use tun::tokio::TunInterface;
 
 use super::{
     rpc::grpc_defs::{
-        networks_server::Networks, tailnet_control_server::TailnetControl,
-        tunnel_server::Tunnel, Empty, Network, NetworkDeleteRequest, NetworkListResponse,
-        NetworkReorderRequest, State as RPCTunnelState, TailnetDiscoverRequest,
-        TailnetDiscoverResponse, TailnetProbeRequest, TailnetProbeResponse,
-        TunnelConfigurationResponse, TunnelStatusResponse,
+        networks_server::Networks, tailnet_control_server::TailnetControl, tunnel_server::Tunnel,
+        Empty, Network, NetworkDeleteRequest, NetworkListResponse, NetworkReorderRequest,
+        State as RPCTunnelState, TailnetDiscoverRequest, TailnetDiscoverResponse,
+        TailnetProbeRequest, TailnetProbeResponse, TunnelConfigurationResponse,
+        TunnelStatusResponse,
     },
     runtime::{ActiveTunnel, ResolvedTunnel},
 };
 use crate::{
+    auth::server::tailscale::{
+        TailscaleBridgeManager, TailscaleLoginStartRequest as BridgeLoginStartRequest,
+        TailscaleLoginStatus,
+    },
     control::discovery,
     daemon::rpc::ServerConfig,
     database::{add_network, delete_network, get_connection, list_networks, reorder_network},
@@ -49,6 +53,7 @@ pub struct DaemonRPCServer {
     wg_state_chan: (watch::Sender<RunState>, watch::Receiver<RunState>),
     network_update_chan: (watch::Sender<()>, watch::Receiver<()>),
     active_tunnel: Arc<RwLock<Option<ActiveTunnel>>>,
+    tailnet_login: TailscaleBridgeManager,
 }
 
 impl DaemonRPCServer {
@@ -59,6 +64,7 @@ impl DaemonRPCServer {
             wg_state_chan: watch::channel(RunState::Idle),
             network_update_chan: watch::channel(()),
             active_tunnel: Arc::new(RwLock::new(None)),
+            tailnet_login: TailscaleBridgeManager::default(),
         })
     }
 
@@ -129,6 +135,11 @@ impl DaemonRPCServer {
         }
 
         Ok(())
+    }
+
+    fn tailnet_control_url(authority: &str) -> Option<String> {
+        let authority = discovery::normalize_authority(authority);
+        (!discovery::is_managed_tailscale_authority(&authority)).then_some(authority)
     }
 }
 
@@ -308,6 +319,60 @@ impl TailnetControl for DaemonRPCServer {
             reachable: status.reachable,
         }))
     }
+
+    async fn login_start(
+        &self,
+        request: Request<super::rpc::grpc_defs::TailnetLoginStartRequest>,
+    ) -> Result<Response<super::rpc::grpc_defs::TailnetLoginStatusResponse>, RspStatus> {
+        let request = request.into_inner();
+        let response = self
+            .tailnet_login
+            .start_login(BridgeLoginStartRequest {
+                account_name: request.account_name,
+                identity_name: request.identity_name,
+                hostname: (!request.hostname.trim().is_empty()).then_some(request.hostname),
+                control_url: Self::tailnet_control_url(&request.authority),
+            })
+            .await
+            .map_err(proc_err)?;
+
+        Ok(Response::new(tailnet_login_rsp(
+            response.session_id,
+            response.status,
+        )))
+    }
+
+    async fn login_status(
+        &self,
+        request: Request<super::rpc::grpc_defs::TailnetLoginStatusRequest>,
+    ) -> Result<Response<super::rpc::grpc_defs::TailnetLoginStatusResponse>, RspStatus> {
+        let request = request.into_inner();
+        let status = self
+            .tailnet_login
+            .status(&request.session_id)
+            .await
+            .map_err(proc_err)?;
+        let Some(status) = status else {
+            return Err(RspStatus::not_found("tailnet login session not found"));
+        };
+        Ok(Response::new(tailnet_login_rsp(request.session_id, status)))
+    }
+
+    async fn login_cancel(
+        &self,
+        request: Request<super::rpc::grpc_defs::TailnetLoginCancelRequest>,
+    ) -> Result<Response<Empty>, RspStatus> {
+        let request = request.into_inner();
+        let canceled = self
+            .tailnet_login
+            .cancel(&request.session_id)
+            .await
+            .map_err(proc_err)?;
+        if !canceled {
+            return Err(RspStatus::not_found("tailnet login session not found"));
+        }
+        Ok(Response::new(Empty {}))
+    }
 }
 
 fn proc_err(err: impl ToString) -> RspStatus {
@@ -325,5 +390,23 @@ fn status_rsp(state: RunState) -> TunnelStatusResponse {
     TunnelStatusResponse {
         state: state.to_rpc().into(),
         start: None, // TODO: Add timestamp
+    }
+}
+
+fn tailnet_login_rsp(
+    session_id: String,
+    status: TailscaleLoginStatus,
+) -> super::rpc::grpc_defs::TailnetLoginStatusResponse {
+    super::rpc::grpc_defs::TailnetLoginStatusResponse {
+        session_id,
+        backend_state: status.backend_state,
+        auth_url: status.auth_url.unwrap_or_default(),
+        running: status.running,
+        needs_login: status.needs_login,
+        tailnet_name: status.tailnet_name.unwrap_or_default(),
+        magic_dns_suffix: status.magic_dns_suffix.unwrap_or_default(),
+        self_dns_name: status.self_dns_name.unwrap_or_default(),
+        tailnet_ips: status.tailscale_ips,
+        health: status.health,
     }
 }

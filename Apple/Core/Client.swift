@@ -68,6 +68,46 @@ public struct Burrow_TailnetProbeResponse: Sendable {
     public init() {}
 }
 
+public struct Burrow_TailnetLoginStartRequest: Sendable {
+    public var accountName: String = ""
+    public var identityName: String = ""
+    public var hostname: String = ""
+    public var authority: String = ""
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+}
+
+public struct Burrow_TailnetLoginStatusRequest: Sendable {
+    public var sessionID: String = ""
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+}
+
+public struct Burrow_TailnetLoginCancelRequest: Sendable {
+    public var sessionID: String = ""
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+}
+
+public struct Burrow_TailnetLoginStatusResponse: Sendable {
+    public var sessionID: String = ""
+    public var backendState: String = ""
+    public var authURL: String = ""
+    public var running: Bool = false
+    public var needsLogin: Bool = false
+    public var tailnetName: String = ""
+    public var magicDNSSuffix: String = ""
+    public var selfDNSName: String = ""
+    public var tailnetIPs: [String] = []
+    public var health: [String] = []
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+}
+
 extension Burrow_TailnetDiscoverRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
     public static let protoMessageName: String = "burrow.TailnetDiscoverRequest"
     public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
@@ -195,6 +235,158 @@ extension Burrow_TailnetProbeResponse: SwiftProtobuf.Message, SwiftProtobuf._Mes
     }
 }
 
+extension Burrow_TailnetLoginStartRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+    public static let protoMessageName: String = "burrow.TailnetLoginStartRequest"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "account_name"),
+        2: .standard(proto: "identity_name"),
+        3: .same(proto: "hostname"),
+        4: .same(proto: "authority"),
+    ]
+
+    public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularStringField(value: &self.accountName)
+            case 2: try decoder.decodeSingularStringField(value: &self.identityName)
+            case 3: try decoder.decodeSingularStringField(value: &self.hostname)
+            case 4: try decoder.decodeSingularStringField(value: &self.authority)
+            default: break
+            }
+        }
+    }
+
+    public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+        if !self.accountName.isEmpty {
+            try visitor.visitSingularStringField(value: self.accountName, fieldNumber: 1)
+        }
+        if !self.identityName.isEmpty {
+            try visitor.visitSingularStringField(value: self.identityName, fieldNumber: 2)
+        }
+        if !self.hostname.isEmpty {
+            try visitor.visitSingularStringField(value: self.hostname, fieldNumber: 3)
+        }
+        if !self.authority.isEmpty {
+            try visitor.visitSingularStringField(value: self.authority, fieldNumber: 4)
+        }
+        try unknownFields.traverse(visitor: &visitor)
+    }
+}
+
+extension Burrow_TailnetLoginStatusRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+    public static let protoMessageName: String = "burrow.TailnetLoginStatusRequest"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "session_id")
+    ]
+
+    public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularStringField(value: &self.sessionID)
+            default: break
+            }
+        }
+    }
+
+    public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+        if !self.sessionID.isEmpty {
+            try visitor.visitSingularStringField(value: self.sessionID, fieldNumber: 1)
+        }
+        try unknownFields.traverse(visitor: &visitor)
+    }
+}
+
+extension Burrow_TailnetLoginCancelRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+    public static let protoMessageName: String = "burrow.TailnetLoginCancelRequest"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "session_id")
+    ]
+
+    public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularStringField(value: &self.sessionID)
+            default: break
+            }
+        }
+    }
+
+    public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+        if !self.sessionID.isEmpty {
+            try visitor.visitSingularStringField(value: self.sessionID, fieldNumber: 1)
+        }
+        try unknownFields.traverse(visitor: &visitor)
+    }
+}
+
+extension Burrow_TailnetLoginStatusResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+    public static let protoMessageName: String = "burrow.TailnetLoginStatusResponse"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "session_id"),
+        2: .standard(proto: "backend_state"),
+        3: .standard(proto: "auth_url"),
+        4: .same(proto: "running"),
+        5: .standard(proto: "needs_login"),
+        6: .standard(proto: "tailnet_name"),
+        7: .standard(proto: "magic_dns_suffix"),
+        8: .standard(proto: "self_dns_name"),
+        9: .standard(proto: "tailnet_ips"),
+        10: .same(proto: "health"),
+    ]
+
+    public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularStringField(value: &self.sessionID)
+            case 2: try decoder.decodeSingularStringField(value: &self.backendState)
+            case 3: try decoder.decodeSingularStringField(value: &self.authURL)
+            case 4: try decoder.decodeSingularBoolField(value: &self.running)
+            case 5: try decoder.decodeSingularBoolField(value: &self.needsLogin)
+            case 6: try decoder.decodeSingularStringField(value: &self.tailnetName)
+            case 7: try decoder.decodeSingularStringField(value: &self.magicDNSSuffix)
+            case 8: try decoder.decodeSingularStringField(value: &self.selfDNSName)
+            case 9: try decoder.decodeRepeatedStringField(value: &self.tailnetIPs)
+            case 10: try decoder.decodeRepeatedStringField(value: &self.health)
+            default: break
+            }
+        }
+    }
+
+    public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+        if !self.sessionID.isEmpty {
+            try visitor.visitSingularStringField(value: self.sessionID, fieldNumber: 1)
+        }
+        if !self.backendState.isEmpty {
+            try visitor.visitSingularStringField(value: self.backendState, fieldNumber: 2)
+        }
+        if !self.authURL.isEmpty {
+            try visitor.visitSingularStringField(value: self.authURL, fieldNumber: 3)
+        }
+        if self.running {
+            try visitor.visitSingularBoolField(value: self.running, fieldNumber: 4)
+        }
+        if self.needsLogin {
+            try visitor.visitSingularBoolField(value: self.needsLogin, fieldNumber: 5)
+        }
+        if !self.tailnetName.isEmpty {
+            try visitor.visitSingularStringField(value: self.tailnetName, fieldNumber: 6)
+        }
+        if !self.magicDNSSuffix.isEmpty {
+            try visitor.visitSingularStringField(value: self.magicDNSSuffix, fieldNumber: 7)
+        }
+        if !self.selfDNSName.isEmpty {
+            try visitor.visitSingularStringField(value: self.selfDNSName, fieldNumber: 8)
+        }
+        if !self.tailnetIPs.isEmpty {
+            try visitor.visitRepeatedStringField(value: self.tailnetIPs, fieldNumber: 9)
+        }
+        if !self.health.isEmpty {
+            try visitor.visitRepeatedStringField(value: self.health, fieldNumber: 10)
+        }
+        try unknownFields.traverse(visitor: &visitor)
+    }
+}
+
 public struct TailnetClient: Client, GRPCClient {
     public let channel: GRPCChannel
     public var defaultCallOptions: CallOptions
@@ -222,6 +414,42 @@ public struct TailnetClient: Client, GRPCClient {
     ) async throws -> Burrow_TailnetProbeResponse {
         try await self.performAsyncUnaryCall(
             path: "/burrow.TailnetControl/Probe",
+            request: request,
+            callOptions: callOptions ?? self.defaultCallOptions,
+            interceptors: []
+        )
+    }
+
+    public func loginStart(
+        _ request: Burrow_TailnetLoginStartRequest,
+        callOptions: CallOptions? = nil
+    ) async throws -> Burrow_TailnetLoginStatusResponse {
+        try await self.performAsyncUnaryCall(
+            path: "/burrow.TailnetControl/LoginStart",
+            request: request,
+            callOptions: callOptions ?? self.defaultCallOptions,
+            interceptors: []
+        )
+    }
+
+    public func loginStatus(
+        _ request: Burrow_TailnetLoginStatusRequest,
+        callOptions: CallOptions? = nil
+    ) async throws -> Burrow_TailnetLoginStatusResponse {
+        try await self.performAsyncUnaryCall(
+            path: "/burrow.TailnetControl/LoginStatus",
+            request: request,
+            callOptions: callOptions ?? self.defaultCallOptions,
+            interceptors: []
+        )
+    }
+
+    public func loginCancel(
+        _ request: Burrow_TailnetLoginCancelRequest,
+        callOptions: CallOptions? = nil
+    ) async throws -> Burrow_Empty {
+        try await self.performAsyncUnaryCall(
+            path: "/burrow.TailnetControl/LoginCancel",
             request: request,
             callOptions: callOptions ?? self.defaultCallOptions,
             interceptors: []

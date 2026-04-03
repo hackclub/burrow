@@ -82,11 +82,22 @@ impl TailscaleBridgeManager {
         let key = session_key(&request.account_name, &request.identity_name);
 
         if let Some(existing) = self.sessions.lock().await.get(&key).cloned() {
-            let status = self.fetch_status(existing.as_ref()).await?;
-            return Ok(TailscaleLoginStartResponse {
-                session_id: existing.session_id.clone(),
-                status,
-            });
+            match self.fetch_status(existing.as_ref()).await {
+                Ok(status) => {
+                    return Ok(TailscaleLoginStartResponse {
+                        session_id: existing.session_id.clone(),
+                        status,
+                    });
+                }
+                Err(err) => {
+                    log::warn!(
+                        "tailscale login session {} is stale, restarting: {err}",
+                        existing.session_id
+                    );
+                    self.sessions.lock().await.remove(&key);
+                    let _ = self.shutdown_session(existing.as_ref()).await;
+                }
+            }
         }
 
         let state_dir = state_root().join(session_dir_name(&request));
@@ -155,8 +166,25 @@ impl TailscaleBridgeManager {
         };
 
         match session {
-            Some(session) => self.fetch_status(session.as_ref()).await.map(Some),
+            Some(session) => match self.fetch_status(session.as_ref()).await {
+                Ok(status) => Ok(Some(status)),
+                Err(err) => {
+                    self.remove_session_by_id(session_id).await;
+                    Err(err)
+                }
+            },
             None => Ok(None),
+        }
+    }
+
+    pub async fn cancel(&self, session_id: &str) -> Result<bool> {
+        let session = self.remove_session_by_id(session_id).await;
+        match session {
+            Some(session) => {
+                self.shutdown_session(session.as_ref()).await?;
+                Ok(true)
+            }
+            None => Ok(false),
         }
     }
 
@@ -200,6 +228,38 @@ impl TailscaleBridgeManager {
             .json::<TailscaleLoginStatus>()
             .await
             .context("invalid tailscale helper status response")
+    }
+
+    async fn remove_session_by_id(&self, session_id: &str) -> Option<Arc<ManagedSession>> {
+        let mut sessions = self.sessions.lock().await;
+        let key = sessions
+            .iter()
+            .find_map(|(key, session)| (session.session_id == session_id).then(|| key.clone()))?;
+        sessions.remove(&key)
+    }
+
+    async fn shutdown_session(&self, session: &ManagedSession) -> Result<()> {
+        let _ = self
+            .client
+            .post(format!("{}/shutdown", session.listen_url))
+            .send()
+            .await;
+
+        for _ in 0..10 {
+            let mut child = session.child.lock().await;
+            if child.try_wait()?.is_some() {
+                return Ok(());
+            }
+            drop(child);
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+
+        let mut child = session.child.lock().await;
+        child
+            .start_kill()
+            .context("failed to kill tailscale helper")?;
+        let _ = child.wait().await;
+        Ok(())
     }
 }
 
@@ -249,7 +309,10 @@ fn state_root() -> PathBuf {
             .join("Burrow")
             .join("tailscale");
     }
-    home.join(".local").join("share").join("burrow").join("tailscale")
+    home.join(".local")
+        .join("share")
+        .join("burrow")
+        .join("tailscale")
 }
 
 fn session_dir_name(request: &TailscaleLoginStartRequest) -> String {

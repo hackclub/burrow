@@ -40,6 +40,19 @@ struct TailnetAuthorityProbeStatus: Sendable {
     var detail: String?
 }
 
+struct TailnetLoginStatus: Sendable {
+    var sessionID: String
+    var backendState: String
+    var authURL: URL?
+    var running: Bool
+    var needsLogin: Bool
+    var tailnetName: String?
+    var magicDNSSuffix: String?
+    var selfDNSName: String?
+    var tailnetIPs: [String]
+    var health: [String]
+}
+
 enum TailnetDiscoveryClient {
     static func discover(email: String, socketURL: URL) async throws -> TailnetDiscoveryResponse {
         var request = Burrow_TailnetDiscoverRequest()
@@ -70,6 +83,58 @@ enum TailnetAuthorityProbeClient {
             detail: response.detail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 ? nil
                 : response.detail
+        )
+    }
+}
+
+enum TailnetLoginClient {
+    static func start(
+        accountName: String,
+        identityName: String,
+        hostname: String?,
+        authority: String,
+        socketURL: URL
+    ) async throws -> TailnetLoginStatus {
+        var request = Burrow_TailnetLoginStartRequest()
+        request.accountName = accountName
+        request.identityName = identityName
+        request.hostname = hostname ?? ""
+        request.authority = authority
+        let response = try await TailnetClient.unix(socketURL: socketURL).loginStart(request)
+        return decode(response)
+    }
+
+    static func status(sessionID: String, socketURL: URL) async throws -> TailnetLoginStatus {
+        var request = Burrow_TailnetLoginStatusRequest()
+        request.sessionID = sessionID
+        let response = try await TailnetClient.unix(socketURL: socketURL).loginStatus(request)
+        return decode(response)
+    }
+
+    static func cancel(sessionID: String, socketURL: URL) async throws {
+        var request = Burrow_TailnetLoginCancelRequest()
+        request.sessionID = sessionID
+        _ = try await TailnetClient.unix(socketURL: socketURL).loginCancel(request)
+    }
+
+    private static func decode(_ response: Burrow_TailnetLoginStatusResponse) -> TailnetLoginStatus {
+        TailnetLoginStatus(
+            sessionID: response.sessionID,
+            backendState: response.backendState,
+            authURL: URL(string: response.authURL.trimmingCharacters(in: .whitespacesAndNewlines)),
+            running: response.running,
+            needsLogin: response.needsLogin,
+            tailnetName: response.tailnetName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? nil
+                : response.tailnetName,
+            magicDNSSuffix: response.magicDNSSuffix.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? nil
+                : response.magicDNSSuffix,
+            selfDNSName: response.selfDNSName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? nil
+                : response.selfDNSName,
+            tailnetIPs: response.tailnetIPs,
+            health: response.health
         )
     }
 }
@@ -116,6 +181,32 @@ final class NetworkViewModel: Sendable {
     func probeTailnetAuthority(_ authority: String) async throws -> TailnetAuthorityProbeStatus {
         let socketURL = try socketURLResult.get()
         return try await TailnetAuthorityProbeClient.probe(authority: authority, socketURL: socketURL)
+    }
+
+    func startTailnetLogin(
+        accountName: String,
+        identityName: String,
+        hostname: String?,
+        authority: String
+    ) async throws -> TailnetLoginStatus {
+        let socketURL = try socketURLResult.get()
+        return try await TailnetLoginClient.start(
+            accountName: accountName,
+            identityName: identityName,
+            hostname: hostname,
+            authority: authority,
+            socketURL: socketURL
+        )
+    }
+
+    func tailnetLoginStatus(sessionID: String) async throws -> TailnetLoginStatus {
+        let socketURL = try socketURLResult.get()
+        return try await TailnetLoginClient.status(sessionID: sessionID, socketURL: socketURL)
+    }
+
+    func cancelTailnetLogin(sessionID: String) async throws {
+        let socketURL = try socketURLResult.get()
+        try await TailnetLoginClient.cancel(sessionID: sessionID, socketURL: socketURL)
     }
 
     private func addNetwork(type: Burrow_NetworkType, payload: Data) async throws -> Int32 {
@@ -317,6 +408,7 @@ enum AccountNetworkKind: String, CaseIterable, Codable, Identifiable, Sendable {
 }
 
 enum AccountAuthMode: String, CaseIterable, Codable, Identifiable, Sendable {
+    case web
     case none
     case password
     case preauthKey
@@ -325,6 +417,7 @@ enum AccountAuthMode: String, CaseIterable, Codable, Identifiable, Sendable {
 
     var title: String {
         switch self {
+        case .web: "Browser Sign-In"
         case .none: "None"
         case .password: "Password"
         case .preauthKey: "Preauth Key"

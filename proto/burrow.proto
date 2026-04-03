@@ -20,6 +20,9 @@ service Networks {
 service TailnetControl {
     rpc Discover (TailnetDiscoverRequest) returns (TailnetDiscoverResponse);
     rpc Probe (TailnetProbeRequest) returns (TailnetProbeResponse);
+    rpc LoginStart (TailnetLoginStartRequest) returns (TailnetLoginStatusResponse);
+    rpc LoginStatus (TailnetLoginStatusRequest) returns (TailnetLoginStatusResponse);
+    rpc LoginCancel (TailnetLoginCancelRequest) returns (Empty);
 }
 
 message NetworkReorderRequest {
@@ -82,6 +85,34 @@ message TailnetProbeResponse {
     string summary = 3;
     string detail = 4;
     bool reachable = 5;
+}
+
+message TailnetLoginStartRequest {
+    string account_name = 1;
+    string identity_name = 2;
+    string hostname = 3;
+    string authority = 4;
+}
+
+message TailnetLoginStatusRequest {
+    string session_id = 1;
+}
+
+message TailnetLoginCancelRequest {
+    string session_id = 1;
+}
+
+message TailnetLoginStatusResponse {
+    string session_id = 1;
+    string backend_state = 2;
+    string auth_url = 3;
+    bool running = 4;
+    bool needs_login = 5;
+    string tailnet_name = 6;
+    string magic_dns_suffix = 7;
+    string self_dns_name = 8;
+    repeated string tailnet_ips = 9;
+    repeated string health = 10;
 }
 
 enum State {
