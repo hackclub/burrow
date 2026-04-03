@@ -11,6 +11,7 @@ let
   directorySyncScript = ../../Scripts/authentik-sync-burrow-directory.sh;
   forgejoOidcSyncScript = ../../Scripts/authentik-sync-forgejo-oidc.sh;
   googleSourceSyncScript = ../../Scripts/authentik-sync-google-source.sh;
+  tailnetAuthFlowSyncScript = ../../Scripts/authentik-sync-tailnet-auth-flow.sh;
   authentikBlueprint = pkgs.writeText "burrow-authentik-blueprint.yaml" ''
     version: 1
     metadata:
@@ -175,6 +176,36 @@ in
       description = "Identification-stage behavior for the Google Authentik source.";
     };
 
+    headscaleAuthenticationFlowSlug = lib.mkOption {
+      type = lib.types.str;
+      default = "burrow-tailnet-authentication";
+      description = "Authentik authentication flow slug used for Burrow Tailnet sign-in.";
+    };
+
+    headscaleAuthenticationFlowName = lib.mkOption {
+      type = lib.types.str;
+      default = "Burrow Tailnet Authentication";
+      description = "Authentik authentication flow name used for Burrow Tailnet sign-in.";
+    };
+
+    headscaleIdentificationStageName = lib.mkOption {
+      type = lib.types.str;
+      default = "burrow-tailnet-identification-stage";
+      description = "Authentik identification stage used for Burrow Tailnet sign-in.";
+    };
+
+    headscalePasswordStageName = lib.mkOption {
+      type = lib.types.str;
+      default = "burrow-tailnet-password-stage";
+      description = "Authentik password stage used for Burrow Tailnet sign-in.";
+    };
+
+    headscaleUserLoginStageName = lib.mkOption {
+      type = lib.types.str;
+      default = "burrow-tailnet-user-login-stage";
+      description = "Authentik user-login stage used for Burrow Tailnet sign-in.";
+    };
+
     userGroupName = lib.mkOption {
       type = lib.types.str;
       default = "burrow-users";
@@ -216,6 +247,11 @@ in
             type = bool;
             default = false;
             description = "Whether this user should be in the Burrow admin group.";
+          };
+          passwordFile = lib.mkOption {
+            type = nullOr str;
+            default = null;
+            description = "Optional host-local file containing a bootstrap password for this user.";
           };
         };
       });
@@ -468,7 +504,7 @@ EOF
       restartTriggers = [
         directorySyncScript
         cfg.envFile
-      ];
+      ] ++ lib.concatMap (user: lib.optional (user.passwordFile != null) user.passwordFile) cfg.bootstrapUsers;
       path = [
         pkgs.bash
         pkgs.coreutils
@@ -491,11 +527,64 @@ EOF
         export AUTHENTIK_BURROW_ADMINS_GROUP=${lib.escapeShellArg cfg.adminGroupName}
         export AUTHENTIK_FORGEJO_APPLICATION_SLUG=${lib.escapeShellArg cfg.forgejoProviderSlug}
         export AUTHENTIK_BURROW_DIRECTORY_JSON='${builtins.toJSON (map (user: {
-          inherit (user) username name email isAdmin;
+          inherit (user) username name email isAdmin passwordFile;
           groups = user.groups;
         }) cfg.bootstrapUsers)}'
 
         ${pkgs.bash}/bin/bash ${directorySyncScript}
+      '';
+    };
+
+    systemd.services.burrow-authentik-tailnet-auth-flow = {
+      description = "Reconcile the Burrow Tailnet authentication flow";
+      after =
+        [
+          "burrow-authentik-ready.service"
+          "network-online.target"
+        ]
+        ++ lib.optionals (
+          cfg.googleClientIDFile != null && cfg.googleClientSecretFile != null
+        ) [ "burrow-authentik-google-source.service" ];
+      wants =
+        [
+          "burrow-authentik-ready.service"
+          "network-online.target"
+        ]
+        ++ lib.optionals (
+          cfg.googleClientIDFile != null && cfg.googleClientSecretFile != null
+        ) [ "burrow-authentik-google-source.service" ];
+      wantedBy = [ "multi-user.target" ];
+      restartTriggers = [
+        tailnetAuthFlowSyncScript
+        cfg.envFile
+      ];
+      path = [
+        pkgs.bash
+        pkgs.coreutils
+        pkgs.curl
+        pkgs.jq
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "root";
+        Group = "root";
+      };
+      script = ''
+        set -euo pipefail
+        set -a
+        source ${lib.escapeShellArg cfg.envFile}
+        set +a
+
+        export AUTHENTIK_URL=https://${cfg.domain}
+        export AUTHENTIK_TAILNET_PROVIDER_SLUG=${lib.escapeShellArg cfg.headscaleProviderSlug}
+        export AUTHENTIK_TAILNET_AUTHENTICATION_FLOW_NAME=${lib.escapeShellArg cfg.headscaleAuthenticationFlowName}
+        export AUTHENTIK_TAILNET_AUTHENTICATION_FLOW_SLUG=${lib.escapeShellArg cfg.headscaleAuthenticationFlowSlug}
+        export AUTHENTIK_TAILNET_IDENTIFICATION_STAGE_NAME=${lib.escapeShellArg cfg.headscaleIdentificationStageName}
+        export AUTHENTIK_TAILNET_PASSWORD_STAGE_NAME=${lib.escapeShellArg cfg.headscalePasswordStageName}
+        export AUTHENTIK_TAILNET_USER_LOGIN_STAGE_NAME=${lib.escapeShellArg cfg.headscaleUserLoginStageName}
+        export AUTHENTIK_TAILNET_GOOGLE_SOURCE_SLUG=${lib.escapeShellArg cfg.googleSourceSlug}
+
+        ${pkgs.bash}/bin/bash ${tailnetAuthFlowSyncScript}
       '';
     };
 

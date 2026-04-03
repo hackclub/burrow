@@ -1,0 +1,14 @@
+#include "Compiler.xcconfig"
+
+SUPPORTED_PLATFORMS = iphonesimulator iphoneos
+TARGETED_DEVICE_FAMILY[sdk=iphone*] = 1,2
+
+PRODUCT_NAME = $(TARGET_NAME)
+PRODUCT_BUNDLE_IDENTIFIER = $(APP_BUNDLE_IDENTIFIER).uitests
+
+STRING_CATALOG_GENERATE_SYMBOLS = NO
+SWIFT_EMIT_LOC_STRINGS = NO
+
+ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES
+LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks @loader_path/Frameworks
+TEST_TARGET_NAME = App

@@ -3,6 +3,10 @@
 let
   contributors = import ../../../contributors.nix;
   identities = contributors.identities;
+  authentikPasswordSecretPath = identity:
+    if identity ? authentikPasswordSecret
+    then config.age.secrets.${identity.authentikPasswordSecret}.path
+    else null;
   bootstrapUsers = lib.mapAttrsToList
     (
       username: identity: {
@@ -11,6 +15,7 @@ let
         email = identity.canonicalEmail;
         sourceEmail = identity.sourceEmail or null;
         isAdmin = identity.isAdmin or false;
+        passwordFile = authentikPasswordSecretPath identity;
       }
     )
     (lib.filterAttrs (_: identity: identity.bootstrapAuthentik or false) identities);
@@ -66,6 +71,12 @@ in
   };
   age.secrets.burrowAuthentikGoogleClientSecret = {
     file = ../../../secrets/infra/authentik-google-client-secret.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+  age.secrets.burrowAuthentikUiTestPassword = {
+    file = ../../../secrets/infra/authentik-ui-test-password.age;
     owner = "root";
     group = "root";
     mode = "0400";

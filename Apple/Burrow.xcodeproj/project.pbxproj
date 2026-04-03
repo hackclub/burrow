@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		D00AA8972A4669BC005C8102 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00AA8962A4669BC005C8102 /* AppDelegate.swift */; };
+		D11000012F70000100112233 /* BurrowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D11000042F70000100112233 /* BurrowUITests.swift */; };
 		D020F65829E4A697002790F6 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D020F65729E4A697002790F6 /* PacketTunnelProvider.swift */; };
 		D020F65D29E4A697002790F6 /* BurrowNetworkExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D020F65329E4A697002790F6 /* BurrowNetworkExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D03383AD2C8E67E300F7C44E /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = D078F7E22C8DA375008A8CEC /* SwiftProtobuf */; };
@@ -49,6 +50,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		D11000022F70000100112233 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D05B9F6A29E39EEC008CB1F9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D05B9F7129E39EEC008CB1F9;
+			remoteInfo = App;
+		};
 		D020F65B29E4A697002790F6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D05B9F6A29E39EEC008CB1F9 /* Project object */;
@@ -130,6 +138,9 @@
 /* Begin PBXFileReference section */
 		D00117422B30348D00D87C25 /* Configuration.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Configuration.xcconfig; sourceTree = "<group>"; };
 		D00AA8962A4669BC005C8102 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		D11000032F70000100112233 /* BurrowUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BurrowUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D11000042F70000100112233 /* BurrowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowUITests.swift; sourceTree = "<group>"; };
+		D11000052F70000100112233 /* UITests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = UITests.xcconfig; sourceTree = "<group>"; };
 		D020F63D29E4A1FF002790F6 /* Identity.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Identity.xcconfig; sourceTree = "<group>"; };
 		D020F64029E4A1FF002790F6 /* Compiler.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Compiler.xcconfig; sourceTree = "<group>"; };
 		D020F64229E4A1FF002790F6 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -182,6 +193,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		D11000062F70000100112233 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D020F65029E4A697002790F6 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -243,6 +261,7 @@
 				D0D4E4F72C8D941D007F820A /* Framework.xcconfig */,
 				D020F64029E4A1FF002790F6 /* Compiler.xcconfig */,
 				D0D4E4F62C8D932D007F820A /* Debug.xcconfig */,
+				D11000052F70000100112233 /* UITests.xcconfig */,
 				D04A3E1D2BAF465F0043EC85 /* Version.xcconfig */,
 				D020F64229E4A1FF002790F6 /* Info.plist */,
 				D0D4E5912C8D9D0A007F820A /* Constants */,
@@ -268,6 +287,7 @@
 			isa = PBXGroup;
 			children = (
 				D05B9F7429E39EEC008CB1F9 /* App */,
+				D11000072F70000100112233 /* AppUITests */,
 				D020F65629E4A697002790F6 /* NetworkExtension */,
 				D0D4E49C2C8D921A007F820A /* Core */,
 				D0D4E4AD2C8D921A007F820A /* UI */,
@@ -281,6 +301,7 @@
 			isa = PBXGroup;
 			children = (
 				D05B9F7229E39EEC008CB1F9 /* Burrow.app */,
+				D11000032F70000100112233 /* BurrowUITests.xctest */,
 				D020F65329E4A697002790F6 /* BurrowNetworkExtension.appex */,
 				D0BCC6032A09535900AD070D /* libburrow.a */,
 				D0D4E5312C8D996F007F820A /* BurrowCore.framework */,
@@ -301,6 +322,14 @@
 				D020F64929E4A34B002790F6 /* App.xcconfig */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		D11000072F70000100112233 /* AppUITests */ = {
+			isa = PBXGroup;
+			children = (
+				D11000042F70000100112233 /* BurrowUITests.swift */,
+			);
+			path = AppUITests;
 			sourceTree = "<group>";
 		};
 		D0B98FD729FDDB57004E7149 /* libburrow */ = {
@@ -375,6 +404,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		D11000082F70000100112233 /* BurrowUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D110000E2F70000100112233 /* Build configuration list for PBXNativeTarget "BurrowUITests" */;
+			buildPhases = (
+				D110000A2F70000100112233 /* Sources */,
+				D11000062F70000100112233 /* Frameworks */,
+				D11000092F70000100112233 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D110000B2F70000100112233 /* PBXTargetDependency */,
+			);
+			name = BurrowUITests;
+			productName = BurrowUITests;
+			productReference = D11000032F70000100112233 /* BurrowUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		D020F65229E4A697002790F6 /* NetworkExtension */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D020F65E29E4A697002790F6 /* Build configuration list for PBXNativeTarget "NetworkExtension" */;
@@ -490,6 +537,10 @@
 				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1520;
 				TargetAttributes = {
+					D11000082F70000100112233 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = D05B9F7129E39EEC008CB1F9;
+					};
 					D020F65229E4A697002790F6 = {
 						CreatedOnToolsVersion = 14.3;
 					};
@@ -522,6 +573,7 @@
 			projectRoot = "";
 			targets = (
 				D05B9F7129E39EEC008CB1F9 /* App */,
+				D11000082F70000100112233 /* BurrowUITests */,
 				D020F65229E4A697002790F6 /* NetworkExtension */,
 				D0D4E5502C8D9BF2007F820A /* UI */,
 				D0D4E5302C8D996F007F820A /* Core */,
@@ -531,6 +583,13 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		D11000092F70000100112233 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D05B9F7029E39EEC008CB1F9 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -594,6 +653,14 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D110000A2F70000100112233 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D11000012F70000100112233 /* BurrowUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D020F64F29E4A697002790F6 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -652,6 +719,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		D110000B2F70000100112233 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D05B9F7129E39EEC008CB1F9 /* App */;
+			targetProxy = D11000022F70000100112233 /* PBXContainerItemProxy */;
+		};
 		D020F65C29E4A697002790F6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D020F65229E4A697002790F6 /* NetworkExtension */;
@@ -694,6 +766,20 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		D110000C2F70000100112233 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D11000052F70000100112233 /* UITests.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		D110000D2F70000100112233 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D11000052F70000100112233 /* UITests.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
 		D020F65F29E4A697002790F6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D020F66229E4A6E5002790F6 /* NetworkExtension.xcconfig */;
@@ -781,6 +867,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D110000E2F70000100112233 /* Build configuration list for PBXNativeTarget "BurrowUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D110000C2F70000100112233 /* Debug */,
+				D110000D2F70000100112233 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D020F65E29E4A697002790F6 /* Build configuration list for PBXNativeTarget "NetworkExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

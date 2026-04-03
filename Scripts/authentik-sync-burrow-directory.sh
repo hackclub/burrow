@@ -116,7 +116,7 @@ lookup_user_pk() {
 
 ensure_user() {
   local user_spec="$1"
-  local username name email is_admin groups_json effective_groups_json group_name
+  local username name email is_admin groups_json password_file effective_groups_json group_name
   local group_pks_json payload user_pk
 
   username="$(printf '%s\n' "$user_spec" | jq -r '.username')"
@@ -124,6 +124,7 @@ ensure_user() {
   email="$(printf '%s\n' "$user_spec" | jq -r '.email')"
   is_admin="$(printf '%s\n' "$user_spec" | jq -r '.isAdmin // false')"
   groups_json="$(printf '%s\n' "$user_spec" | jq -c '.groups // []')"
+  password_file="$(printf '%s\n' "$user_spec" | jq -r '.passwordFile // empty')"
 
   if [[ -z "$username" || "$username" == "null" || -z "$email" || "$email" == "null" ]]; then
     echo "error: each Burrow Authentik user requires username and email" >&2
@@ -177,6 +178,19 @@ ensure_user() {
   if [[ -z "$user_pk" ]]; then
     echo "error: could not create Authentik user ${username}" >&2
     exit 1
+  fi
+
+  if [[ -n "$password_file" ]]; then
+    if [[ ! -s "$password_file" ]]; then
+      echo "error: password file for Authentik user ${username} is missing: ${password_file}" >&2
+      exit 1
+    fi
+
+    api POST "/api/v3/core/users/${user_pk}/set_password/" "$(
+      jq -cn \
+        --arg password "$(tr -d '\r\n' < "$password_file")" \
+        '{password: $password}'
+    )" >/dev/null
   fi
 }
 

@@ -276,6 +276,7 @@ private struct QuickAddButton: View {
             }
             .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
         }
+        .accessibilityIdentifier("quick-add-\(sheet.rawValue)")
         .buttonStyle(.floating(color: sheet.quickActionColor, cornerRadius: 18))
     }
 }
@@ -485,6 +486,7 @@ private struct ConfigurationSheetView: View {
                 .burrowEmailField()
                 .burrowLoginField()
                 .autocorrectionDisabled()
+                .accessibilityIdentifier("tailnet-discovery-email")
 
             Button {
                 discoverTailnetAuthority()
@@ -497,6 +499,7 @@ private struct ConfigurationSheetView: View {
             }
             .buttonStyle(.borderless)
             .disabled(isDiscoveringTailnet || normalizedOptional(draft.discoveryEmail) == nil)
+            .accessibilityIdentifier("tailnet-find-server")
 
             if let discoveryStatus {
                 tailnetDiscoveryCard(status: discoveryStatus, failure: nil)
@@ -507,6 +510,7 @@ private struct ConfigurationSheetView: View {
             TextField("Authority URL", text: $draft.authority)
                 .burrowLoginField()
                 .autocorrectionDisabled()
+                .accessibilityIdentifier("tailnet-authority")
 
             Text("Use the managed Tailnet authority or enter a custom Tailnet control server.")
                 .font(.footnote)
@@ -523,6 +527,7 @@ private struct ConfigurationSheetView: View {
             }
             .buttonStyle(.borderless)
             .disabled(isProbingAuthority || normalizedOptional(draft.authority) == nil)
+            .accessibilityIdentifier("tailnet-check-connection")
 
             if let authorityProbeStatus {
                 tailnetAuthorityProbeCard(status: authorityProbeStatus, failure: nil)
@@ -533,6 +538,7 @@ private struct ConfigurationSheetView: View {
             TextField("Tailnet", text: $draft.tailnet)
                 .burrowLoginField()
                 .autocorrectionDisabled()
+                .accessibilityIdentifier("tailnet-name")
         }
 
         Section("Authentication") {
@@ -555,6 +561,7 @@ private struct ConfigurationSheetView: View {
                 }
                 .buttonStyle(.borderless)
                 .disabled(isStartingTailnetLogin || normalizedOptional(draft.authority) == nil)
+                .accessibilityIdentifier("tailnet-start-sign-in")
 
                 if let tailnetLoginStatus {
                     tailnetLoginCard(status: tailnetLoginStatus, failure: nil)
@@ -673,6 +680,7 @@ private struct ConfigurationSheetView: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(.thinMaterial)
         )
+        .accessibilityIdentifier("tailnet-authority-probe-card")
     }
 
     private func tailnetDiscoveryCard(
@@ -711,6 +719,7 @@ private struct ConfigurationSheetView: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(.thinMaterial)
         )
+        .accessibilityIdentifier("tailnet-discovery-card")
     }
 
     private func tailnetLoginCard(
@@ -757,6 +766,7 @@ private struct ConfigurationSheetView: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(.thinMaterial)
         )
+        .accessibilityIdentifier("tailnet-login-card")
     }
 
     private func summaryBadge(_ label: String) -> some View {

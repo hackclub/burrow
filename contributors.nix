@@ -43,5 +43,18 @@
         "automation"
       ];
     };
+
+    ui-test = {
+      displayName = "Burrow UI Test";
+      canonicalEmail = "ui-test@burrow.net";
+      isAdmin = false;
+      forgeAuthorized = false;
+      bootstrapAuthentik = true;
+      authentikPasswordSecret = "burrowAuthentikUiTestPassword";
+      roles = [
+        "testing"
+        "apple-ui"
+      ];
+    };
   };
 }
