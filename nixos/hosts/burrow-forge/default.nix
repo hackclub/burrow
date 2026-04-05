@@ -63,6 +63,12 @@ in
     group = "forgejo";
     mode = "0440";
   };
+  age.secrets.burrowTailscaleOidcClientSecret = {
+    file = ../../../secrets/infra/tailscale-oidc-client-secret.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
   age.secrets.burrowAuthentikGoogleClientId = {
     file = ../../../secrets/infra/authentik-google-client-id.age;
     owner = "root";
@@ -121,6 +127,7 @@ in
     envFile = config.age.secrets.burrowAuthentikEnv.path;
     forgejoClientSecretFile = config.age.secrets.burrowForgejoOidcClientSecret.path;
     headscaleClientSecretFile = config.age.secrets.burrowHeadscaleOidcClientSecret.path;
+    tailscaleClientSecretFile = config.age.secrets.burrowTailscaleOidcClientSecret.path;
     googleClientIDFile = config.age.secrets.burrowAuthentikGoogleClientId.path;
     googleClientSecretFile = config.age.secrets.burrowAuthentikGoogleClientSecret.path;
     googleLoginMode = "redirect";

@@ -10,6 +10,7 @@ let
   dataVolume = "burrow-authentik-data:/data";
   directorySyncScript = ../../Scripts/authentik-sync-burrow-directory.sh;
   forgejoOidcSyncScript = ../../Scripts/authentik-sync-forgejo-oidc.sh;
+  tailscaleOidcSyncScript = ../../Scripts/authentik-sync-tailscale-oidc.sh;
   googleSourceSyncScript = ../../Scripts/authentik-sync-google-source.sh;
   tailnetAuthFlowSyncScript = ../../Scripts/authentik-sync-tailnet-auth-flow.sh;
   authentikBlueprint = pkgs.writeText "burrow-authentik-blueprint.yaml" ''
@@ -129,6 +130,24 @@ in
       type = lib.types.str;
       default = "git";
       description = "Authentik application slug for Forgejo.";
+    };
+
+    tailscaleProviderSlug = lib.mkOption {
+      type = lib.types.str;
+      default = "tailscale";
+      description = "Authentik application slug for Tailscale custom OIDC sign-in.";
+    };
+
+    tailscaleClientId = lib.mkOption {
+      type = lib.types.str;
+      default = "tailscale.burrow.net";
+      description = "Client ID Authentik should present to Tailscale.";
+    };
+
+    tailscaleClientSecretFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Host-local file containing the Authentik Tailscale OIDC client secret.";
     };
 
     forgejoClientId = lib.mkOption {
@@ -309,6 +328,13 @@ in
         ${lib.optionalString (cfg.forgejoClientSecretFile != null) ''
           if [ ! -s ${lib.escapeShellArg cfg.forgejoClientSecretFile} ]; then
             echo "Forgejo client secret missing: ${cfg.forgejoClientSecretFile}" >&2
+            exit 1
+          fi
+        ''}
+
+        ${lib.optionalString (cfg.tailscaleClientSecretFile != null) ''
+          if [ ! -s ${lib.escapeShellArg cfg.tailscaleClientSecretFile} ]; then
+            echo "Tailscale client secret missing: ${cfg.tailscaleClientSecretFile}" >&2
             exit 1
           fi
         ''}
@@ -631,6 +657,53 @@ EOF
         export AUTHENTIK_FORGEJO_REDIRECT_URIS_JSON='["https://${cfg.forgejoDomain}/user/oauth2/burrow.net/callback","https://${cfg.forgejoDomain}/user/oauth2/authentik/callback","https://${cfg.forgejoDomain}/user/oauth2/GitHub/callback"]'
 
         ${pkgs.bash}/bin/bash ${forgejoOidcSyncScript}
+      '';
+    };
+
+    systemd.services.burrow-authentik-tailscale-oidc = lib.mkIf (cfg.tailscaleClientSecretFile != null) {
+      description = "Reconcile the Burrow Authentik Tailscale OIDC application";
+      after = [
+        "burrow-authentik-ready.service"
+        "network-online.target"
+      ];
+      wants = [
+        "burrow-authentik-ready.service"
+        "network-online.target"
+      ];
+      wantedBy = [ "multi-user.target" ];
+      restartTriggers = [
+        tailscaleOidcSyncScript
+        cfg.envFile
+        cfg.tailscaleClientSecretFile
+      ];
+      path = [
+        pkgs.bash
+        pkgs.coreutils
+        pkgs.curl
+        pkgs.jq
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "root";
+        Group = "root";
+      };
+      script = ''
+        set -euo pipefail
+        set -a
+        source ${lib.escapeShellArg cfg.envFile}
+        set +a
+
+        export AUTHENTIK_URL=https://${cfg.domain}
+        export AUTHENTIK_TAILSCALE_APPLICATION_SLUG=${lib.escapeShellArg cfg.tailscaleProviderSlug}
+        export AUTHENTIK_TAILSCALE_APPLICATION_NAME=Tailscale
+        export AUTHENTIK_TAILSCALE_PROVIDER_NAME=Tailscale
+        export AUTHENTIK_TAILSCALE_TEMPLATE_SLUG=${lib.escapeShellArg cfg.headscaleProviderSlug}
+        export AUTHENTIK_TAILSCALE_CLIENT_ID=${lib.escapeShellArg cfg.tailscaleClientId}
+        export AUTHENTIK_TAILSCALE_CLIENT_SECRET="$(tr -d '\r\n' < ${lib.escapeShellArg cfg.tailscaleClientSecretFile})"
+        export AUTHENTIK_TAILSCALE_LAUNCH_URL=https://login.tailscale.com/start/oidc
+        export AUTHENTIK_TAILSCALE_REDIRECT_URIS_JSON='["https://login.tailscale.com/a/oauth_response"]'
+
+        ${pkgs.bash}/bin/bash ${tailscaleOidcSyncScript}
       '';
     };
 

@@ -17,4 +17,5 @@ in
   "secrets/infra/authentik-ui-test-password.age".publicKeys = uiTestRecipients;
   "secrets/infra/forgejo-oidc-client-secret.age".publicKeys = burrowForgeRecipients;
   "secrets/infra/headscale-oidc-client-secret.age".publicKeys = burrowForgeRecipients;
+  "secrets/infra/tailscale-oidc-client-secret.age".publicKeys = burrowForgeRecipients;
 }
