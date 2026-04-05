@@ -123,13 +123,37 @@
         "url": "https://codeload.github.com/NixOS/nixpkgs/tar.gz/nixos-unstable"
       }
     },
+    "nsc-autoscaler": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1775221037,
+        "narHash": "sha256-tv6Y3cqn76PEyZpSMMItVW96KKIboovBWTOv5Lt7PXg=",
+        "ref": "refs/heads/main",
+        "rev": "2c485752fde28ec3be2f228b571d1906f4bcf917",
+        "revCount": 10,
+        "type": "git",
+        "url": "https://compatible.systems/conrad/nsc-autoscaler.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://compatible.systems/conrad/nsc-autoscaler.git"
+      }
+    },
     "root": {
       "inputs": {
         "agenix": "agenix",
         "disko": "disko",
         "flake-utils": "flake-utils",
         "hcloud-upload-image-src": "hcloud-upload-image-src",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "nsc-autoscaler": "nsc-autoscaler"
       }
     },
     "systems": {

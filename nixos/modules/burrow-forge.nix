@@ -271,7 +271,7 @@ in
           '';
         }
         // lib.optionalAttrs (
-          config.services.burrow.forgejoNsc.enable && config.services.burrow.forgejoNsc.autoscaler.enable
+          config.services.forgejo-nsc.enable && config.services.forgejo-nsc.autoscaler.enable
         ) {
           "${cfg.nscAutoscalerDomain}".extraConfig = ''
             encode gzip zstd

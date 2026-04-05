@@ -104,7 +104,7 @@ in
     sshPrivateKeyFile = "/var/lib/burrow/intake/agent_at_burrow_net_ed25519";
   };
 
-  services.burrow.forgejoNsc = {
+  services.forgejo-nsc = {
     enable = true;
     nscTokenFile = "/var/lib/burrow/intake/forgejo_nsc_token.txt";
     dispatcher = {

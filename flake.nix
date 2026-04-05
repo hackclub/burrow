@@ -12,13 +12,18 @@
       url = "tarball+https://codeload.github.com/nix-community/disko/tar.gz/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nsc-autoscaler = {
+      url = "git+https://compatible.systems/conrad/nsc-autoscaler.git";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-utils.follows = "flake-utils";
+    };
     hcloud-upload-image-src = {
       url = "tarball+https://codeload.github.com/apricote/hcloud-upload-image/tar.gz/v1.3.0";
       flake = false;
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, agenix, disko, hcloud-upload-image-src }:
+  outputs = { self, nixpkgs, flake-utils, agenix, disko, nsc-autoscaler, hcloud-upload-image-src }:
     let
       supportedSystems = [
         "x86_64-linux"
@@ -175,7 +180,7 @@
     // {
       nixosModules.burrow-forge = import ./nixos/modules/burrow-forge.nix;
       nixosModules.burrow-forge-runner = import ./nixos/modules/burrow-forge-runner.nix;
-      nixosModules.burrow-forgejo-nsc = import ./nixos/modules/burrow-forgejo-nsc.nix;
+      nixosModules.burrow-forgejo-nsc = nsc-autoscaler.nixosModules.default;
       nixosModules.burrow-authentik = import ./nixos/modules/burrow-authentik.nix;
       nixosModules.burrow-headscale = import ./nixos/modules/burrow-headscale.nix;
 
