@@ -279,8 +279,8 @@ mapfile -t provider_pks < <(
     | jq -r --argjson provider_slugs "$provider_slugs_json" '
         .results[]?
         | select(
-            (.assigned_application_slug != null and ($provider_slugs | index(.assigned_application_slug) != null))
-            or (.slug != null and ($provider_slugs | index(.slug) != null))
+            ((.assigned_application_slug // empty) as $assigned | ($provider_slugs | index($assigned)) != null)
+            or ((.slug // empty) as $slug | ($provider_slugs | index($slug)) != null)
           )
         | .pk // empty
       '
