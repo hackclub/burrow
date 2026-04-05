@@ -303,7 +303,7 @@ enum TailnetProvider: String, CaseIterable, Codable, Identifiable, Sendable {
     var title: String {
         switch self {
         case .tailscale: "Tailscale"
-        case .headscale: "Headscale"
+        case .headscale: "Custom Tailnet"
         case .burrow: "Burrow"
         }
     }
@@ -375,7 +375,7 @@ enum AccountNetworkKind: String, CaseIterable, Codable, Identifiable, Sendable {
         switch self {
         case .wireGuard: "Import a tunnel and optional account metadata."
         case .tor: "Store Arti account and identity preferences."
-        case .tailnet: "Save Tailnet authority, identity, and login material."
+        case .tailnet: "Save Tailnet authority, identity defaults, and login material."
         }
     }
 
@@ -402,7 +402,7 @@ enum AccountNetworkKind: String, CaseIterable, Codable, Identifiable, Sendable {
         case .tor:
             "Tor account preferences are stored on Apple now. The managed Tor runtime is not wired on Apple in this branch yet."
         case .tailnet:
-            "Tailnet accounts can sign in from Apple now. The managed Apple runtime is still pending, but Tailnet networks can be stored in the daemon."
+            "Tailnet accounts can sign in from Apple now. The managed Apple runtime is still pending, but Tailnet networks can already be stored in the daemon."
         }
     }
 }

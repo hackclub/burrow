@@ -215,6 +215,14 @@ public struct Burrow_TunnelConfigurationResponse: Sendable {
 
   public var mtu: Int32 = 0
 
+  public var routes: [String] = []
+
+  public var dnsServers: [String] = []
+
+  public var searchDomains: [String] = []
+
+  public var includeDefaultRoute: Bool = false
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -532,6 +540,10 @@ extension Burrow_TunnelConfigurationResponse: SwiftProtobuf.Message, SwiftProtob
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "addresses"),
     2: .same(proto: "mtu"),
+    3: .same(proto: "routes"),
+    4: .standard(proto: "dns_servers"),
+    5: .standard(proto: "search_domains"),
+    6: .standard(proto: "include_default_route"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -542,6 +554,10 @@ extension Burrow_TunnelConfigurationResponse: SwiftProtobuf.Message, SwiftProtob
       switch fieldNumber {
       case 1: try { try decoder.decodeRepeatedStringField(value: &self.addresses) }()
       case 2: try { try decoder.decodeSingularInt32Field(value: &self.mtu) }()
+      case 3: try { try decoder.decodeRepeatedStringField(value: &self.routes) }()
+      case 4: try { try decoder.decodeRepeatedStringField(value: &self.dnsServers) }()
+      case 5: try { try decoder.decodeRepeatedStringField(value: &self.searchDomains) }()
+      case 6: try { try decoder.decodeSingularBoolField(value: &self.includeDefaultRoute) }()
       default: break
       }
     }
@@ -554,12 +570,28 @@ extension Burrow_TunnelConfigurationResponse: SwiftProtobuf.Message, SwiftProtob
     if self.mtu != 0 {
       try visitor.visitSingularInt32Field(value: self.mtu, fieldNumber: 2)
     }
+    if !self.routes.isEmpty {
+      try visitor.visitRepeatedStringField(value: self.routes, fieldNumber: 3)
+    }
+    if !self.dnsServers.isEmpty {
+      try visitor.visitRepeatedStringField(value: self.dnsServers, fieldNumber: 4)
+    }
+    if !self.searchDomains.isEmpty {
+      try visitor.visitRepeatedStringField(value: self.searchDomains, fieldNumber: 5)
+    }
+    if self.includeDefaultRoute {
+      try visitor.visitSingularBoolField(value: self.includeDefaultRoute, fieldNumber: 6)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Burrow_TunnelConfigurationResponse, rhs: Burrow_TunnelConfigurationResponse) -> Bool {
     if lhs.addresses != rhs.addresses {return false}
     if lhs.mtu != rhs.mtu {return false}
+    if lhs.routes != rhs.routes {return false}
+    if lhs.dnsServers != rhs.dnsServers {return false}
+    if lhs.searchDomains != rhs.searchDomains {return false}
+    if lhs.includeDefaultRoute != rhs.includeDefaultRoute {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

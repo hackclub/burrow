@@ -36,13 +36,9 @@ public enum Constants {
     private static func fallbackContainerURL() -> Result<URL, any Swift.Error> {
 #if targetEnvironment(simulator)
         Result {
-            let baseURL = try FileManager.default.url(
-                for: .applicationSupportDirectory,
-                in: .userDomainMask,
-                appropriateFor: nil,
-                create: true
-            )
-            let url = baseURL
+            // The simulator app's Application Support path lives inside its sandbox container,
+            // so the host daemon cannot reach it. Use a shared host temp location instead.
+            let url = URL(filePath: "/tmp", directoryHint: .isDirectory)
                 .appending(component: bundleIdentifier, directoryHint: .isDirectory)
                 .appending(component: "SimulatorFallback", directoryHint: .isDirectory)
             try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)

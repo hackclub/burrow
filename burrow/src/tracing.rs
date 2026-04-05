@@ -47,10 +47,16 @@ pub fn initialize() {
 
         #[cfg(target_os = "macos")]
         let subscriber = {
-            let system_log = Some(tracing_oslog::OsLogger::new(
-                "com.hackclub.burrow",
-                "tracing",
-            ));
+            // `tracing_oslog` is crashing under Tokio/h2 span churn in the host daemon on
+            // current macOS. Keep logging on stderr by default and allow opt-in OSLog
+            // only when explicitly requested for local debugging.
+            let enable_oslog = matches!(
+                std::env::var("BURROW_ENABLE_OSLOG").as_deref(),
+                Ok("1" | "true" | "TRUE" | "yes" | "YES")
+            );
+            let system_log = enable_oslog.then(|| {
+                tracing_oslog::OsLogger::new("com.hackclub.burrow", "tracing")
+            });
             let stderr = (console::user_attended_stderr() || system_log.is_none()).then(make_stderr);
             Registry::default().with(stderr).with(system_log)
         };

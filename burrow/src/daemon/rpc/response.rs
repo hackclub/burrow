@@ -68,6 +68,14 @@ impl TryFrom<&TunInterface> for ServerInfo {
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 pub struct ServerConfig {
     pub address: Vec<String>,
+    #[serde(default)]
+    pub routes: Vec<String>,
+    #[serde(default)]
+    pub dns_servers: Vec<String>,
+    #[serde(default)]
+    pub search_domains: Vec<String>,
+    #[serde(default)]
+    pub include_default_route: bool,
     pub name: Option<String>,
     pub mtu: Option<i32>,
 }
@@ -78,6 +86,14 @@ impl TryFrom<&Config> for ServerConfig {
     fn try_from(config: &Config) -> anyhow::Result<Self> {
         Ok(ServerConfig {
             address: config.interface.address.clone(),
+            routes: config
+                .peers
+                .iter()
+                .flat_map(|peer| peer.allowed_ips.iter().cloned())
+                .collect(),
+            dns_servers: config.interface.dns.clone(),
+            search_domains: Vec::new(),
+            include_default_route: false,
             name: None,
             mtu: config.interface.mtu.map(|mtu| mtu as i32),
         })
@@ -88,6 +104,10 @@ impl Default for ServerConfig {
     fn default() -> Self {
         Self {
             address: vec!["10.13.13.2".to_string()], // Dummy remote address
+            routes: Vec::new(),
+            dns_servers: Vec::new(),
+            search_domains: Vec::new(),
+            include_default_route: false,
             name: None,
             mtu: None,
         }

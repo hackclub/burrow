@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use reqwest::{Client, StatusCode, Url};
 use serde::{Deserialize, Serialize};
+use tracing::{debug, info};
 
 use super::TailnetProvider;
 
@@ -43,6 +44,7 @@ struct WebFingerLink {
 
 pub async fn discover_tailnet(email: &str) -> Result<TailnetDiscovery> {
     let domain = email_domain(email)?;
+    info!(%email, %domain, "tailnet discovery requested");
     let base_url = Url::parse(&format!("https://{domain}"))
         .with_context(|| format!("invalid discovery domain {domain}"))?;
     let client = Client::builder()
@@ -116,12 +118,21 @@ pub async fn discover_tailnet_at(
     base_url: &Url,
 ) -> Result<TailnetDiscovery> {
     let domain = email_domain(email)?;
+    debug!(%email, %domain, base_url = %base_url, "starting tailnet domain discovery");
 
     if let Some(discovery) = discover_well_known(client, base_url).await? {
+        info!(
+            %email,
+            %domain,
+            authority = %discovery.authority,
+            provider = ?discovery.provider,
+            "resolved tailnet discovery from well-known document"
+        );
         return Ok(TailnetDiscovery { domain, ..discovery });
     }
 
     if let Some(authority) = discover_webfinger(client, email, base_url).await? {
+        info!(%email, %domain, %authority, "resolved tailnet discovery from webfinger");
         return Ok(TailnetDiscovery {
             domain,
             provider: inferred_provider(Some(&authority), None),
@@ -162,6 +173,7 @@ async fn discover_well_known(client: &Client, base_url: &Url) -> Result<Option<T
     let url = base_url
         .join(TAILNET_DISCOVERY_PATH)
         .context("failed to build tailnet discovery URL")?;
+    debug!(%url, "requesting tailnet well-known document");
     let response = client
         .get(url)
         .header("accept", "application/json")
@@ -187,6 +199,7 @@ async fn discover_webfinger(client: &Client, email: &str, base_url: &Url) -> Res
     url.query_pairs_mut()
         .append_pair("resource", &format!("acct:{email}"))
         .append_pair("rel", TAILNET_DISCOVERY_REL);
+    debug!(%email, url = %url, "requesting tailnet webfinger document");
 
     let response = client
         .get(url)

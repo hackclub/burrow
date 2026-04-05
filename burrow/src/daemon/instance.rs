@@ -8,7 +8,7 @@ use rusqlite::Connection;
 use tokio::sync::{mpsc, watch, RwLock};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status as RspStatus};
-use tracing::warn;
+use tracing::{debug, info, warn};
 use tun::tokio::TunInterface;
 
 use super::{
@@ -16,15 +16,15 @@ use super::{
         networks_server::Networks, tailnet_control_server::TailnetControl, tunnel_server::Tunnel,
         Empty, Network, NetworkDeleteRequest, NetworkListResponse, NetworkReorderRequest,
         State as RPCTunnelState, TailnetDiscoverRequest, TailnetDiscoverResponse,
-        TailnetProbeRequest, TailnetProbeResponse, TunnelConfigurationResponse,
+        TailnetProbeRequest, TailnetProbeResponse, TunnelConfigurationResponse, TunnelPacket,
         TunnelStatusResponse,
     },
-    runtime::{ActiveTunnel, ResolvedTunnel},
+    runtime::{tailnet_helper_request, ActiveTunnel, ResolvedTunnel},
 };
 use crate::{
     auth::server::tailscale::{
-        TailscaleBridgeManager, TailscaleLoginStartRequest as BridgeLoginStartRequest,
-        TailscaleLoginStatus,
+        packet_socket_path, TailscaleBridgeManager,
+        TailscaleLoginStartRequest as BridgeLoginStartRequest, TailscaleLoginStatus,
     },
     control::discovery,
     daemon::rpc::ServerConfig,
@@ -87,11 +87,20 @@ impl DaemonRPCServer {
     }
 
     async fn current_tunnel_configuration(&self) -> Result<TunnelConfigurationResponse, RspStatus> {
-        let config = self
-            .resolve_tunnel()
-            .await?
-            .server_config()
-            .map_err(proc_err)?;
+        let config = {
+            let active = self.active_tunnel.read().await;
+            active
+                .as_ref()
+                .map(|tunnel| tunnel.server_config().clone())
+        };
+        let config = match config {
+            Some(config) => config,
+            None => self
+                .resolve_tunnel()
+                .await?
+                .server_config()
+                .map_err(proc_err)?,
+        };
         Ok(configuration_rsp(config))
     }
 
@@ -111,8 +120,18 @@ impl DaemonRPCServer {
 
     async fn replace_active_tunnel(&self, desired: ResolvedTunnel) -> Result<(), RspStatus> {
         let _ = self.stop_active_tunnel().await?;
+        let tailnet_helper = match &desired {
+            ResolvedTunnel::Tailnet { identity, config } => Some(
+                self.tailnet_login
+                    .ensure_session(tailnet_helper_request(identity, config))
+                    .await
+                    .map_err(proc_err)?
+                    .helper,
+            ),
+            _ => None,
+        };
         let active = desired
-            .start(self.tun_interface.clone())
+            .start(self.tun_interface.clone(), tailnet_helper)
             .await
             .map_err(proc_err)?;
         self.active_tunnel.write().await.replace(active);
@@ -137,6 +156,23 @@ impl DaemonRPCServer {
         Ok(())
     }
 
+    fn tailnet_bridge_request(
+        account_name: String,
+        identity_name: String,
+        hostname: String,
+        authority: String,
+    ) -> BridgeLoginStartRequest {
+        let mut request = BridgeLoginStartRequest {
+            account_name,
+            identity_name,
+            hostname: (!hostname.trim().is_empty()).then_some(hostname),
+            control_url: Self::tailnet_control_url(&authority),
+            packet_socket: None,
+        };
+        request.packet_socket = Some(packet_socket_path(&request).display().to_string());
+        request
+    }
+
     fn tailnet_control_url(authority: &str) -> Option<String> {
         let authority = discovery::normalize_authority(authority);
         (!discovery::is_managed_tailscale_authority(&authority)).then_some(authority)
@@ -146,6 +182,7 @@ impl DaemonRPCServer {
 #[tonic::async_trait]
 impl Tunnel for DaemonRPCServer {
     type TunnelConfigurationStream = ReceiverStream<Result<TunnelConfigurationResponse, RspStatus>>;
+    type TunnelPacketsStream = ReceiverStream<Result<TunnelPacket, RspStatus>>;
     type TunnelStatusStream = ReceiverStream<Result<TunnelStatusResponse, RspStatus>>;
 
     async fn tunnel_configuration(
@@ -164,6 +201,62 @@ impl Tunnel for DaemonRPCServer {
                 }
                 if sub.changed().await.is_err() {
                     break;
+                }
+            }
+        });
+
+        Ok(Response::new(ReceiverStream::new(rx)))
+    }
+
+    async fn tunnel_packets(
+        &self,
+        request: Request<tonic::Streaming<TunnelPacket>>,
+    ) -> Result<Response<Self::TunnelPacketsStream>, RspStatus> {
+        let (packet_tx, mut packet_rx) = {
+            let guard = self.active_tunnel.read().await;
+            let Some(active) = guard.as_ref() else {
+                return Err(RspStatus::failed_precondition("no active tunnel"));
+            };
+            active.packet_stream().ok_or_else(|| {
+                RspStatus::failed_precondition(
+                    "active tunnel does not support packet streaming",
+                )
+            })?
+        };
+
+        let (tx, rx) = mpsc::channel(128);
+        tokio::spawn(async move {
+            loop {
+                match packet_rx.recv().await {
+                    Ok(payload) => {
+                        if tx.send(Ok(TunnelPacket { payload })).await.is_err() {
+                            break;
+                        }
+                    }
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+                }
+            }
+        });
+
+        let mut inbound = request.into_inner();
+        tokio::spawn(async move {
+            loop {
+                match inbound.message().await {
+                    Ok(Some(packet)) => {
+                        debug!(
+                            "daemon tunnel packet stream received {} bytes from client",
+                            packet.payload.len()
+                        );
+                        if packet_tx.send(packet.payload).await.is_err() {
+                            break;
+                        }
+                    }
+                    Ok(None) => break,
+                    Err(error) => {
+                        warn!("tailnet packet stream receive error: {error}");
+                        break;
+                    }
                 }
             }
         });
@@ -287,9 +380,16 @@ impl TailnetControl for DaemonRPCServer {
         request: Request<TailnetDiscoverRequest>,
     ) -> Result<Response<TailnetDiscoverResponse>, RspStatus> {
         let request = request.into_inner();
+        info!(email = %request.email, "daemon tailnet discover RPC received");
         let discovery = discovery::discover_tailnet(&request.email)
             .await
             .map_err(proc_err)?;
+        info!(
+            email = %request.email,
+            authority = %discovery.authority,
+            provider = ?discovery.provider,
+            "daemon tailnet discover RPC resolved"
+        );
 
         Ok(Response::new(TailnetDiscoverResponse {
             domain: discovery.domain,
@@ -325,16 +425,31 @@ impl TailnetControl for DaemonRPCServer {
         request: Request<super::rpc::grpc_defs::TailnetLoginStartRequest>,
     ) -> Result<Response<super::rpc::grpc_defs::TailnetLoginStatusResponse>, RspStatus> {
         let request = request.into_inner();
+        info!(
+            account = %request.account_name,
+            identity = %request.identity_name,
+            authority = %request.authority,
+            "daemon tailnet login start RPC received"
+        );
         let response = self
             .tailnet_login
-            .start_login(BridgeLoginStartRequest {
-                account_name: request.account_name,
-                identity_name: request.identity_name,
-                hostname: (!request.hostname.trim().is_empty()).then_some(request.hostname),
-                control_url: Self::tailnet_control_url(&request.authority),
-            })
+            .start_login(Self::tailnet_bridge_request(
+                request.account_name,
+                request.identity_name,
+                request.hostname,
+                request.authority,
+            ))
             .await
             .map_err(proc_err)?;
+
+        info!(
+            session_id = %response.session_id,
+            backend_state = %response.status.backend_state,
+            running = response.status.running,
+            needs_login = response.status.needs_login,
+            auth_url = ?response.status.auth_url,
+            "daemon tailnet login start RPC resolved"
+        );
 
         Ok(Response::new(tailnet_login_rsp(
             response.session_id,
@@ -347,6 +462,7 @@ impl TailnetControl for DaemonRPCServer {
         request: Request<super::rpc::grpc_defs::TailnetLoginStatusRequest>,
     ) -> Result<Response<super::rpc::grpc_defs::TailnetLoginStatusResponse>, RspStatus> {
         let request = request.into_inner();
+        info!(session_id = %request.session_id, "daemon tailnet login status RPC received");
         let status = self
             .tailnet_login
             .status(&request.session_id)
@@ -355,6 +471,14 @@ impl TailnetControl for DaemonRPCServer {
         let Some(status) = status else {
             return Err(RspStatus::not_found("tailnet login session not found"));
         };
+        info!(
+            session_id = %request.session_id,
+            backend_state = %status.backend_state,
+            running = status.running,
+            needs_login = status.needs_login,
+            auth_url = ?status.auth_url,
+            "daemon tailnet login status RPC resolved"
+        );
         Ok(Response::new(tailnet_login_rsp(request.session_id, status)))
     }
 
@@ -381,8 +505,12 @@ fn proc_err(err: impl ToString) -> RspStatus {
 
 fn configuration_rsp(config: ServerConfig) -> TunnelConfigurationResponse {
     TunnelConfigurationResponse {
-        mtu: config.mtu.unwrap_or(1000),
         addresses: config.address,
+        mtu: config.mtu.unwrap_or(1000),
+        routes: config.routes,
+        dns_servers: config.dns_servers,
+        search_domains: config.search_domains,
+        include_default_route: config.include_default_route,
     }
 }
 

@@ -108,6 +108,13 @@ public struct Burrow_TailnetLoginStatusResponse: Sendable {
     public init() {}
 }
 
+public struct Burrow_TunnelPacket: Sendable {
+    public var payload = Data()
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+}
+
 extension Burrow_TailnetDiscoverRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
     public static let protoMessageName: String = "burrow.TailnetDiscoverRequest"
     public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
@@ -387,6 +394,29 @@ extension Burrow_TailnetLoginStatusResponse: SwiftProtobuf.Message, SwiftProtobu
     }
 }
 
+extension Burrow_TunnelPacket: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+    public static let protoMessageName: String = "burrow.TunnelPacket"
+    public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .same(proto: "payload")
+    ]
+
+    public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularBytesField(value: &self.payload)
+            default: break
+            }
+        }
+    }
+
+    public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+        if !self.payload.isEmpty {
+            try visitor.visitSingularBytesField(value: self.payload, fieldNumber: 1)
+        }
+        try unknownFields.traverse(visitor: &visitor)
+    }
+}
+
 public struct TailnetClient: Client, GRPCClient {
     public let channel: GRPCChannel
     public var defaultCallOptions: CallOptions
@@ -451,6 +481,26 @@ public struct TailnetClient: Client, GRPCClient {
         try await self.performAsyncUnaryCall(
             path: "/burrow.TailnetControl/LoginCancel",
             request: request,
+            callOptions: callOptions ?? self.defaultCallOptions,
+            interceptors: []
+        )
+    }
+}
+
+public struct TunnelPacketClient: Client, GRPCClient {
+    public let channel: GRPCChannel
+    public var defaultCallOptions: CallOptions
+
+    public init(channel: any GRPCChannel) {
+        self.channel = channel
+        self.defaultCallOptions = .init()
+    }
+
+    public func makeTunnelPacketsCall(
+        callOptions: CallOptions? = nil
+    ) -> GRPCAsyncBidirectionalStreamingCall<Burrow_TunnelPacket, Burrow_TunnelPacket> {
+        self.makeAsyncBidirectionalStreamingCall(
+            path: "/burrow.Tunnel/TunnelPackets",
             callOptions: callOptions ?? self.defaultCallOptions,
             interceptors: []
         )

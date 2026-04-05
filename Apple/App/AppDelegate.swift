@@ -55,7 +55,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let statusBar = NSStatusBar.system
         let statusItem = statusBar.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "network.badge.shield.half.filled", accessibilityDescription: nil)
+            button.image = NSImage(systemSymbolName: "pipe.and.drop.fill", accessibilityDescription: nil)
         }
         return statusItem
     }()
