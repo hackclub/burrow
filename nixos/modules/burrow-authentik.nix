@@ -603,6 +603,7 @@ EOF
 
         export AUTHENTIK_URL=https://${cfg.domain}
         export AUTHENTIK_TAILNET_PROVIDER_SLUG=${lib.escapeShellArg cfg.headscaleProviderSlug}
+        export AUTHENTIK_TAILNET_PROVIDER_SLUGS_JSON='["${cfg.headscaleProviderSlug}","${cfg.tailscaleProviderSlug}"]'
         export AUTHENTIK_TAILNET_AUTHENTICATION_FLOW_NAME=${lib.escapeShellArg cfg.headscaleAuthenticationFlowName}
         export AUTHENTIK_TAILNET_AUTHENTICATION_FLOW_SLUG=${lib.escapeShellArg cfg.headscaleAuthenticationFlowSlug}
         export AUTHENTIK_TAILNET_IDENTIFICATION_STAGE_NAME=${lib.escapeShellArg cfg.headscaleIdentificationStageName}

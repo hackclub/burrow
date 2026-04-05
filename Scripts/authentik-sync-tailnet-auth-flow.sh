@@ -4,6 +4,7 @@ set -euo pipefail
 authentik_url="${AUTHENTIK_URL:-https://auth.burrow.net}"
 bootstrap_token="${AUTHENTIK_BOOTSTRAP_TOKEN:-}"
 provider_slug="${AUTHENTIK_TAILNET_PROVIDER_SLUG:-ts}"
+provider_slugs_json="${AUTHENTIK_TAILNET_PROVIDER_SLUGS_JSON:-}"
 authentication_flow_name="${AUTHENTIK_TAILNET_AUTHENTICATION_FLOW_NAME:-Burrow Tailnet Authentication}"
 authentication_flow_slug="${AUTHENTIK_TAILNET_AUTHENTICATION_FLOW_SLUG:-burrow-tailnet-authentication}"
 identification_stage_name="${AUTHENTIK_TAILNET_IDENTIFICATION_STAGE_NAME:-burrow-tailnet-identification-stage}"
@@ -21,6 +22,7 @@ Required environment:
 Optional environment:
   AUTHENTIK_URL
   AUTHENTIK_TAILNET_PROVIDER_SLUG
+  AUTHENTIK_TAILNET_PROVIDER_SLUGS_JSON
   AUTHENTIK_TAILNET_AUTHENTICATION_FLOW_NAME
   AUTHENTIK_TAILNET_AUTHENTICATION_FLOW_SLUG
   AUTHENTIK_TAILNET_IDENTIFICATION_STAGE_NAME
@@ -38,6 +40,15 @@ fi
 if [[ -z "$bootstrap_token" ]]; then
   echo "error: AUTHENTIK_BOOTSTRAP_TOKEN is required" >&2
   exit 1
+fi
+
+if [[ -n "$provider_slugs_json" ]]; then
+  if ! printf '%s' "$provider_slugs_json" | jq -e 'type == "array" and length > 0 and all(.[]; type == "string" and length > 0)' >/dev/null; then
+    echo "error: AUTHENTIK_TAILNET_PROVIDER_SLUGS_JSON must be a non-empty JSON array of strings" >&2
+    exit 1
+  fi
+else
+  provider_slugs_json="$(jq -cn --arg slug "$provider_slug" '[$slug]')"
 fi
 
 api() {
@@ -263,18 +274,20 @@ ensure_flow_binding() {
 
 wait_for_authentik
 
-provider_pk="$(
+mapfile -t provider_pks < <(
   api GET "/api/v3/providers/oauth2/?page_size=200" \
-    | jq -r --arg provider_slug "$provider_slug" '
+    | jq -r --argjson provider_slugs "$provider_slugs_json" '
         .results[]?
-        | select(.assigned_application_slug == $provider_slug or .slug == $provider_slug)
+        | select(
+            (.assigned_application_slug != null and ($provider_slugs | index(.assigned_application_slug) != null))
+            or (.slug != null and ($provider_slugs | index(.slug) != null))
+          )
         | .pk // empty
-      ' \
-    | head -n1
-)"
+      '
+)
 
-if [[ -z "$provider_pk" ]]; then
-  echo "error: could not resolve Authentik Tailnet OAuth provider ${provider_slug}" >&2
+if [[ "${#provider_pks[@]}" -eq 0 ]]; then
+  echo "error: could not resolve any Authentik Tailnet OAuth providers from ${provider_slugs_json}" >&2
   exit 1
 fi
 
@@ -287,8 +300,10 @@ authentication_flow_pk="$(ensure_authentication_flow)"
 ensure_flow_binding "$authentication_flow_pk" "$identification_stage_pk" 10
 ensure_flow_binding "$authentication_flow_pk" "$user_login_stage_pk" 30
 
-api PATCH "/api/v3/providers/oauth2/${provider_pk}/" "$(
-  jq -cn --arg flow "$authentication_flow_pk" '{authentication_flow: $flow}'
-)" >/dev/null
+for provider_pk in "${provider_pks[@]}"; do
+  api PATCH "/api/v3/providers/oauth2/${provider_pk}/" "$(
+    jq -cn --arg flow "$authentication_flow_pk" '{authentication_flow: $flow}'
+  )" >/dev/null
+done
 
-echo "Synced Burrow Tailnet authentication flow for provider ${provider_slug}."
+echo "Synced Burrow Tailnet authentication flow for providers ${provider_slugs_json}."
