@@ -130,6 +130,12 @@ in
   services.burrow.forgeRunner = {
     enable = true;
     sshPrivateKeyFile = "/var/lib/burrow/intake/agent_at_burrow_net_ed25519";
+    labels = [
+      "self-hosted"
+      "linux"
+      "x86_64"
+      "burrow-forge"
+    ];
   };
 
   services.forgejo-nsc = {

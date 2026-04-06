@@ -5,8 +5,10 @@ let
   runnerPkg = pkgs.forgejo-runner;
   stateDir = cfg.stateDir;
   runnerFile = "${stateDir}/.runner";
+  registrationFingerprintFile = "${stateDir}/.runner-registration-fingerprint";
   configFile = "${stateDir}/runner.yaml";
   labelsCsv = lib.concatStringsSep "," (map (label: "${label}:host") cfg.labels);
+  registrationFingerprint = builtins.hashString "sha256" "${cfg.instanceUrl}\n${cfg.name}\n${labelsCsv}";
   sshPrivateKeyFile = cfg.sshPrivateKeyFile or "";
 in
 {
@@ -141,6 +143,17 @@ EOF
         chown ${cfg.user}:${cfg.group} ${configFile}
         chmod 0640 ${configFile}
 
+        expected_fingerprint=${lib.escapeShellArg registrationFingerprint}
+        if [ -s ${runnerFile} ]; then
+          current_fingerprint=""
+          if [ -s ${registrationFingerprintFile} ]; then
+            current_fingerprint="$(tr -d '\r\n' < ${registrationFingerprintFile})"
+          fi
+          if [ "${"$"}current_fingerprint" != "${"$"}expected_fingerprint" ]; then
+            rm -f ${runnerFile} ${registrationFingerprintFile}
+          fi
+        fi
+
         install -d -m 0700 -o ${cfg.user} -g ${cfg.group} ${stateDir}/.ssh
         ${pkgs.util-linux}/bin/runuser -u ${cfg.user} -- \
           ${pkgs.git}/bin/git config --global user.name ${lib.escapeShellArg cfg.gitUserName}
@@ -177,6 +190,10 @@ EOF
               --name ${lib.escapeShellArg cfg.name} \
               --labels ${lib.escapeShellArg labelsCsv} \
               --config ${configFile}
+
+          printf '%s\n' "${"$"}expected_fingerprint" > ${registrationFingerprintFile}
+          chown ${cfg.user}:${cfg.group} ${registrationFingerprintFile}
+          chmod 0640 ${registrationFingerprintFile}
         fi
       '';
     };
