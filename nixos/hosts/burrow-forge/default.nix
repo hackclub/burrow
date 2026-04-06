@@ -33,7 +33,6 @@ in
     self.nixosModules.burrow-forgejo-nsc
     self.nixosModules.burrow-authentik
     self.nixosModules.burrow-headscale
-    self.nixosModules.burrow-namespace-portal
   ];
 
   system.stateVersion = "24.11";
@@ -88,10 +87,28 @@ in
     group = "root";
     mode = "0400";
   };
+  age.secrets.burrowForgejoNscToken = {
+    file = ../../../secrets/infra/forgejo-nsc-token.age;
+    owner = "forgejo-nsc";
+    group = "forgejo-nsc";
+    mode = "0400";
+  };
+  age.secrets.burrowForgejoNscDispatcherConfig = {
+    file = ../../../secrets/infra/forgejo-nsc-dispatcher-config.age;
+    owner = "forgejo-nsc";
+    group = "forgejo-nsc";
+    mode = "0400";
+  };
+  age.secrets.burrowForgejoNscAutoscalerConfig = {
+    file = ../../../secrets/infra/forgejo-nsc-autoscaler-config.age;
+    owner = "forgejo-nsc";
+    group = "forgejo-nsc";
+    mode = "0400";
+  };
 
   networking.extraHosts = ''
-    127.0.0.1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net nsc-autoscaler.burrow.net nsc.burrow.net
-    ::1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net nsc-autoscaler.burrow.net nsc.burrow.net
+    127.0.0.1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net nsc-autoscaler.burrow.net
+    ::1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net nsc-autoscaler.burrow.net
   '';
 
   services.burrow.forge = {
@@ -113,13 +130,13 @@ in
 
   services.forgejo-nsc = {
     enable = true;
-    nscTokenFile = "/var/lib/burrow/intake/forgejo_nsc_token.txt";
+    nscTokenFile = config.age.secrets.burrowForgejoNscToken.path;
     dispatcher = {
-      configFile = "/var/lib/burrow/intake/forgejo_nsc_dispatcher.yaml";
+      configFile = config.age.secrets.burrowForgejoNscDispatcherConfig.path;
     };
     autoscaler = {
       enable = true;
-      configFile = "/var/lib/burrow/intake/forgejo_nsc_autoscaler.yaml";
+      configFile = config.age.secrets.burrowForgejoNscAutoscalerConfig.path;
     };
   };
 
@@ -140,12 +157,5 @@ in
   services.burrow.headscale = {
     enable = true;
     oidcClientSecretFile = config.age.secrets.burrowHeadscaleOidcClientSecret.path;
-  };
-
-  services.burrow.namespacePortal = {
-    enable = true;
-    domain = "nsc.burrow.net";
-    baseUrl = "https://nsc.burrow.net";
-    adminGroup = contributors.groups.admins;
   };
 }

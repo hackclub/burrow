@@ -10,7 +10,6 @@ let
   dataVolume = "burrow-authentik-data:/data";
   directorySyncScript = ../../Scripts/authentik-sync-burrow-directory.sh;
   forgejoOidcSyncScript = ../../Scripts/authentik-sync-forgejo-oidc.sh;
-  namespacePortalOidcSyncScript = ../../Scripts/authentik-sync-namespace-portal-oidc.sh;
   tailscaleOidcSyncScript = ../../Scripts/authentik-sync-tailscale-oidc.sh;
   googleSourceSyncScript = ../../Scripts/authentik-sync-google-source.sh;
   tailnetAuthFlowSyncScript = ../../Scripts/authentik-sync-tailnet-auth-flow.sh;
@@ -137,30 +136,6 @@ in
       type = lib.types.str;
       default = "tailscale";
       description = "Authentik application slug for Tailscale custom OIDC sign-in.";
-    };
-
-    namespacePortalDomain = lib.mkOption {
-      type = lib.types.str;
-      default = "nsc.burrow.net";
-      description = "Public domain for the Burrow Namespace portal.";
-    };
-
-    namespacePortalProviderSlug = lib.mkOption {
-      type = lib.types.str;
-      default = "namespace";
-      description = "Authentik application slug for the Namespace portal.";
-    };
-
-    namespacePortalClientId = lib.mkOption {
-      type = lib.types.str;
-      default = "nsc.burrow.net";
-      description = "Client ID Authentik should present to the Namespace portal.";
-    };
-
-    namespacePortalClientSecretFile = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-      description = "Optional host-local file containing the Authentik Namespace portal OIDC client secret.";
     };
 
     tailscaleClientId = lib.mkOption {
@@ -730,56 +705,6 @@ EOF
         export AUTHENTIK_TAILSCALE_REDIRECT_URIS_JSON='["https://login.tailscale.com/a/oauth_response"]'
 
         ${pkgs.bash}/bin/bash ${tailscaleOidcSyncScript}
-      '';
-    };
-
-    systemd.services.burrow-authentik-namespace-portal-oidc = {
-      description = "Reconcile the Burrow Authentik Namespace portal OIDC application";
-      after = [
-        "burrow-authentik-ready.service"
-        "network-online.target"
-      ];
-      wants = [
-        "burrow-authentik-ready.service"
-        "network-online.target"
-      ];
-      wantedBy = [ "multi-user.target" ];
-      restartTriggers =
-        [
-          namespacePortalOidcSyncScript
-          cfg.envFile
-        ]
-        ++ lib.optionals (cfg.namespacePortalClientSecretFile != null) [ cfg.namespacePortalClientSecretFile ];
-      path = [
-        pkgs.bash
-        pkgs.coreutils
-        pkgs.curl
-        pkgs.jq
-      ];
-      serviceConfig = {
-        Type = "oneshot";
-        User = "root";
-        Group = "root";
-      };
-      script = ''
-        set -euo pipefail
-        set -a
-        source ${lib.escapeShellArg cfg.envFile}
-        set +a
-
-        export AUTHENTIK_URL=https://${cfg.domain}
-        export AUTHENTIK_NAMESPACE_PORTAL_APPLICATION_SLUG=${lib.escapeShellArg cfg.namespacePortalProviderSlug}
-        export AUTHENTIK_NAMESPACE_PORTAL_APPLICATION_NAME="Namespace Portal"
-        export AUTHENTIK_NAMESPACE_PORTAL_PROVIDER_NAME="Namespace Portal"
-        export AUTHENTIK_NAMESPACE_PORTAL_TEMPLATE_SLUG=${lib.escapeShellArg cfg.headscaleProviderSlug}
-        export AUTHENTIK_NAMESPACE_PORTAL_CLIENT_ID=${lib.escapeShellArg cfg.namespacePortalClientId}
-        ${lib.optionalString (cfg.namespacePortalClientSecretFile != null) ''
-          export AUTHENTIK_NAMESPACE_PORTAL_CLIENT_SECRET="$(tr -d '\r\n' < ${lib.escapeShellArg cfg.namespacePortalClientSecretFile})"
-        ''}
-        export AUTHENTIK_NAMESPACE_PORTAL_LAUNCH_URL=https://${cfg.namespacePortalDomain}/
-        export AUTHENTIK_NAMESPACE_PORTAL_REDIRECT_URIS_JSON='["https://${cfg.namespacePortalDomain}/oauth/callback"]'
-
-        ${pkgs.bash}/bin/bash ${namespacePortalOidcSyncScript}
       '';
     };
 

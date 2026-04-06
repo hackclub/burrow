@@ -5,8 +5,6 @@ use clap::{Args, Parser, Subcommand};
 mod control;
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 mod daemon;
-#[cfg(target_os = "linux")]
-mod namespace_portal;
 pub(crate) mod tracing;
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 mod wireguard;
@@ -62,12 +60,6 @@ enum Commands {
     ReloadConfig(ReloadConfigArgs),
     /// Authentication server
     AuthServer,
-    #[cfg(target_os = "linux")]
-    /// Admin portal for forge-owned Namespace authentication and NSC token minting
-    NamespacePortal,
-    #[cfg(target_os = "linux")]
-    /// Refresh the forge-owned Namespace dev token once
-    NamespaceRefreshToken,
     /// Server Status
     ServerStatus,
     /// Tunnel Config
@@ -767,10 +759,6 @@ async fn main() -> Result<()> {
         Commands::ServerConfig => try_serverconfig().await?,
         Commands::ReloadConfig(args) => try_reloadconfig(args.interface_id.clone()).await?,
         Commands::AuthServer => crate::auth::server::serve().await?,
-        #[cfg(target_os = "linux")]
-        Commands::NamespacePortal => crate::namespace_portal::serve().await?,
-        #[cfg(target_os = "linux")]
-        Commands::NamespaceRefreshToken => crate::namespace_portal::refresh_token_once().await?,
         Commands::ServerStatus => try_serverstatus().await?,
         Commands::TunnelConfig => try_tun_config().await?,
         Commands::NetworkAdd(args) => {

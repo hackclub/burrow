@@ -214,8 +214,6 @@
       nixosModules.burrow-forgejo-nsc = nsc-autoscaler.nixosModules.default;
       nixosModules.burrow-authentik = import ./nixos/modules/burrow-authentik.nix;
       nixosModules.burrow-headscale = import ./nixos/modules/burrow-headscale.nix;
-      nixosModules.burrow-namespace-portal = import ./nixos/modules/burrow-namespace-portal.nix;
-
       nixosConfigurations.burrow-forge = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = {
