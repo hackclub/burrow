@@ -19,10 +19,21 @@ jobs:
     runs-on: [self-hosted, linux, x86_64, burrow-forge]
     steps:
       - name: Checkout
-        uses: https://code.forgejo.org/actions/checkout@v4
-        with:
-          token: ${{ github.token }}
-          fetch-depth: 0
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+          if [ ! -d .git ]; then
+            git init .
+          fi
+          if git remote get-url origin >/dev/null 2>&1; then
+            git remote set-url origin "${repo_url}"
+          else
+            git remote add origin "${repo_url}"
+          fi
+          git fetch --force --tags origin "${GITHUB_SHA}"
+          git checkout --force --detach FETCH_HEAD
+          git clean -ffdqx
 
       - name: Test
         shell: bash
