@@ -1,4 +1,4 @@
-{ config, lib, self, ... }:
+{ config, lib, pkgs, self, ... }:
 
 let
   contributors = import ../../../contributors.nix;
@@ -42,6 +42,10 @@ in
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
+  ];
+
+  environment.systemPackages = lib.optionals config.services.forgejo-nsc.enable [
+    self.packages.${pkgs.stdenv.hostPlatform.system}.nsc
   ];
 
   age.identityPaths = [ "/var/lib/agenix/agenix.key" ];
