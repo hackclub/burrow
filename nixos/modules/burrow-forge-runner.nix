@@ -208,6 +208,7 @@ EOF
         User = cfg.user;
         Group = cfg.group;
         WorkingDirectory = stateDir;
+        Environment = [ "BURROW_RUNNER_REGISTRATION_FINGERPRINT=${registrationFingerprint}" ];
         Restart = "on-failure";
         RestartSec = 2;
         ExecStart = pkgs.writeShellScript "burrow-forgejo-runner" ''
