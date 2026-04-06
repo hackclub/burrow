@@ -94,6 +94,7 @@
             pkgs.stdenvNoCC.mkDerivation {
               pname = "nsc";
               inherit version src;
+              meta.mainProgram = "nsc";
               dontConfigure = true;
               dontBuild = true;
               unpackPhase = ''
@@ -144,6 +145,35 @@
           subPackages = [ "./cmd/forgejo-nsc-autoscaler" ];
           vendorHash = "sha256-Kpr+5Q7Dy4JiLuJVZbFeJAzLR7PLPYxhtJqfxMEytcs=";
         };
+        burrowSrc = lib.cleanSourceWith {
+          src = ./.;
+          filter = path: type:
+            let
+              p = toString path;
+              name = builtins.baseNameOf path;
+              hasDir = dir: lib.hasInfix "/${dir}/" p || lib.hasSuffix "/${dir}" p;
+            in
+            !(hasDir ".git" || hasDir "target" || hasDir "node_modules" || name == "result");
+        };
+        burrowPkg = pkgs.rustPlatform.buildRustPackage {
+          pname = "burrow";
+          version = "0.1.0";
+          src = burrowSrc;
+          cargoLock = {
+            lockFile = ./Cargo.lock;
+            outputHashes = {
+              "tracing-oslog-0.1.2" = "sha256-DjJDiPCTn43zJmmOfuRnyti8iQf9qoXICMKIx4bAG3I=";
+            };
+          };
+          cargoBuildFlags = [
+            "-p"
+            "burrow"
+            "--bin"
+            "burrow"
+          ];
+          nativeBuildInputs = [ pkgs.protobuf ];
+          meta.mainProgram = "burrow";
+        };
       in
       {
         devShells.default = pkgs.mkShell {
@@ -171,6 +201,7 @@
         packages =
           {
             agenix = agenix.packages.${system}.agenix;
+            burrow = burrowPkg;
             hcloud-upload-image = hcloudUploadImagePkg;
             forgejo-nsc-dispatcher = forgejoNscDispatcher;
             forgejo-nsc-autoscaler = forgejoNscAutoscaler;
@@ -183,6 +214,7 @@
       nixosModules.burrow-forgejo-nsc = nsc-autoscaler.nixosModules.default;
       nixosModules.burrow-authentik = import ./nixos/modules/burrow-authentik.nix;
       nixosModules.burrow-headscale = import ./nixos/modules/burrow-headscale.nix;
+      nixosModules.burrow-namespace-portal = import ./nixos/modules/burrow-namespace-portal.nix;
 
       nixosConfigurations.burrow-forge = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";

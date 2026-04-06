@@ -2,4 +2,4 @@
 source: burrow/src/daemon/rpc/response.rs
 expression: "serde_json::to_string(&DaemonResponse::new(Ok::<DaemonResponseData,\n                        String>(DaemonResponseData::ServerConfig(ServerConfig::default()))))?"
 ---
-{"result":{"Ok":{"type":"ServerConfig","address":["10.13.13.2"],"name":null,"mtu":null}},"id":0}
+{"result":{"Ok":{"type":"ServerConfig","address":["10.13.13.2"],"routes":[],"dns_servers":[],"search_domains":[],"include_default_route":false,"name":null,"mtu":null}},"id":0}

@@ -84,6 +84,7 @@ base_services=(
 nsc_services=(
   forgejo-nsc-dispatcher.service
   forgejo-nsc-autoscaler.service
+  burrow-namespace-portal.service
 )
 
 tailnet_services=(
@@ -172,6 +173,9 @@ if command -v curl >/dev/null 2>&1; then
   if [[ "${EXPECT_TAILNET}" == "1" ]]; then
     curl -fsS -o /dev/null -H 'Host: auth.burrow.net' -w 'authentik_ready %{http_code}\n' http://127.0.0.1/-/health/ready/
     curl -sS -o /dev/null -H 'Host: ts.burrow.net' -w 'headscale_root %{http_code}\n' http://127.0.0.1/ || true
+  fi
+  if [[ "${EXPECT_NSC}" == "1" ]]; then
+    curl -fsS -o /dev/null -H 'Host: nsc.burrow.net' -w 'namespace_portal %{http_code}\n' http://127.0.0.1/
   fi
 fi
 EOF

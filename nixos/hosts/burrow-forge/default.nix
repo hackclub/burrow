@@ -33,6 +33,7 @@ in
     self.nixosModules.burrow-forgejo-nsc
     self.nixosModules.burrow-authentik
     self.nixosModules.burrow-headscale
+    self.nixosModules.burrow-namespace-portal
   ];
 
   system.stateVersion = "24.11";
@@ -89,8 +90,8 @@ in
   };
 
   networking.extraHosts = ''
-    127.0.0.1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net nsc-autoscaler.burrow.net
-    ::1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net nsc-autoscaler.burrow.net
+    127.0.0.1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net nsc-autoscaler.burrow.net nsc.burrow.net
+    ::1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net nsc-autoscaler.burrow.net nsc.burrow.net
   '';
 
   services.burrow.forge = {
@@ -139,5 +140,12 @@ in
   services.burrow.headscale = {
     enable = true;
     oidcClientSecretFile = config.age.secrets.burrowHeadscaleOidcClientSecret.path;
+  };
+
+  services.burrow.namespacePortal = {
+    enable = true;
+    domain = "nsc.burrow.net";
+    baseUrl = "https://nsc.burrow.net";
+    adminGroup = contributors.groups.admins;
   };
 }

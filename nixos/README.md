@@ -12,6 +12,7 @@ Mail hosting is intentionally not part of this NixOS host in the current plan. B
 - upstream `compatible.systems/conrad/nsc-autoscaler`: Namespace-backed ephemeral Forgejo runner module consumed via the Burrow flake input
 - `modules/burrow-authentik.nix`: minimal Authentik IdP for Burrow control planes
 - `modules/burrow-headscale.nix`: Headscale control plane rooted in Authentik OIDC
+- `modules/burrow-namespace-portal.nix`: small admin portal for forge-owned Namespace authentication and NSC token refresh
 - `../secrets.nix`: agenix recipient map for tracked Burrow forge secrets
 - `hetzner-cloud-config.yaml`: desired Hetzner host shape
 - `keys/contact_at_burrow_net.pub`: initial operator SSH public key
@@ -24,6 +25,7 @@ Mail hosting is intentionally not part of this NixOS host in the current plan. B
 - `../Scripts/forge-deploy.sh`: remote `nixos-rebuild` entrypoint for the forge host
 - `../Scripts/provision-forgejo-nsc.sh`: render Burrow Namespace dispatcher/autoscaler runtime inputs and ensure the default Forgejo scope exists
 - `../Scripts/sync-forgejo-nsc-config.sh`: copy intake-backed dispatcher/autoscaler inputs to the host
+- `../Scripts/authentik-sync-namespace-portal-oidc.sh`: reconcile the Authentik OIDC app used by `nsc.burrow.net`
 
 ## Intended Flow
 
@@ -33,10 +35,11 @@ Mail hosting is intentionally not part of this NixOS host in the current plan. B
 4. Let `burrow-forgejo-bootstrap.service` create or rotate the initial Forgejo admin account.
 5. Let `burrow-forgejo-runner-bootstrap.service` register the self-hosted Forgejo runner and seed Git identity as `agent <agent@burrow.net>`.
 6. Run `Scripts/provision-forgejo-nsc.sh` locally, then `Scripts/sync-forgejo-nsc-config.sh` to place the raw Namespace dispatcher/autoscaler runtime inputs under `/var/lib/burrow/intake/` for the upstream `services.forgejo-nsc` module.
-7. Ensure `/var/lib/agenix/agenix.key` exists on the host, encrypt `secrets/infra/authentik.env.age`, `secrets/infra/authentik-google-client-id.age`, `secrets/infra/authentik-google-client-secret.age`, `secrets/infra/forgejo-oidc-client-secret.age`, and `secrets/infra/headscale-oidc-client-secret.age`, and let agenix materialize them under `/run/agenix/`.
-8. Use `Scripts/cloudflare-upsert-a-record.sh` to point `git.burrow.net`, `burrow.net`, `auth.burrow.net`, `ts.burrow.net`, and `nsc-autoscaler.burrow.net` at the host with Cloudflare proxying disabled for ACME.
-9. Use `Scripts/forge-deploy.sh --allow-dirty` for subsequent remote `nixos-rebuild` runs from the live workspace.
-10. Configure Forward Email custom S3 backups for `burrow.net` and `burrow.rs` out-of-band with `Tools/forwardemail-custom-s3.sh`.
+7. Visit `https://nsc.burrow.net/` as a Burrow admin to link the forge-owned Namespace session and rotate `/var/lib/burrow/intake/forgejo_nsc_token.txt` without relying on a personal local `nsc` login.
+8. Ensure `/var/lib/agenix/agenix.key` exists on the host, encrypt `secrets/infra/authentik.env.age`, `secrets/infra/authentik-google-client-id.age`, `secrets/infra/authentik-google-client-secret.age`, `secrets/infra/forgejo-oidc-client-secret.age`, and `secrets/infra/headscale-oidc-client-secret.age`, and let agenix materialize them under `/run/agenix/`.
+9. Use `Scripts/cloudflare-upsert-a-record.sh` to point `git.burrow.net`, `burrow.net`, `auth.burrow.net`, `ts.burrow.net`, `nsc.burrow.net`, and `nsc-autoscaler.burrow.net` at the host with Cloudflare proxying disabled for ACME.
+10. Use `Scripts/forge-deploy.sh --allow-dirty` for subsequent remote `nixos-rebuild` runs from the live workspace.
+11. Configure Forward Email custom S3 backups for `burrow.net` and `burrow.rs` out-of-band with `Tools/forwardemail-custom-s3.sh`.
 
 ## Current Constraints
 

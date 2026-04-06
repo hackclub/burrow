@@ -5,6 +5,8 @@ use clap::{Args, Parser, Subcommand};
 mod control;
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 mod daemon;
+#[cfg(target_os = "linux")]
+mod namespace_portal;
 pub(crate) mod tracing;
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
 mod wireguard;
@@ -60,6 +62,12 @@ enum Commands {
     ReloadConfig(ReloadConfigArgs),
     /// Authentication server
     AuthServer,
+    #[cfg(target_os = "linux")]
+    /// Admin portal for forge-owned Namespace authentication and NSC token minting
+    NamespacePortal,
+    #[cfg(target_os = "linux")]
+    /// Refresh the forge-owned Namespace dev token once
+    NamespaceRefreshToken,
     /// Server Status
     ServerStatus,
     /// Tunnel Config
@@ -283,9 +291,7 @@ async fn try_tailnet_discover(email: &str) -> Result<()> {
     let mut client = BurrowClient::from_uds().await?;
     let response = client
         .tailnet_client
-        .discover(crate::daemon::rpc::grpc_defs::TailnetDiscoverRequest {
-            email: email.to_owned(),
-        })
+        .discover(crate::daemon::rpc::grpc_defs::TailnetDiscoverRequest { email: email.to_owned() })
         .await?
         .into_inner();
     println!("Tailnet Discover Response: {:?}", response);
@@ -370,13 +376,9 @@ async fn try_tailnet_ping(remote: &str, payload: &str, timeout_ms: u64) -> Resul
                 "tailnet ping received {} bytes from daemon packet stream",
                 packet.payload.len()
             );
-            if let Some(reply) = parse_icmp_echo_reply(
-                &packet.payload,
-                local_ip,
-                remote_ip,
-                identifier,
-                sequence,
-            )? {
+            if let Some(reply) =
+                parse_icmp_echo_reply(&packet.payload, local_ip, remote_ip, identifier, sequence)?
+            {
                 break Ok::<_, anyhow::Error>(reply);
             }
         }
@@ -464,8 +466,7 @@ async fn try_tailnet_udp_echo(remote: &str, message: &str, timeout_ms: u64) -> R
 
     let egress_task = tokio::spawn(async move {
         while let Some(packet) = stack_stream.next().await {
-            let payload =
-                packet.context("failed to read outbound packet from userspace stack")?;
+            let payload = packet.context("failed to read outbound packet from userspace stack")?;
             log::debug!(
                 "tailnet udp echo sending {} bytes into daemon packet stream",
                 payload.len()
@@ -484,9 +485,7 @@ async fn try_tailnet_udp_echo(remote: &str, message: &str, timeout_ms: u64) -> R
         .send((message.as_bytes().to_vec(), local_addr, remote_addr))
         .await
         .context("failed to send UDP echo probe into userspace stack")?;
-    log::debug!(
-        "tailnet udp echo probe queued from {local_addr} to {remote_addr}"
-    );
+    log::debug!("tailnet udp echo probe queued from {local_addr} to {remote_addr}");
 
     let response = timeout(Duration::from_millis(timeout_ms), udp_reader.next())
         .await
@@ -516,7 +515,10 @@ async fn try_tailnet_udp_echo(remote: &str, message: &str, timeout_ms: u64) -> R
 }
 
 #[cfg(any(target_os = "linux", target_vendor = "apple"))]
-fn select_tailnet_local_ip(addresses: &[String], remote_ip: std::net::IpAddr) -> Result<std::net::IpAddr> {
+fn select_tailnet_local_ip(
+    addresses: &[String],
+    remote_ip: std::net::IpAddr,
+) -> Result<std::net::IpAddr> {
     use anyhow::Context;
 
     let family_is_v4 = remote_ip.is_ipv4();
@@ -765,6 +767,10 @@ async fn main() -> Result<()> {
         Commands::ServerConfig => try_serverconfig().await?,
         Commands::ReloadConfig(args) => try_reloadconfig(args.interface_id.clone()).await?,
         Commands::AuthServer => crate::auth::server::serve().await?,
+        #[cfg(target_os = "linux")]
+        Commands::NamespacePortal => crate::namespace_portal::serve().await?,
+        #[cfg(target_os = "linux")]
+        Commands::NamespaceRefreshToken => crate::namespace_portal::refresh_token_once().await?,
         Commands::ServerStatus => try_serverstatus().await?,
         Commands::TunnelConfig => try_tun_config().await?,
         Commands::NetworkAdd(args) => {
