@@ -39,4 +39,4 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          nix develop .#ci -c bash -lc 'cd site && npm install && npm run build'
+          nix develop .#ci -c bash -lc 'cd site && npm ci --no-audit --no-fund && npm run build'

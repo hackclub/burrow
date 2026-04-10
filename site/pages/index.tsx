@@ -1,13 +1,36 @@
-import { faGithub } from "@fortawesome/free-brands-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Head from "next/head";
-import {
-  faChevronDown,
-  faChevronUp,
-  faUpRightFromSquare,
-} from "@fortawesome/free-solid-svg-icons";
 import { Menu, Transition } from "@headlessui/react";
 import { useState, useRef, useEffect } from "react";
+
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <span aria-hidden="true" className="pl-1.5 text-lg">
+      {open ? "▴" : "▾"}
+    </span>
+  );
+}
+
+function ExternalLinkIcon() {
+  return (
+    <span aria-hidden="true" className="pl-3 text-lg">
+      ↗
+    </span>
+  );
+}
+
+function GithubIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 16 16"
+      className="mr-3 inline-block h-4 w-4"
+      fill="currentColor"
+    >
+      <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82A7.6 7.6 0 0 1 8 4.84c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8" />
+    </svg>
+  );
+}
+
 export default function Page() {
   const [chevron, setChevron] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -71,17 +94,7 @@ export default function Page() {
                     className="w-50 h-12 rounded-2xl bg-hackClubRed px-3 font-SpaceMono hover:scale-105 md:h-12 md:w-auto md:rounded-3xl md:text-xl 2xl:h-16 2xl:text-2xl "
                   >
                     Install for Linux
-                    {chevron ? (
-                      <FontAwesomeIcon
-                        icon={faChevronUp}
-                        className="pl-1.5 text-lg"
-                      />
-                    ) : (
-                      <FontAwesomeIcon
-                        icon={faChevronDown}
-                        className="pl-1.5 text-lg"
-                      />
-                    )}
+                    <ChevronIcon open={chevron} />
                   </Menu.Button>
                 </div>
                 <Transition
@@ -116,17 +129,14 @@ export default function Page() {
               <a>
                 <button className="h-12 rounded-2xl border-2 border-hackClubRed bg-transparent px-3 font-SpaceMono text-lg text-hackClubRed hover:scale-110 md:h-12 md:rounded-3xl md:text-xl 2xl:h-16 2xl:text-2xl">
                   Docs
-                  <FontAwesomeIcon
-                    icon={faUpRightFromSquare}
-                    className="pl-3"
-                  />
+                  <ExternalLinkIcon />
                 </button>
               </a>
             </div>
             <div className="mt-4 flex w-full justify-center hover:scale-110 md:mt-0 md:w-auto md:pl-4">
               <a href="https://github.com/hackclub/burrow" target="_blank">
                 <button className="h-12 w-40 rounded-xl border-2 border-hackClubRed bg-transparent px-3 font-SpaceMono text-hackClubRed md:h-12 md:w-auto md:rounded-3xl md:text-xl 2xl:h-16 2xl:text-2xl">
-                  <FontAwesomeIcon icon={faGithub} className="pr-3" />
+                  <GithubIcon />
                   Contribute
                 </button>
               </a>

@@ -1,19 +1,4 @@
-import { Space_Mono, Poppins } from "next/font/google";
 import localFont from "next/font/local";
-
-const space_mono = Space_Mono({
-  weight: ["400", "700"],
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-space-mono",
-});
-
-const poppins = Poppins({
-  weight: ["400", "500", "600", "700", "800", "900"],
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-poppins",
-});
 
 const phantomSans = localFont({
   src: [
@@ -36,10 +21,18 @@ const phantomSans = localFont({
   variable: "--font-phantom-sans",
 });
 
+const fallbackFontVariables = {
+  "--font-space-mono":
+    '"SFMono-Regular", "SF Mono", ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", monospace',
+  "--font-poppins":
+    'var(--font-phantom-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+} as React.CSSProperties;
+
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className={`${space_mono.variable} ${poppins.variable} ${phantomSans.variable}`}
+      className={phantomSans.variable}
+      style={fallbackFontVariables}
     >
       {children}
     </div>
