@@ -33,7 +33,7 @@
     jett = {
       displayName = "Jett";
       canonicalEmail = "jett@burrow.net";
-      isAdmin = false;
+      isAdmin = true;
       forgeAuthorized = false;
       bootstrapAuthentik = true;
       roles = [
