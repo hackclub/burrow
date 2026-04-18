@@ -8,7 +8,6 @@
     contact = {
       displayName = "Burrow";
       canonicalEmail = "contact@burrow.net";
-      sourceEmail = "net.burrow@gmail.com";
       isAdmin = true;
       forgeAuthorized = true;
       bootstrapAuthentik = true;
@@ -22,13 +21,35 @@
     conrad = {
       displayName = "Conrad Kramer";
       canonicalEmail = "conrad@burrow.net";
-      sourceEmail = "ckrames1234@gmail.com";
       isAdmin = true;
       forgeAuthorized = false;
       bootstrapAuthentik = true;
       roles = [
         "operator"
         "founder"
+      ];
+    };
+
+    jett = {
+      displayName = "Jett";
+      canonicalEmail = "jett@burrow.net";
+      isAdmin = false;
+      forgeAuthorized = false;
+      bootstrapAuthentik = true;
+      roles = [
+        "member"
+      ];
+    };
+
+    davnotdev = {
+      displayName = "David";
+      canonicalEmail = "davnotdev@burrow.net";
+      isAdmin = true;
+      forgeAuthorized = false;
+      bootstrapAuthentik = true;
+      roles = [
+        "member"
+        "operator"
       ];
     };
 

@@ -180,6 +180,12 @@ in
       description = "Host-local file containing the Google OAuth client secret for the Authentik source.";
     };
 
+    googleAccountMapFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Optional host-local JSON file mapping external Google accounts onto Burrow Authentik users.";
+    };
+
     googleSourceSlug = lib.mkOption {
       type = lib.types.str;
       default = "google";
@@ -477,7 +483,7 @@ EOF
         cfg.envFile
         cfg.googleClientIDFile
         cfg.googleClientSecretFile
-      ];
+      ] ++ lib.optional (cfg.googleAccountMapFile != null) cfg.googleAccountMapFile;
       path = [
         pkgs.bash
         pkgs.coreutils
@@ -501,12 +507,16 @@ EOF
         export AUTHENTIK_GOOGLE_USER_MATCHING_MODE=email_link
         export AUTHENTIK_GOOGLE_CLIENT_ID="$(tr -d '\r\n' < ${lib.escapeShellArg cfg.googleClientIDFile})"
         export AUTHENTIK_GOOGLE_CLIENT_SECRET="$(tr -d '\r\n' < ${lib.escapeShellArg cfg.googleClientSecretFile})"
-        export AUTHENTIK_GOOGLE_ACCOUNT_MAP_JSON='${builtins.toJSON (map (user: {
-          source_email = user.sourceEmail;
-          username = user.username;
-          email = user.email;
-          name = user.name;
-        }) (lib.filter (user: user.sourceEmail != null) cfg.bootstrapUsers))}'
+        if [ -n ${lib.escapeShellArg (cfg.googleAccountMapFile or "")} ]; then
+          export AUTHENTIK_GOOGLE_ACCOUNT_MAP_JSON="$(tr -d '\n' < ${lib.escapeShellArg (cfg.googleAccountMapFile or "/dev/null")})"
+        else
+          export AUTHENTIK_GOOGLE_ACCOUNT_MAP_JSON='${builtins.toJSON (map (user: {
+            source_email = user.sourceEmail;
+            username = user.username;
+            email = user.email;
+            name = user.name;
+          }) (lib.filter (user: user.sourceEmail != null) cfg.bootstrapUsers))}'
+        fi
 
         ${pkgs.bash}/bin/bash ${googleSourceSyncScript}
       '';

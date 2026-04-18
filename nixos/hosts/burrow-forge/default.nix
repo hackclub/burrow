@@ -13,7 +13,6 @@ let
         inherit username;
         name = identity.displayName;
         email = identity.canonicalEmail;
-        sourceEmail = identity.sourceEmail or null;
         isAdmin = identity.isAdmin or false;
         passwordFile = authentikPasswordSecretPath identity;
       }
@@ -81,6 +80,12 @@ in
   };
   age.secrets.burrowAuthentikGoogleClientSecret = {
     file = ../../../secrets/infra/authentik-google-client-secret.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+  age.secrets.burrowAuthentikGoogleAccountMap = {
+    file = ../../../secrets/infra/authentik-google-account-map.json.age;
     owner = "root";
     group = "root";
     mode = "0400";
@@ -158,6 +163,7 @@ in
     tailscaleClientSecretFile = config.age.secrets.burrowTailscaleOidcClientSecret.path;
     googleClientIDFile = config.age.secrets.burrowAuthentikGoogleClientId.path;
     googleClientSecretFile = config.age.secrets.burrowAuthentikGoogleClientSecret.path;
+    googleAccountMapFile = config.age.secrets.burrowAuthentikGoogleAccountMap.path;
     googleLoginMode = "redirect";
     userGroupName = contributors.groups.users;
     adminGroupName = contributors.groups.admins;

@@ -14,6 +14,7 @@ in
   "secrets/infra/authentik.env.age".publicKeys = burrowForgeRecipients;
   "secrets/infra/authentik-google-client-id.age".publicKeys = burrowForgeRecipients;
   "secrets/infra/authentik-google-client-secret.age".publicKeys = burrowForgeRecipients;
+  "secrets/infra/authentik-google-account-map.json.age".publicKeys = burrowForgeRecipients;
   "secrets/infra/authentik-ui-test-password.age".publicKeys = uiTestRecipients;
   "secrets/infra/forgejo-oidc-client-secret.age".publicKeys = burrowForgeRecipients;
   "secrets/infra/forgejo-nsc-autoscaler-config.age".publicKeys = burrowForgeRecipients;
