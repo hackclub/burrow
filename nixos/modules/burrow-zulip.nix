@@ -455,6 +455,16 @@ EOF
         }
 
         patch_uwsgi_scheme_handling() {
+          local attempts=0
+          while ! podman exec burrow-zulip_zulip_1 supervisorctl status >/dev/null 2>&1; do
+            attempts=$((attempts + 1))
+            if [ "$attempts" -ge 90 ]; then
+              echo "error: Zulip supervisor did not become ready for nginx patching" >&2
+              exit 1
+            fi
+            sleep 2
+          done
+
           podman exec burrow-zulip_zulip_1 bash -lc "cat > /etc/nginx/uwsgi_params <<'EOF'
 uwsgi_param QUERY_STRING    \$query_string;
 uwsgi_param REQUEST_METHOD  \$request_method;
@@ -533,8 +543,8 @@ supervisorctl restart nginx zulip-django >/dev/null"
 
         ensure_zulip_data_layout
         compose up -d zulip
-        patch_uwsgi_scheme_handling
         bootstrap_realm_if_needed
+        patch_uwsgi_scheme_handling
       '';
     };
   };
