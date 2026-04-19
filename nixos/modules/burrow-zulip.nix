@@ -340,13 +340,18 @@ services:
       SETTING_ZULIP_ADMINISTRATOR: "${cfg.administratorEmail}"
       TRUST_GATEWAY_IP: "True"
       SETTING_SEND_LOGIN_EMAILS: "False"
-      ZULIP_AUTH_BACKENDS: "EmailAuthBackend,SAMLAuthBackend"
+      ZULIP_AUTH_BACKENDS: "SAMLAuthBackend"
       CONFIG_application_server__http_only: true
       CONFIG_application_server__nginx_listen_port: ${toString cfg.port}
       CONFIG_application_server__queue_workers_multiprocess: false
       ZULIP_CUSTOM_SETTINGS: |
         EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
         EMAIL_FILE_PATH = "/data/logs/emails"
+        EXTERNAL_URI_SCHEME = "https://"
+        SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+        USE_X_FORWARDED_HOST = True
+        SESSION_COOKIE_SECURE = True
+        CSRF_COOKIE_SECURE = True
         SOCIAL_AUTH_SAML_ORG_INFO = {
             "en-US": {
                 "displayname": "Burrow Zulip",
