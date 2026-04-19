@@ -385,7 +385,7 @@ EOF
         bootstrap_realm_if_needed() {
           local realm_exists
           realm_exists="$(
-            compose run --rm --entrypoint bash zulip -lc \
+            compose run --rm -T --entrypoint bash zulip -lc \
               "su zulip -c '/home/zulip/deployments/current/manage.py list_realms'" \
               | awk '$NF == "https://${cfg.domain}" { print "yes" }'
           )"
@@ -398,7 +398,7 @@ EOF
           export ZULIP_ADMIN_EMAIL=${lib.escapeShellArg cfg.administratorEmail}
           export ZULIP_OWNER_NAME=${lib.escapeShellArg cfg.realmOwnerName}
 
-          compose run --rm --entrypoint bash zulip -lc '
+          compose run --rm -T --entrypoint bash zulip -lc '
             su zulip -c "/home/zulip/deployments/current/manage.py create_realm --string-id= --password-file /data/secrets/bootstrap-owner-password --automated \"$ZULIP_REALM_NAME\" \"$ZULIP_ADMIN_EMAIL\" \"$ZULIP_OWNER_NAME\""
           '
         }
@@ -407,7 +407,7 @@ EOF
           compose pull
           compose up -d database memcached rabbitmq redis
           wait_for_rabbitmq
-          compose run --rm zulip app:init
+          compose run --rm -T zulip app:init
           touch .initialized
         fi
 
