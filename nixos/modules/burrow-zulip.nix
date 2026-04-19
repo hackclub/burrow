@@ -384,9 +384,19 @@ EOF
 
         bootstrap_realm_if_needed() {
           local realm_exists
+          local attempts=0
+          while ! podman exec burrow-zulip_zulip_1 test -r /etc/zulip/zulip-secrets.conf >/dev/null 2>&1; do
+            attempts=$((attempts + 1))
+            if [ "$attempts" -ge 90 ]; then
+              echo "error: Zulip did not finish generating production secrets" >&2
+              exit 1
+            fi
+            sleep 2
+          done
+
           realm_exists="$(
-            compose run --rm -T -u zulip --entrypoint bash zulip -lc \
-              "/home/zulip/deployments/current/manage.py list_realms" \
+            podman exec burrow-zulip_zulip_1 bash -lc \
+              "su zulip -c '/home/zulip/deployments/current/manage.py list_realms'" \
               | awk '$NF == "https://${cfg.domain}" { print "yes" }'
           )"
 
@@ -398,8 +408,8 @@ EOF
           export ZULIP_ADMIN_EMAIL=${lib.escapeShellArg cfg.administratorEmail}
           export ZULIP_OWNER_NAME=${lib.escapeShellArg cfg.realmOwnerName}
 
-          compose run --rm -T -u zulip --entrypoint bash zulip -lc '
-            /home/zulip/deployments/current/manage.py create_realm --string-id= --password-file /data/secrets/bootstrap-owner-password --automated "$ZULIP_REALM_NAME" "$ZULIP_ADMIN_EMAIL" "$ZULIP_OWNER_NAME"
+          podman exec burrow-zulip_zulip_1 bash -lc '
+            su zulip -c "/home/zulip/deployments/current/manage.py create_realm --string-id= --password-file /data/secrets/bootstrap-owner-password --automated \"$ZULIP_REALM_NAME\" \"$ZULIP_ADMIN_EMAIL\" \"$ZULIP_OWNER_NAME\""
           '
         }
 
@@ -414,8 +424,8 @@ EOF
         compose up -d database memcached rabbitmq redis
         wait_for_rabbitmq
         ensure_zulip_volume_layout
-        bootstrap_realm_if_needed
         compose up -d zulip
+        bootstrap_realm_if_needed
       '';
     };
   };
