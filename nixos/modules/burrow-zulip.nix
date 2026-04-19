@@ -352,6 +352,15 @@ services:
         USE_X_FORWARDED_HOST = True
         SESSION_COOKIE_SECURE = True
         CSRF_COOKIE_SECURE = True
+        SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+        SOCIAL_AUTH_SAML_REDIRECT_IS_HTTPS = True
+        SOCIAL_AUTH_SAML_SP_ENTITY_ID = "https://${cfg.domain}"
+        SOCIAL_AUTH_SAML_SP_EXTRA = {
+            "assertionConsumerService": {
+                "url": "https://${cfg.domain}/complete/saml/",
+                "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+            },
+        }
         SOCIAL_AUTH_SAML_ORG_INFO = {
             "en-US": {
                 "displayname": "Burrow Zulip",
