@@ -41,20 +41,10 @@ let
       rabbitmq = {
         image = "rabbitmq:4.2";
         restart = "unless-stopped";
-        command = [
-          "sh"
-          "-euc"
-          ''
-            export RABBITMQ_DEFAULT_PASS="$(cat "$RABBITMQ_PASSWORD_FILE")"
-            echo "default_user = $RABBITMQ_DEFAULT_USER" >> /etc/rabbitmq/rabbitmq.conf
-            echo "default_pass = $RABBITMQ_DEFAULT_PASS" >> /etc/rabbitmq/rabbitmq.conf
-            exec docker-entrypoint.sh rabbitmq-server
-          ''
-        ];
         secrets = [ "zulip__rabbitmq_password" ];
         environment = {
           RABBITMQ_DEFAULT_USER = "zulip";
-          RABBITMQ_PASSWORD_FILE = "/run/secrets/zulip__rabbitmq_password";
+          RABBITMQ_DEFAULT_PASS_FILE = "/run/secrets/zulip__rabbitmq_password";
         };
         volumes = [ "rabbitmq:/var/lib/rabbitmq:rw" ];
         attach = false;

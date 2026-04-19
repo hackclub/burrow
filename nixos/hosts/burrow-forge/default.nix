@@ -244,8 +244,7 @@ in
     forgejoClientSecretFile = config.age.secrets.burrowForgejoOidcClientSecret.path;
     headscaleClientSecretFile = config.age.secrets.burrowHeadscaleOidcClientSecret.path;
     tailscaleClientSecretFile = config.age.secrets.burrowTailscaleOidcClientSecret.path;
-    tailscaleAccessGroupName = contributors.groups.users;
-    defaultExternalApplicationSlug = "tailscale";
+    defaultExternalApplicationSlug = "ts";
     googleClientIDFile = config.age.secrets.burrowAuthentikGoogleClientId.path;
     googleClientSecretFile = config.age.secrets.burrowAuthentikGoogleClientSecret.path;
     googleAccountMapFile = config.age.secrets.burrowAuthentikGoogleAccountMap.path;
