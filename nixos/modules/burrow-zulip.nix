@@ -307,34 +307,6 @@ SQL
         install -m 0644 ${composeFile} ${lib.escapeShellArg "${cfg.dataDir}/compose.yaml"}
         : > ${lib.escapeShellArg "${cfg.dataDir}/secrets/email-password"}
         chmod 0600 ${lib.escapeShellArg "${cfg.dataDir}/secrets/email-password"}
-        cat > ${lib.escapeShellArg "${cfg.dataDir}/uwsgi_params"} <<'EOF'
-uwsgi_param QUERY_STRING    $query_string;
-uwsgi_param REQUEST_METHOD  $request_method;
-uwsgi_param CONTENT_TYPE    $content_type;
-uwsgi_param CONTENT_LENGTH  $content_length;
-uwsgi_param REQUEST_URI     $request_uri;
-uwsgi_param PATH_INFO       $document_uri;
-uwsgi_param DOCUMENT_ROOT   $document_root;
-uwsgi_param SERVER_PROTOCOL $server_protocol;
-uwsgi_param REQUEST_SCHEME  $trusted_x_forwarded_proto;
-uwsgi_param HTTPS           on;
-uwsgi_param REMOTE_ADDR     $remote_addr;
-uwsgi_param REMOTE_PORT     $remote_port;
-uwsgi_param SERVER_ADDR     $server_addr;
-uwsgi_param SERVER_PORT     $server_port;
-uwsgi_param SERVER_NAME     $server_name;
-uwsgi_param HTTP_X_REAL_IP  $remote_addr;
-uwsgi_param HTTP_X_FORWARDED_PROTO $trusted_x_forwarded_proto;
-uwsgi_param HTTP_X_FORWARDED_SSL "";
-uwsgi_param HTTP_X_PROXY_MISCONFIGURATION $x_proxy_misconfiguration;
-
-# This value is the default, and is provided for explicitness; it must
-# be longer than the configured 55s "harakiri" timeout in uwsgi
-uwsgi_read_timeout 60s;
-
-uwsgi_pass django;
-EOF
-        chmod 0644 ${lib.escapeShellArg "${cfg.dataDir}/uwsgi_params"}
 
         metadata_xml="$(${pkgs.curl}/bin/curl -fsSL https://${cfg.authentikDomain}/application/saml/${cfg.authentikProviderSlug}/metadata/)"
         saml_cert="$(printf '%s' "$metadata_xml" | ${pkgs.python3}/bin/python3 -c '
@@ -418,8 +390,6 @@ services:
                 },
             },
         }
-    volumes:
-      - ${cfg.dataDir}/uwsgi_params:/etc/nginx/uwsgi_params:ro
 EOF
       '';
     };
@@ -484,6 +454,37 @@ EOF
           chmod 0600 "$zulip_data_dir/secrets/bootstrap-owner-password"
         }
 
+        patch_uwsgi_scheme_handling() {
+          podman exec burrow-zulip_zulip_1 bash -lc "cat > /etc/nginx/uwsgi_params <<'EOF'
+uwsgi_param QUERY_STRING    \$query_string;
+uwsgi_param REQUEST_METHOD  \$request_method;
+uwsgi_param CONTENT_TYPE    \$content_type;
+uwsgi_param CONTENT_LENGTH  \$content_length;
+uwsgi_param REQUEST_URI     \$request_uri;
+uwsgi_param PATH_INFO       \$document_uri;
+uwsgi_param DOCUMENT_ROOT   \$document_root;
+uwsgi_param SERVER_PROTOCOL \$server_protocol;
+uwsgi_param REQUEST_SCHEME  \$trusted_x_forwarded_proto;
+uwsgi_param HTTPS           on;
+uwsgi_param REMOTE_ADDR     \$remote_addr;
+uwsgi_param REMOTE_PORT     \$remote_port;
+uwsgi_param SERVER_ADDR     \$server_addr;
+uwsgi_param SERVER_PORT     \$server_port;
+uwsgi_param SERVER_NAME     \$server_name;
+uwsgi_param HTTP_X_REAL_IP  \$remote_addr;
+uwsgi_param HTTP_X_FORWARDED_PROTO \$trusted_x_forwarded_proto;
+uwsgi_param HTTP_X_FORWARDED_SSL \"\";
+uwsgi_param HTTP_X_PROXY_MISCONFIGURATION \$x_proxy_misconfiguration;
+
+# This value is the default, and is provided for explicitness; it must
+# be longer than the configured 55s harakiri timeout in uwsgi
+uwsgi_read_timeout 60s;
+
+uwsgi_pass django;
+EOF
+supervisorctl restart nginx zulip-django >/dev/null"
+        }
+
         bootstrap_realm_if_needed() {
           local realm_exists
           local attempts=0
@@ -532,6 +533,7 @@ EOF
 
         ensure_zulip_data_layout
         compose up -d zulip
+        patch_uwsgi_scheme_handling
         bootstrap_realm_if_needed
       '';
     };
