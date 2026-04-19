@@ -404,7 +404,8 @@ EOF
         Group = "root";
         WorkingDirectory = cfg.dataDir;
         RemainAfterExit = true;
-        ExecStop = "${pkgs.bash}/bin/bash -lc 'cd ${lib.escapeShellArg cfg.dataDir} && ${pkgs.podman-compose}/bin/podman-compose -p burrow-zulip down'";
+        TimeoutStopSec = "20s";
+        ExecStop = "${pkgs.bash}/bin/bash -lc 'set -euo pipefail; if ${pkgs.podman}/bin/podman container exists burrow-zulip_zulip_1; then ${pkgs.podman}/bin/podman stop --ignore --time 10 burrow-zulip_zulip_1 >/dev/null || true; ${pkgs.podman}/bin/podman rm -f --ignore burrow-zulip_zulip_1 >/dev/null || true; fi'";
       };
       script = ''
         set -euo pipefail
@@ -452,13 +453,22 @@ EOF
             return 0
           fi
 
-          export ZULIP_REALM_NAME=${lib.escapeShellArg cfg.realmName}
-          export ZULIP_ADMIN_EMAIL=${lib.escapeShellArg cfg.administratorEmail}
-          export ZULIP_OWNER_NAME=${lib.escapeShellArg cfg.realmOwnerName}
+          local realm_name=${lib.escapeShellArg cfg.realmName}
+          local admin_email=${lib.escapeShellArg cfg.administratorEmail}
+          local owner_name=${lib.escapeShellArg cfg.realmOwnerName}
+          local create_realm_cmd
 
-          podman exec burrow-zulip_zulip_1 bash -lc '
-            su zulip -c "/home/zulip/deployments/current/manage.py create_realm --string-id= --password-file /data/secrets/bootstrap-owner-password --automated \"$ZULIP_REALM_NAME\" \"$ZULIP_ADMIN_EMAIL\" \"$ZULIP_OWNER_NAME\""
-          '
+          printf -v create_realm_cmd '%q ' \
+            /home/zulip/deployments/current/manage.py \
+            create_realm \
+            --string-id= \
+            --password-file /data/secrets/bootstrap-owner-password \
+            --automated \
+            "$realm_name" \
+            "$admin_email" \
+            "$owner_name"
+
+          podman exec burrow-zulip_zulip_1 su zulip -c "$create_realm_cmd"
         }
 
         if [ ! -e .initialized ]; then

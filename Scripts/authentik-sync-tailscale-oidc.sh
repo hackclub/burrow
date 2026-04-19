@@ -137,10 +137,24 @@ lookup_group_pk() {
 
 lookup_application_pk() {
   local slug="$1"
+  local application_pk lookup_result lookup_status
 
-  api GET "/api/v3/core/applications/?page_size=200" \
+  application_pk="$(
+    api GET "/api/v3/core/applications/?page_size=200" \
     | jq -r --arg slug "$slug" '.results[]? | select(.slug == $slug) | .pk // empty' \
     | head -n1
+  )"
+
+  if [[ -n "$application_pk" ]]; then
+    printf '%s\n' "$application_pk"
+    return 0
+  fi
+
+  lookup_result="$(api_with_status GET "/api/v3/core/applications/${slug}/")"
+  lookup_status="$(printf '%s\n' "$lookup_result" | sed -n '1p')"
+  if [[ "$lookup_status" =~ ^20[01]$ ]]; then
+    printf '%s\n' "$lookup_result" | sed '1d' | jq -r '.pk // empty'
+  fi
 }
 
 ensure_application_group_binding() {
