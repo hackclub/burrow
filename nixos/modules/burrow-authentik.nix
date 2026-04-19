@@ -13,6 +13,7 @@ let
   tailscaleOidcSyncScript = ../../Scripts/authentik-sync-tailscale-oidc.sh;
   onePasswordOidcSyncScript = ../../Scripts/authentik-sync-1password-oidc.sh;
   linearSamlSyncScript = ../../Scripts/authentik-sync-linear-saml.sh;
+  linearScimSyncScript = ../../Scripts/authentik-sync-linear-scim.sh;
   googleSourceSyncScript = ../../Scripts/authentik-sync-google-source.sh;
   tailnetAuthFlowSyncScript = ../../Scripts/authentik-sync-tailnet-auth-flow.sh;
   authentikBlueprint = pkgs.writeText "burrow-authentik-blueprint.yaml" ''
@@ -207,6 +208,42 @@ in
       type = lib.types.nullOr lib.types.str;
       default = null;
       description = "Optional Linear relay state or login URL for IdP-initiated launches.";
+    };
+
+    linearScimUrl = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Linear SCIM base connector URL.";
+    };
+
+    linearScimTokenFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Host-local file containing the Linear SCIM bearer token.";
+    };
+
+    linearScimUserIdentifier = lib.mkOption {
+      type = lib.types.str;
+      default = "email";
+      description = "Linear SCIM unique identifier field for users.";
+    };
+
+    linearOwnerGroupName = lib.mkOption {
+      type = lib.types.str;
+      default = "linear-owners";
+      description = "Authentik group name that should map to Linear owners.";
+    };
+
+    linearAdminGroupName = lib.mkOption {
+      type = lib.types.str;
+      default = "linear-admins";
+      description = "Authentik group name that should map to Linear admins.";
+    };
+
+    linearGuestGroupName = lib.mkOption {
+      type = lib.types.str;
+      default = "linear-guests";
+      description = "Authentik group name that should map to Linear guests.";
     };
 
     forgejoClientId = lib.mkOption {
@@ -868,6 +905,59 @@ EOF
         ''}
 
         ${pkgs.bash}/bin/bash ${linearSamlSyncScript}
+      '';
+    };
+
+    systemd.services.burrow-authentik-linear-scim = lib.mkIf (
+      cfg.linearScimUrl != null && cfg.linearScimTokenFile != null
+    ) {
+      description = "Reconcile the Burrow Authentik Linear SCIM provider";
+      after = [
+        "burrow-authentik-ready.service"
+        "burrow-authentik-directory.service"
+        "burrow-authentik-linear-saml.service"
+        "network-online.target"
+      ];
+      wants = [
+        "burrow-authentik-ready.service"
+        "burrow-authentik-directory.service"
+        "burrow-authentik-linear-saml.service"
+        "network-online.target"
+      ];
+      wantedBy = [ "multi-user.target" ];
+      restartTriggers = [
+        linearScimSyncScript
+        cfg.envFile
+        cfg.linearScimTokenFile
+      ];
+      path = [
+        pkgs.bash
+        pkgs.coreutils
+        pkgs.curl
+        pkgs.jq
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "root";
+        Group = "root";
+      };
+      script = ''
+        set -euo pipefail
+        set -a
+        source ${lib.escapeShellArg cfg.envFile}
+        set +a
+
+        export AUTHENTIK_URL=https://${cfg.domain}
+        export AUTHENTIK_LINEAR_APPLICATION_SLUG=${lib.escapeShellArg cfg.linearProviderSlug}
+        export AUTHENTIK_LINEAR_SCIM_PROVIDER_NAME="Linear SCIM"
+        export AUTHENTIK_LINEAR_SCIM_URL=${lib.escapeShellArg cfg.linearScimUrl}
+        export AUTHENTIK_LINEAR_SCIM_TOKEN_FILE=${lib.escapeShellArg cfg.linearScimTokenFile}
+        export AUTHENTIK_LINEAR_SCIM_USER_IDENTIFIER=${lib.escapeShellArg cfg.linearScimUserIdentifier}
+        export AUTHENTIK_LINEAR_OWNER_GROUP=${lib.escapeShellArg cfg.linearOwnerGroupName}
+        export AUTHENTIK_LINEAR_ADMIN_GROUP=${lib.escapeShellArg cfg.linearAdminGroupName}
+        export AUTHENTIK_LINEAR_GUEST_GROUP=${lib.escapeShellArg cfg.linearGuestGroupName}
+
+        ${pkgs.bash}/bin/bash ${linearScimSyncScript}
       '';
     };
 

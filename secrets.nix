@@ -23,5 +23,6 @@ in
   "secrets/infra/forgejo-nsc-dispatcher-config.age".publicKeys = burrowForgeRecipients;
   "secrets/infra/forgejo-nsc-token.age".publicKeys = burrowForgeRecipients;
   "secrets/infra/headscale-oidc-client-secret.age".publicKeys = burrowForgeRecipients;
+  "secrets/infra/linear-scim-token.age".publicKeys = burrowForgeRecipients;
   "secrets/infra/tailscale-oidc-client-secret.age".publicKeys = burrowForgeRecipients;
 }

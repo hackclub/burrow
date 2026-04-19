@@ -55,6 +55,8 @@ across vendor-native Google auth flows when Burrow already operates an IdP.
 - Add Authentik-managed SAML applications for:
   - Zulip at `chat.burrow.net`
   - Linear using Burrow's claimed domains and Authentik metadata
+- Add an Authentik-managed SCIM backchannel for Linear so Burrow can push
+  role groups declaratively instead of hand-maintaining workspace roles.
 - Add an Authentik-managed OIDC application for 1Password Business under the
   Burrow team sign-in address.
 - Treat Zulip and Linear as downstream applications of the same identity
@@ -66,6 +68,10 @@ across vendor-native Google auth flows when Burrow already operates an IdP.
   options instead of hand-edited UI state.
 - Prefer service-specific reconciliation over ad hoc manual setup so rebuilds
   and host replacement converge automatically.
+- Derive Linear SCIM role groups from Burrow's canonical identity metadata.
+  If Burrow-wide admin intent says a user is an operator/admin, the repo-owned
+  configuration should map that intent onto the Linear push group without a
+  second manual roster.
 - Model 1Password according to the vendor's actual integration contract:
   - OIDC Authorization Code Flow with PKCE
   - public client rather than a confidential client
@@ -82,6 +88,8 @@ across vendor-native Google auth flows when Burrow already operates an IdP.
 - Linear SAML must not become Burrow's only admin recovery path. At least one
   owner login path outside the enforced SAML flow should remain available until
   rollout is proven.
+- Linear SCIM group push should be role-scoped and explicit. Burrow should
+  avoid blanket ownership mapping unless that intent is recorded in the repo.
 - 1Password Owners cannot be forced onto Unlock with SSO during initial setup.
   Burrow should preserve the owner recovery path and treat OIDC rollout as a
   scoped migration for non-owner users first.

@@ -3,6 +3,7 @@
 let
   contributors = import ../../../contributors.nix;
   identities = contributors.identities;
+  linearGroups = contributors.groups.linear;
   stripNewline = value: lib.replaceStrings [ "\n" ] [ "" ] value;
   authentikPasswordSecretPath = identity:
     if identity ? authentikPasswordSecret
@@ -15,6 +16,7 @@ let
         name = identity.displayName;
         email = identity.canonicalEmail;
         isAdmin = identity.isAdmin or false;
+        groups = lib.optionals (identity.isAdmin or false) [ linearGroups.owners ];
         passwordFile = authentikPasswordSecretPath identity;
       }
     )
@@ -107,6 +109,12 @@ in
   };
   age.secrets.burrowTailscaleOidcClientSecret = {
     file = ../../../secrets/infra/tailscale-oidc-client-secret.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+  age.secrets.burrowLinearScimToken = {
+    file = ../../../secrets/infra/linear-scim-token.age;
     owner = "root";
     group = "root";
     mode = "0400";
@@ -210,6 +218,12 @@ in
     linearAcsUrl = "https://api.linear.app/auth/sso/d0ca13dc-ac41-4824-8aab-e0ca352fc3de/acs";
     linearAudience = "https://auth.linear.app/sso/d0ca13dc-ac41-4824-8aab-e0ca352fc3de";
     linearDefaultRelayState = "https://linear.app/auth/sso/d0ca13dc-ac41-4824-8aab-e0ca352fc3de";
+    linearScimUrl = "https://api.linear.app/auth/scim/d0ca13dc-ac41-4824-8aab-e0ca352fc3de";
+    linearScimTokenFile = config.age.secrets.burrowLinearScimToken.path;
+    linearScimUserIdentifier = "email";
+    linearOwnerGroupName = linearGroups.owners;
+    linearAdminGroupName = linearGroups.admins;
+    linearGuestGroupName = linearGroups.guests;
   };
 
   services.burrow.headscale = {

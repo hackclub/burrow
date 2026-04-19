@@ -2,6 +2,11 @@
   groups = {
     users = "burrow-users";
     admins = "burrow-admins";
+    linear = {
+      owners = "linear-owners";
+      admins = "linear-admins";
+      guests = "linear-guests";
+    };
   };
 
   identities = {
