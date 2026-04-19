@@ -239,7 +239,7 @@ in
         : > ${lib.escapeShellArg "${cfg.dataDir}/secrets/email-password"}
         chmod 0600 ${lib.escapeShellArg "${cfg.dataDir}/secrets/email-password"}
 
-        metadata_xml="$(${pkgs.curl}/bin/curl -fsS https://${cfg.authentikDomain}/application/saml/${cfg.authentikProviderSlug}/metadata/)"
+        metadata_xml="$(${pkgs.curl}/bin/curl -fsSL https://${cfg.authentikDomain}/application/saml/${cfg.authentikProviderSlug}/metadata/)"
         saml_cert="$(printf '%s' "$metadata_xml" | ${pkgs.python3}/bin/python3 -c '
 import re, sys, xml.etree.ElementTree as ET
 xml = sys.stdin.read()
