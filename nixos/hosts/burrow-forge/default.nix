@@ -18,6 +18,15 @@ let
       }
     )
     (lib.filterAttrs (_: identity: identity.bootstrapAuthentik or false) identities);
+  headscaleBootstrapUsers = lib.mapAttrsToList
+    (
+      username: identity: {
+        name = username;
+        displayName = identity.displayName;
+        email = identity.canonicalEmail;
+      }
+    )
+    (lib.filterAttrs (_: identity: identity.bootstrapAuthentik or false) identities);
   forgeAuthorizedKeys = map
     (username: builtins.readFile identities.${username}.sshPublicKeyPath)
     (builtins.attrNames (lib.filterAttrs (_: identity: identity.forgeAuthorized or false) identities));
@@ -173,5 +182,6 @@ in
   services.burrow.headscale = {
     enable = true;
     oidcClientSecretFile = config.age.secrets.burrowHeadscaleOidcClientSecret.path;
+    bootstrapUsers = headscaleBootstrapUsers;
   };
 }

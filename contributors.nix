@@ -38,6 +38,8 @@
       bootstrapAuthentik = true;
       roles = [
         "member"
+        "operator"
+        "forge-admin"
       ];
     };
 
@@ -50,6 +52,7 @@
       roles = [
         "member"
         "operator"
+        "forge-admin"
       ];
     };
 
