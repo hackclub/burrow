@@ -25,28 +25,25 @@ let
           "-euc"
           ''
             echo 'mech_list: plain' > "$SASL_CONF_PATH"
-            echo "zulip@$HOSTNAME:$(cat $MEMCACHED_PASSWORD_FILE)" > "$MEMCACHED_SASL_PWDB"
-            echo "zulip@localhost:$(cat $MEMCACHED_PASSWORD_FILE)" >> "$MEMCACHED_SASL_PWDB"
+            echo "zulip@$HOSTNAME:$(cat /run/burrow/memcached-password)" > "$MEMCACHED_SASL_PWDB"
+            echo "zulip@localhost:$(cat /run/burrow/memcached-password)" >> "$MEMCACHED_SASL_PWDB"
             exec memcached -S
           ''
         ];
-        secrets = [ "zulip__memcached_password" ];
         environment = {
           SASL_CONF_PATH = "/home/memcache/memcached.conf";
           MEMCACHED_SASL_PWDB = "/home/memcache/memcached-sasl-db";
-          MEMCACHED_PASSWORD_FILE = "/run/secrets/zulip__memcached_password";
         };
+        volumes = [ "./secrets/memcached-password:/run/burrow/memcached-password:ro" ];
         attach = false;
       };
       rabbitmq = {
         image = "rabbitmq:4.2";
         restart = "unless-stopped";
-        secrets = [ "zulip__rabbitmq_password" ];
-        environment = {
-          RABBITMQ_DEFAULT_USER = "zulip";
-          RABBITMQ_DEFAULT_PASS_FILE = "/run/secrets/zulip__rabbitmq_password";
-        };
-        volumes = [ "rabbitmq:/var/lib/rabbitmq:rw" ];
+        volumes = [
+          "rabbitmq:/var/lib/rabbitmq:rw"
+          "./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro"
+        ];
         attach = false;
       };
       redis = {
@@ -228,6 +225,12 @@ in
         install -m 0644 ${composeFile} ${lib.escapeShellArg "${cfg.dataDir}/compose.yaml"}
         : > ${lib.escapeShellArg "${cfg.dataDir}/secrets/email-password"}
         chmod 0600 ${lib.escapeShellArg "${cfg.dataDir}/secrets/email-password"}
+        install -m 0444 ${lib.escapeShellArg cfg.memcachedPasswordFile} ${lib.escapeShellArg "${cfg.dataDir}/secrets/memcached-password"}
+        cat > ${lib.escapeShellArg "${cfg.dataDir}/rabbitmq.conf"} <<EOF
+default_user = zulip
+default_pass = "$(tr -d '\r\n' < ${lib.escapeShellArg cfg.rabbitmqPasswordFile})"
+EOF
+        chmod 0444 ${lib.escapeShellArg "${cfg.dataDir}/rabbitmq.conf"}
 
         metadata_xml="$(${pkgs.curl}/bin/curl -fsSL https://${cfg.authentikDomain}/application/saml/${cfg.authentikProviderSlug}/metadata/)"
         saml_cert="$(printf '%s' "$metadata_xml" | ${pkgs.python3}/bin/python3 -c '
@@ -245,10 +248,6 @@ print((node.text or "").strip())
 secrets:
   zulip__postgres_password:
     file: ${cfg.postgresPasswordFile}
-  zulip__memcached_password:
-    file: ${cfg.memcachedPasswordFile}
-  zulip__rabbitmq_password:
-    file: ${cfg.rabbitmqPasswordFile}
   zulip__redis_password:
     file: ${cfg.redisPasswordFile}
   zulip__secret_key:
