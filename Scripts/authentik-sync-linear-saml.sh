@@ -323,10 +323,20 @@ if [[ -z "${application_pk:-}" ]]; then
 fi
 
 for _ in $(seq 1 30); do
-  if curl -fsS "${authentik_url}/application/saml/${application_slug}/metadata/" >/dev/null 2>&1; then
-    echo "Synced Authentik Linear SAML application ${application_slug} (${application_name})."
-    exit 0
-  fi
+  metadata_status="$(
+    curl -sS \
+      -o /dev/null \
+      -w '%{http_code}' \
+      --max-redirs 0 \
+      "${authentik_url}/application/saml/${application_slug}/metadata/" \
+      || true
+  )"
+  case "$metadata_status" in
+    200|301|302|307|308)
+      echo "Synced Authentik Linear SAML application ${application_slug} (${application_name})."
+      exit 0
+      ;;
+  esac
   sleep 2
 done
 
