@@ -25,4 +25,9 @@ in
   "secrets/infra/headscale-oidc-client-secret.age".publicKeys = burrowForgeRecipients;
   "secrets/infra/linear-scim-token.age".publicKeys = burrowForgeRecipients;
   "secrets/infra/tailscale-oidc-client-secret.age".publicKeys = burrowForgeRecipients;
+  "secrets/infra/zulip-postgres-password.age".publicKeys = burrowForgeRecipients;
+  "secrets/infra/zulip-memcached-password.age".publicKeys = burrowForgeRecipients;
+  "secrets/infra/zulip-rabbitmq-password.age".publicKeys = burrowForgeRecipients;
+  "secrets/infra/zulip-redis-password.age".publicKeys = burrowForgeRecipients;
+  "secrets/infra/zulip-secret-key.age".publicKeys = burrowForgeRecipients;
 }

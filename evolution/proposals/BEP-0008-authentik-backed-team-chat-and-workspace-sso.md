@@ -68,6 +68,9 @@ across vendor-native Google auth flows when Burrow already operates an IdP.
   options instead of hand-edited UI state.
 - Prefer service-specific reconciliation over ad hoc manual setup so rebuilds
   and host replacement converge automatically.
+- When Burrow wants an external-user launcher surface in Authentik, configure
+  the brand's `default_application` explicitly instead of relying on
+  `/if/user/`, which otherwise remains internal-user-only.
 - Derive Linear SCIM role groups from Burrow's canonical identity metadata.
   If Burrow-wide admin intent says a user is an operator/admin, the repo-owned
   configuration should map that intent onto the Linear push group without a
@@ -111,8 +114,10 @@ across vendor-native Google auth flows when Burrow already operates an IdP.
 - Verify:
   - `chat.burrow.net` serves a working Zulip login surface
   - Authentik exposes working metadata for Zulip and Linear
-  - Authentik exposes a working OIDC issuer for 1Password
+- Authentik exposes a working OIDC issuer for 1Password
   - users in Burrow admin groups receive the expected access on first login
+  - external Burrow users landing on `auth.burrow.net` reach the intended
+    app launcher target instead of the internal-only Authentik user interface
 - Record concrete evidence for:
   - host deployment generation
   - Authentik reconciliation success

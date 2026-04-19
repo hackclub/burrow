@@ -61,6 +61,7 @@ in
     self.nixosModules.burrow-forgejo-nsc
     self.nixosModules.burrow-authentik
     self.nixosModules.burrow-headscale
+    self.nixosModules.burrow-zulip
   ];
 
   system.stateVersion = "24.11";
@@ -162,9 +163,44 @@ in
     mode = "0400";
   };
 
+  age.secrets.burrowZulipPostgresPassword = {
+    file = ../../../secrets/infra/zulip-postgres-password.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
+  age.secrets.burrowZulipMemcachedPassword = {
+    file = ../../../secrets/infra/zulip-memcached-password.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
+  age.secrets.burrowZulipRabbitmqPassword = {
+    file = ../../../secrets/infra/zulip-rabbitmq-password.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
+  age.secrets.burrowZulipRedisPassword = {
+    file = ../../../secrets/infra/zulip-redis-password.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
+  age.secrets.burrowZulipSecretKey = {
+    file = ../../../secrets/infra/zulip-secret-key.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
   networking.extraHosts = ''
-    127.0.0.1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net nsc-autoscaler.burrow.net
-    ::1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net nsc-autoscaler.burrow.net
+    127.0.0.1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net chat.burrow.net nsc-autoscaler.burrow.net
+    ::1 burrow.net git.burrow.net auth.burrow.net ts.burrow.net chat.burrow.net nsc-autoscaler.burrow.net
   '';
 
   services.burrow.forge = {
@@ -208,6 +244,8 @@ in
     forgejoClientSecretFile = config.age.secrets.burrowForgejoOidcClientSecret.path;
     headscaleClientSecretFile = config.age.secrets.burrowHeadscaleOidcClientSecret.path;
     tailscaleClientSecretFile = config.age.secrets.burrowTailscaleOidcClientSecret.path;
+    tailscaleAccessGroupName = contributors.groups.users;
+    defaultExternalApplicationSlug = "tailscale";
     googleClientIDFile = config.age.secrets.burrowAuthentikGoogleClientId.path;
     googleClientSecretFile = config.age.secrets.burrowAuthentikGoogleClientSecret.path;
     googleAccountMapFile = config.age.secrets.burrowAuthentikGoogleAccountMap.path;
@@ -224,11 +262,22 @@ in
     linearOwnerGroupName = linearGroups.owners;
     linearAdminGroupName = linearGroups.admins;
     linearGuestGroupName = linearGroups.guests;
+    zulipAccessGroupName = contributors.groups.users;
   };
 
   services.burrow.headscale = {
     enable = true;
     oidcClientSecretFile = config.age.secrets.burrowHeadscaleOidcClientSecret.path;
     bootstrapUsers = headscaleBootstrapUsers;
+  };
+
+  services.burrow.zulip = {
+    enable = true;
+    administratorEmail = identities.contact.canonicalEmail;
+    postgresPasswordFile = config.age.secrets.burrowZulipPostgresPassword.path;
+    memcachedPasswordFile = config.age.secrets.burrowZulipMemcachedPassword.path;
+    rabbitmqPasswordFile = config.age.secrets.burrowZulipRabbitmqPassword.path;
+    redisPasswordFile = config.age.secrets.burrowZulipRedisPassword.path;
+    secretKeyFile = config.age.secrets.burrowZulipSecretKey.path;
   };
 }

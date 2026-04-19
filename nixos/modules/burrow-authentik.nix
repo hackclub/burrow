@@ -12,6 +12,7 @@ let
   forgejoOidcSyncScript = ../../Scripts/authentik-sync-forgejo-oidc.sh;
   tailscaleOidcSyncScript = ../../Scripts/authentik-sync-tailscale-oidc.sh;
   onePasswordOidcSyncScript = ../../Scripts/authentik-sync-1password-oidc.sh;
+  zulipSamlSyncScript = ../../Scripts/authentik-sync-zulip-saml.sh;
   linearSamlSyncScript = ../../Scripts/authentik-sync-linear-saml.sh;
   linearScimSyncScript = ../../Scripts/authentik-sync-linear-scim.sh;
   googleSourceSyncScript = ../../Scripts/authentik-sync-google-source.sh;
@@ -153,6 +154,18 @@ in
       description = "Host-local file containing the Authentik Tailscale OIDC client secret.";
     };
 
+    tailscaleAccessGroupName = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Authentik group that should be allowed to launch the Tailscale application.";
+    };
+
+    defaultExternalApplicationSlug = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Authentik application slug that external users should land on instead of /if/user/.";
+    };
+
     onePasswordDomain = lib.mkOption {
       type = lib.types.str;
       default = "burrow-team.1password.com";
@@ -184,6 +197,42 @@ in
       type = lib.types.str;
       default = "linear";
       description = "Authentik application slug for Linear SAML.";
+    };
+
+    zulipDomain = lib.mkOption {
+      type = lib.types.str;
+      default = "chat.burrow.net";
+      description = "Public Zulip domain exposed through Authentik SAML.";
+    };
+
+    zulipProviderSlug = lib.mkOption {
+      type = lib.types.str;
+      default = "zulip";
+      description = "Authentik application slug for Zulip SAML.";
+    };
+
+    zulipAcsUrl = lib.mkOption {
+      type = lib.types.str;
+      default = "https://${config.services.burrow.authentik.zulipDomain}/complete/saml/";
+      description = "Zulip SAML ACS URL.";
+    };
+
+    zulipAudience = lib.mkOption {
+      type = lib.types.str;
+      default = "https://${config.services.burrow.authentik.zulipDomain}";
+      description = "Zulip SAML audience/entity identifier.";
+    };
+
+    zulipLaunchUrl = lib.mkOption {
+      type = lib.types.str;
+      default = "https://${config.services.burrow.authentik.zulipDomain}/";
+      description = "Zulip URL exposed in Authentik.";
+    };
+
+    zulipAccessGroupName = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Authentik group allowed to launch Zulip from Burrow SSO surfaces.";
     };
 
     linearAcsUrl = lib.mkOption {
@@ -809,6 +858,12 @@ EOF
         export AUTHENTIK_TAILSCALE_CLIENT_SECRET="$(tr -d '\r\n' < ${lib.escapeShellArg cfg.tailscaleClientSecretFile})"
         export AUTHENTIK_TAILSCALE_LAUNCH_URL=https://login.tailscale.com/start/oidc
         export AUTHENTIK_TAILSCALE_REDIRECT_URIS_JSON='["https://login.tailscale.com/a/oauth_response"]'
+        ${lib.optionalString (cfg.tailscaleAccessGroupName != null) ''
+          export AUTHENTIK_TAILSCALE_ACCESS_GROUP=${lib.escapeShellArg cfg.tailscaleAccessGroupName}
+        ''}
+        ${lib.optionalString (cfg.defaultExternalApplicationSlug != null) ''
+          export AUTHENTIK_DEFAULT_EXTERNAL_APPLICATION_SLUG=${lib.escapeShellArg cfg.defaultExternalApplicationSlug}
+        ''}
 
         ${pkgs.bash}/bin/bash ${tailscaleOidcSyncScript}
       '';
@@ -856,6 +911,53 @@ EOF
         export AUTHENTIK_ONEPASSWORD_REDIRECT_URIS_JSON='${builtins.toJSON cfg.onePasswordRedirectUris}'
 
         ${pkgs.bash}/bin/bash ${onePasswordOidcSyncScript}
+      '';
+    };
+
+    systemd.services.burrow-authentik-zulip-saml = {
+      description = "Reconcile the Burrow Authentik Zulip SAML application";
+      after = [
+        "burrow-authentik-ready.service"
+        "network-online.target"
+      ];
+      wants = [
+        "burrow-authentik-ready.service"
+        "network-online.target"
+      ];
+      wantedBy = [ "multi-user.target" ];
+      restartTriggers = [
+        zulipSamlSyncScript
+        cfg.envFile
+      ];
+      path = [
+        pkgs.bash
+        pkgs.coreutils
+        pkgs.curl
+        pkgs.jq
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "root";
+        Group = "root";
+      };
+      script = ''
+        set -euo pipefail
+        set -a
+        source ${lib.escapeShellArg cfg.envFile}
+        set +a
+
+        export AUTHENTIK_URL=https://${cfg.domain}
+        export AUTHENTIK_ZULIP_APPLICATION_SLUG=${lib.escapeShellArg cfg.zulipProviderSlug}
+        export AUTHENTIK_ZULIP_APPLICATION_NAME=Zulip
+        export AUTHENTIK_ZULIP_PROVIDER_NAME=Zulip
+        export AUTHENTIK_ZULIP_ACS_URL=${lib.escapeShellArg cfg.zulipAcsUrl}
+        export AUTHENTIK_ZULIP_AUDIENCE=${lib.escapeShellArg cfg.zulipAudience}
+        export AUTHENTIK_ZULIP_LAUNCH_URL=${lib.escapeShellArg cfg.zulipLaunchUrl}
+        ${lib.optionalString (cfg.zulipAccessGroupName != null) ''
+          export AUTHENTIK_ZULIP_ACCESS_GROUP=${lib.escapeShellArg cfg.zulipAccessGroupName}
+        ''}
+
+        ${pkgs.bash}/bin/bash ${zulipSamlSyncScript}
       '';
     };
 
