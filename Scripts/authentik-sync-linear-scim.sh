@@ -262,7 +262,6 @@ if [[ -z "$application" ]]; then
   exit 1
 fi
 
-application_pk="$(printf '%s\n' "$application" | jq -r '.pk')"
 application_payload="$(
   printf '%s\n' "$application" \
     | jq \
@@ -277,7 +276,7 @@ application_payload="$(
         policy_engine_mode: .policy_engine_mode
       }'
 )"
-api PATCH "/api/v3/core/applications/${application_pk}/" "$application_payload" >/dev/null
+api PATCH "/api/v3/core/applications/${application_slug}/" "$application_payload" >/dev/null
 
 group_pks_json="$(jq -cn --arg owner "$owner_group_pk" --arg admin "$admin_group_pk" --arg guest "$guest_group_pk" '[$owner, $admin, $guest]')"
 user_pks_json="$(
