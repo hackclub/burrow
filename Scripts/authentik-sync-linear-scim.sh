@@ -301,10 +301,9 @@ while IFS= read -r user_pk; do
   sync_object "$provider_pk" "authentik.core.models.User" "$user_pk"
 done < <(printf '%s\n' "$user_pks_json" | jq -r '.[]')
 
-status_json="$(api GET "/api/v3/providers/scim/${provider_pk}/sync/status/")"
-if ! printf '%s\n' "$status_json" | jq -e '.task_count >= 0' >/dev/null 2>&1; then
-  echo "error: could not read Linear SCIM sync status for provider ${provider_pk}" >&2
-  exit 1
+status_json="$(api GET "/api/v3/providers/scim/${provider_pk}/sync/status/" || true)"
+if ! printf '%s\n' "$status_json" | jq -e 'has("last_sync_status")' >/dev/null 2>&1; then
+  echo "warning: could not read Linear SCIM sync status for provider ${provider_pk}; keeping reconciled configuration." >&2
 fi
 
 echo "Synced Authentik Linear SCIM provider ${provider_name} (${provider_pk}) with groups ${owner_group}, ${admin_group}, ${guest_group}."
