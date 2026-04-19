@@ -248,6 +248,10 @@ print((node.text or "").strip())
 secrets:
   zulip__postgres_password:
     file: ${cfg.postgresPasswordFile}
+  zulip__memcached_password:
+    file: ${cfg.memcachedPasswordFile}
+  zulip__rabbitmq_password:
+    file: ${cfg.rabbitmqPasswordFile}
   zulip__redis_password:
     file: ${cfg.redisPasswordFile}
   zulip__secret_key:
