@@ -251,6 +251,7 @@ in
     googleLoginMode = "redirect";
     userGroupName = contributors.groups.users;
     adminGroupName = contributors.groups.admins;
+    tailscaleAccessGroupName = contributors.groups.users;
     bootstrapUsers = bootstrapUsers;
     linearAcsUrl = "https://api.linear.app/auth/sso/d0ca13dc-ac41-4824-8aab-e0ca352fc3de/acs";
     linearAudience = "https://auth.linear.app/sso/d0ca13dc-ac41-4824-8aab-e0ca352fc3de";

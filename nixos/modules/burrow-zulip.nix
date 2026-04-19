@@ -128,6 +128,18 @@ in
       description = "Operational Zulip administrator email.";
     };
 
+    realmName = lib.mkOption {
+      type = lib.types.str;
+      default = "Burrow";
+      description = "Initial Zulip organization name for single-tenant bootstrap.";
+    };
+
+    realmOwnerName = lib.mkOption {
+      type = lib.types.str;
+      default = "Burrow";
+      description = "Display name used for the initial Zulip organization owner.";
+    };
+
     authentikDomain = lib.mkOption {
       type = lib.types.str;
       default = config.services.burrow.authentik.domain;
@@ -227,6 +239,7 @@ in
         chmod 0600 ${lib.escapeShellArg "${cfg.dataDir}/secrets/email-password"}
         install -m 0444 ${lib.escapeShellArg cfg.memcachedPasswordFile} ${lib.escapeShellArg "${cfg.dataDir}/secrets/memcached-password"}
         cat > ${lib.escapeShellArg "${cfg.dataDir}/rabbitmq.conf"} <<EOF
+listeners.tcp.default = 0.0.0.0:5672
 default_user = zulip
 default_pass = "$(tr -d '\r\n' < ${lib.escapeShellArg cfg.rabbitmqPasswordFile})"
 EOF
@@ -311,6 +324,9 @@ EOF
       path = [
         pkgs.bash
         pkgs.coreutils
+        pkgs.gawk
+        pkgs.gnugrep
+        pkgs.openssl
         pkgs.podman
         pkgs.podman-compose
       ];
@@ -334,13 +350,72 @@ EOF
         set -euo pipefail
         cd ${lib.escapeShellArg cfg.dataDir}
 
+        compose() {
+          ${pkgs.podman-compose}/bin/podman-compose -p burrow-zulip "$@"
+        }
+
+        wait_for_rabbitmq() {
+          local attempts=0
+          while ! podman exec burrow-zulip_rabbitmq_1 rabbitmq-diagnostics -q ping >/dev/null 2>&1; do
+            attempts=$((attempts + 1))
+            if [ "$attempts" -ge 90 ]; then
+              echo "error: RabbitMQ did not become ready for Zulip bootstrap" >&2
+              exit 1
+            fi
+            sleep 2
+          done
+        }
+
+        ensure_zulip_volume_layout() {
+          local zulip_volume_mount
+          zulip_volume_mount="$(podman volume inspect burrow-zulip_zulip --format '{{.Mountpoint}}')"
+          install -d -m 0755 "$zulip_volume_mount/logs"
+          install -d -m 0755 "$zulip_volume_mount/logs/emails"
+          install -d -m 0700 "$zulip_volume_mount/secrets"
+          chown 1000:1000 "$zulip_volume_mount/logs" "$zulip_volume_mount/logs/emails" "$zulip_volume_mount/secrets"
+
+          if [ ! -s "$zulip_volume_mount/secrets/bootstrap-owner-password" ]; then
+            umask 077
+            openssl rand -base64 24 > "$zulip_volume_mount/secrets/bootstrap-owner-password"
+          fi
+          chown 1000:1000 "$zulip_volume_mount/secrets/bootstrap-owner-password"
+          chmod 0600 "$zulip_volume_mount/secrets/bootstrap-owner-password"
+        }
+
+        bootstrap_realm_if_needed() {
+          local realm_exists
+          realm_exists="$(
+            compose run --rm --entrypoint bash zulip -lc \
+              "su zulip -c '/home/zulip/deployments/current/manage.py list_realms'" \
+              | awk '$NF == "https://${cfg.domain}" { print "yes" }'
+          )"
+
+          if [ -n "$realm_exists" ]; then
+            return 0
+          fi
+
+          export ZULIP_REALM_NAME=${lib.escapeShellArg cfg.realmName}
+          export ZULIP_ADMIN_EMAIL=${lib.escapeShellArg cfg.administratorEmail}
+          export ZULIP_OWNER_NAME=${lib.escapeShellArg cfg.realmOwnerName}
+
+          compose run --rm --entrypoint bash zulip -lc '
+            su zulip -c "/home/zulip/deployments/current/manage.py create_realm --string-id= --password-file /data/secrets/bootstrap-owner-password --automated \"$ZULIP_REALM_NAME\" \"$ZULIP_ADMIN_EMAIL\" \"$ZULIP_OWNER_NAME\""
+          '
+        }
+
         if [ ! -e .initialized ]; then
-          ${pkgs.podman-compose}/bin/podman-compose -p burrow-zulip pull
-          ${pkgs.podman-compose}/bin/podman-compose -p burrow-zulip run --rm zulip app:init
+          compose pull
+          compose up -d database memcached rabbitmq redis
+          wait_for_rabbitmq
+          compose run --rm zulip app:init
           touch .initialized
         fi
 
-        ${pkgs.podman-compose}/bin/podman-compose -p burrow-zulip up -d
+        compose up -d database memcached rabbitmq redis
+        wait_for_rabbitmq
+        ensure_zulip_volume_layout
+        bootstrap_realm_if_needed
+        compose up -d zulip
       '';
     };
   };
