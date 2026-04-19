@@ -204,6 +204,7 @@ END
 \$\$;
 ALTER ROLE zulip WITH LOGIN PASSWORD '$db_password_sql';
 SQL
+        chmod 0644 "$setup_sql"
 
         ${pkgs.util-linux}/bin/runuser -u postgres -- psql -v ON_ERROR_STOP=1 -f "$setup_sql"
       '';
