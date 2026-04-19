@@ -2,6 +2,11 @@
 
 let
   cfg = config.services.burrow.zulip;
+  realmSignupDomain =
+    let
+      parts = lib.splitString "@" cfg.administratorEmail;
+    in
+    if builtins.length parts == 2 then builtins.elemAt parts 1 else cfg.domain;
   yamlFormat = pkgs.formats.yaml { };
   composeFile = yamlFormat.generate "burrow-zulip-compose.yaml" {
     services = {
@@ -352,6 +357,7 @@ services:
         USE_X_FORWARDED_HOST = True
         SESSION_COOKIE_SECURE = True
         CSRF_COOKIE_SECURE = True
+        CSRF_TRUSTED_ORIGINS = ["https://${cfg.domain}"]
         SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
         SOCIAL_AUTH_SAML_REDIRECT_IS_HTTPS = True
         SOCIAL_AUTH_SAML_SP_ENTITY_ID = "https://${cfg.domain}"
@@ -384,7 +390,7 @@ services:
             },
         }
         SOCIAL_AUTH_SYNC_ATTRS_DICT = {
-            "authentik": {
+            "": {
                 "saml": {
                     "role": "zulip_role",
                 },
@@ -454,18 +460,38 @@ EOF
           chmod 0600 "$zulip_data_dir/secrets/bootstrap-owner-password"
         }
 
-        patch_uwsgi_scheme_handling() {
+        wait_for_zulip_supervisor() {
           local attempts=0
           while ! podman exec burrow-zulip_zulip_1 supervisorctl status >/dev/null 2>&1; do
             attempts=$((attempts + 1))
             if [ "$attempts" -ge 90 ]; then
-              echo "error: Zulip supervisor did not become ready for nginx patching" >&2
+              echo "error: Zulip supervisor did not become ready" >&2
               exit 1
             fi
             sleep 2
           done
+        }
 
-          podman exec burrow-zulip_zulip_1 bash -lc "cat > /etc/nginx/uwsgi_params <<'EOF'
+        patch_uwsgi_scheme_handling() {
+          wait_for_zulip_supervisor
+          podman exec burrow-zulip_zulip_1 bash -lc "cat > /etc/nginx/zulip-include/trusted-proto <<'EOF'
+map \$remote_addr \$trusted_x_forwarded_proto {
+    default \$scheme;
+    127.0.0.1 \$http_x_forwarded_proto;
+    ::1 \$http_x_forwarded_proto;
+    172.31.1.1 \$http_x_forwarded_proto;
+}
+map \$remote_addr \$trusted_x_forwarded_for {
+    default \"\";
+    127.0.0.1 \$http_x_forwarded_for;
+    ::1 \$http_x_forwarded_for;
+    172.31.1.1 \$http_x_forwarded_for;
+}
+map \$remote_addr \$x_proxy_misconfiguration {
+    default \"\";
+}
+EOF
+cat > /etc/nginx/uwsgi_params <<'EOF'
 uwsgi_param QUERY_STRING    \$query_string;
 uwsgi_param REQUEST_METHOD  \$request_method;
 uwsgi_param CONTENT_TYPE    \$content_type;
@@ -496,16 +522,8 @@ supervisorctl restart nginx zulip-django >/dev/null"
         }
 
         bootstrap_realm_if_needed() {
+          wait_for_zulip_supervisor
           local realm_exists
-          local attempts=0
-          while ! podman exec burrow-zulip_zulip_1 test -r /etc/zulip/zulip-secrets.conf >/dev/null 2>&1; do
-            attempts=$((attempts + 1))
-            if [ "$attempts" -ge 90 ]; then
-              echo "error: Zulip did not finish generating production secrets" >&2
-              exit 1
-            fi
-            sleep 2
-          done
 
           realm_exists="$(
             podman exec burrow-zulip_zulip_1 bash -lc \
@@ -535,6 +553,23 @@ supervisorctl restart nginx zulip-django >/dev/null"
           podman exec burrow-zulip_zulip_1 su zulip -c "$create_realm_cmd"
         }
 
+        reconcile_realm_policy() {
+          wait_for_zulip_supervisor
+          local realm_id
+          realm_id="$(
+            podman exec burrow-zulip_zulip_1 bash -lc \
+              "su zulip -c '/home/zulip/deployments/current/manage.py list_realms'" \
+              | awk '$NF == "https://${cfg.domain}" { print $1 }'
+          )"
+
+          podman exec burrow-zulip_zulip_1 su zulip -c \
+            "/home/zulip/deployments/current/manage.py realm_domain --op add -r $realm_id ${realmSignupDomain} --allow-subdomains --automated" \
+            >/dev/null 2>&1 || true
+
+          podman exec burrow-zulip_zulip_1 su zulip -c \
+            "/home/zulip/deployments/current/manage.py shell -c 'from zerver.models import Realm; realm = Realm.objects.get(id=$realm_id); realm.invite_required = False; realm.save(update_fields=[\"invite_required\"])'"
+        }
+
         if [ ! -e .initialized ]; then
           compose pull
           compose run --rm -T zulip app:init
@@ -544,6 +579,7 @@ supervisorctl restart nginx zulip-django >/dev/null"
         ensure_zulip_data_layout
         compose up -d zulip
         bootstrap_realm_if_needed
+        reconcile_realm_policy
         patch_uwsgi_scheme_handling
       '';
     };
