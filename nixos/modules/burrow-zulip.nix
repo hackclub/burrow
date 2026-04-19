@@ -373,6 +373,7 @@ services:
                 "entity_id": "https://${cfg.authentikDomain}",
                 "url": "https://${cfg.authentikDomain}/application/saml/${cfg.authentikProviderSlug}/sso/binding/redirect/",
                 "display_name": "burrow.net",
+                "auto_signup": True,
                 "x509cert": """$saml_cert""",
                 "attr_user_permanent_id": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
                 "attr_username": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
