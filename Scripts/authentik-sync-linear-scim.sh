@@ -278,12 +278,7 @@ application_payload="$(
         policy_engine_mode: .policy_engine_mode
       }'
 )"
-application_pk="$(printf '%s\n' "$application" | jq -r '.pk // empty')"
-if [[ -z "$application_pk" ]]; then
-  echo "error: could not resolve Authentik application primary key for ${application_slug}" >&2
-  exit 1
-fi
-api PATCH "/api/v3/core/applications/${application_pk}/" "$application_payload" >/dev/null
+api PATCH "/api/v3/core/applications/${application_slug}/" "$application_payload" >/dev/null
 
 group_pks_json="$(jq -cn --arg owner "$owner_group_pk" --arg admin "$admin_group_pk" --arg guest "$guest_group_pk" '[$owner, $admin, $guest]')"
 user_pks_json="$(

@@ -294,8 +294,8 @@ existing_application="$(
 )"
 
 if [[ -n "$existing_application" ]]; then
-  application_pk="$(printf '%s\n' "$existing_application" | jq -r '.pk')"
-  api PATCH "/api/v3/core/applications/${application_pk}/" "$application_payload" >/dev/null
+  application_pk="existing"
+  api PATCH "/api/v3/core/applications/${application_slug}/" "$application_payload" >/dev/null
 else
   create_application_result="$(
     api_with_status POST "/api/v3/core/applications/" "$application_payload"
