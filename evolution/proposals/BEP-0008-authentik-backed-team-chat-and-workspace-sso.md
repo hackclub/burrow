@@ -49,6 +49,10 @@ across vendor-native Google auth flows when Burrow already operates an IdP.
 - Add a Burrow-managed Zulip workload on the forge host at `chat.burrow.net`.
   The deployment should be repo-owned and rebuildable from Nix, even if the
   runtime uses vendor-supported container images internally.
+- Prefer host-managed NixOS services for Zulip's stateful dependencies
+  (PostgreSQL, Redis, RabbitMQ, memcached, backups) so Burrow owns the
+  operational surface directly rather than composing a container-side service
+  mesh.
 - Zulip should authenticate through Authentik SAML rather than local passwords
   as the primary path. Initial bootstrap may still keep an operational escape
   hatch while the deployment is being validated.

@@ -170,13 +170,6 @@ in
     mode = "0400";
   };
 
-  age.secrets.burrowZulipMemcachedPassword = {
-    file = ../../../secrets/infra/zulip-memcached-password.age;
-    owner = "root";
-    group = "root";
-    mode = "0400";
-  };
-
   age.secrets.burrowZulipRabbitmqPassword = {
     file = ../../../secrets/infra/zulip-rabbitmq-password.age;
     owner = "root";
@@ -275,7 +268,6 @@ in
     enable = true;
     administratorEmail = identities.contact.canonicalEmail;
     postgresPasswordFile = config.age.secrets.burrowZulipPostgresPassword.path;
-    memcachedPasswordFile = config.age.secrets.burrowZulipMemcachedPassword.path;
     rabbitmqPasswordFile = config.age.secrets.burrowZulipRabbitmqPassword.path;
     redisPasswordFile = config.age.secrets.burrowZulipRedisPassword.path;
     secretKeyFile = config.age.secrets.burrowZulipSecretKey.path;

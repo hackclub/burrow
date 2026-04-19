@@ -5,98 +5,29 @@ let
   yamlFormat = pkgs.formats.yaml { };
   composeFile = yamlFormat.generate "burrow-zulip-compose.yaml" {
     services = {
-      database = {
-        image = "zulip/zulip-postgresql:14";
-        restart = "unless-stopped";
-        secrets = [ "zulip__postgres_password" ];
-        environment = {
-          POSTGRES_DB = "zulip";
-          POSTGRES_USER = "zulip";
-          POSTGRES_PASSWORD_FILE = "/run/secrets/zulip__postgres_password";
-        };
-        volumes = [ "postgresql-14:/var/lib/postgresql/data:rw" ];
-        attach = false;
-      };
-      memcached = {
-        image = "memcached:alpine";
-        restart = "unless-stopped";
-        command = [
-          "sh"
-          "-euc"
-          ''
-            echo 'mech_list: plain' > "$SASL_CONF_PATH"
-            echo "zulip@$HOSTNAME:$(cat /run/burrow/memcached-password)" > "$MEMCACHED_SASL_PWDB"
-            echo "zulip@localhost:$(cat /run/burrow/memcached-password)" >> "$MEMCACHED_SASL_PWDB"
-            exec memcached -S
-          ''
-        ];
-        environment = {
-          SASL_CONF_PATH = "/home/memcache/memcached.conf";
-          MEMCACHED_SASL_PWDB = "/home/memcache/memcached-sasl-db";
-        };
-        volumes = [ "./secrets/memcached-password:/run/burrow/memcached-password:ro" ];
-        attach = false;
-      };
-      rabbitmq = {
-        image = "rabbitmq:4.2";
-        restart = "unless-stopped";
-        volumes = [
-          "rabbitmq:/var/lib/rabbitmq:rw"
-          "./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro"
-        ];
-        attach = false;
-      };
-      redis = {
-        image = "redis:alpine";
-        restart = "unless-stopped";
-        command = [
-          "sh"
-          "-euc"
-          "/usr/local/bin/docker-entrypoint.sh --requirepass \"$(cat \"$REDIS_PASSWORD_FILE\")\""
-        ];
-        secrets = [ "zulip__redis_password" ];
-        environment = {
-          REDIS_PASSWORD_FILE = "/run/secrets/zulip__redis_password";
-        };
-        volumes = [ "redis:/data:rw" ];
-        attach = false;
-      };
       zulip = {
         image = "ghcr.io/zulip/zulip-server:11.6-1";
         restart = "unless-stopped";
+        network_mode = "host";
         secrets = [
           "zulip__postgres_password"
-          "zulip__memcached_password"
           "zulip__rabbitmq_password"
           "zulip__redis_password"
           "zulip__secret_key"
           "zulip__email_password"
         ];
         environment = {
-          SETTING_REMOTE_POSTGRES_HOST = "database";
-          SETTING_MEMCACHED_LOCATION = "memcached:11211";
-          SETTING_RABBITMQ_HOST = "rabbitmq";
-          SETTING_REDIS_HOST = "redis";
+          SETTING_REMOTE_POSTGRES_HOST = "127.0.0.1";
+          SETTING_MEMCACHED_LOCATION = "127.0.0.1:11211";
+          SETTING_RABBITMQ_HOST = "127.0.0.1";
+          SETTING_REDIS_HOST = "127.0.0.1";
         };
-        volumes = [ "zulip:/data:rw" ];
+        volumes = [ "${cfg.dataDir}/data:/data:rw" ];
         ulimits.nofile = {
           soft = 1000000;
           hard = 1048576;
         };
-        depends_on = [
-          "database"
-          "memcached"
-          "rabbitmq"
-          "redis"
-        ];
       };
-    };
-
-    volumes = {
-      zulip = { };
-      postgresql-14 = { };
-      rabbitmq = { };
-      redis = { };
     };
   };
 in
@@ -157,11 +88,6 @@ in
       description = "File containing the Zulip PostgreSQL password.";
     };
 
-    memcachedPasswordFile = lib.mkOption {
-      type = lib.types.str;
-      description = "File containing the Zulip memcached password.";
-    };
-
     rabbitmqPasswordFile = lib.mkOption {
       type = lib.types.str;
       description = "File containing the Zulip RabbitMQ password.";
@@ -184,6 +110,49 @@ in
       pkgs.podman-compose
     ];
 
+    services.postgresql = {
+      ensureDatabases = [ "zulip" ];
+      ensureUsers = [
+        {
+          name = "zulip";
+          ensureDBOwnership = true;
+        }
+      ];
+      settings = {
+        listen_addresses = lib.mkDefault "127.0.0.1";
+        password_encryption = lib.mkDefault "scram-sha-256";
+      };
+      authentication = lib.mkAfter ''
+        host zulip zulip 127.0.0.1/32 scram-sha-256
+      '';
+    };
+
+    services.postgresqlBackup = {
+      enable = true;
+      backupAll = false;
+      databases = [ "zulip" ];
+    };
+
+    services.memcached = {
+      enable = true;
+      listen = "127.0.0.1";
+      port = 11211;
+      extraOptions = [ "-U 0" ];
+    };
+
+    services.redis.servers.zulip = {
+      enable = true;
+      bind = "127.0.0.1";
+      port = 6379;
+      requirePassFile = cfg.redisPasswordFile;
+    };
+
+    services.rabbitmq = {
+      enable = true;
+      listenAddress = "127.0.0.1";
+      port = 5672;
+    };
+
     services.caddy.virtualHosts."${cfg.domain}".extraConfig = ''
       encode gzip zstd
       reverse_proxy 127.0.0.1:${toString cfg.port}
@@ -191,18 +160,114 @@ in
 
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0755 root root - -"
+      "d ${cfg.dataDir}/data 0755 root root - -"
+      "d ${cfg.dataDir}/data/logs 0755 root root - -"
+      "d ${cfg.dataDir}/data/logs/emails 0755 root root - -"
+      "d ${cfg.dataDir}/data/secrets 0700 root root - -"
       "d ${cfg.dataDir}/secrets 0700 root root - -"
       "d ${cfg.dataDir}/logs 0755 root root - -"
     ];
 
+    systemd.services.burrow-zulip-postgres-bootstrap = {
+      description = "Bootstrap PostgreSQL role for Burrow Zulip";
+      after = [ "postgresql.service" ];
+      wants = [ "postgresql.service" ];
+      requiredBy = [ "burrow-zulip.service" ];
+      before = [ "burrow-zulip.service" ];
+      path = [
+        config.services.postgresql.package
+        pkgs.bash
+        pkgs.coreutils
+        pkgs.python3
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "root";
+        Group = "root";
+      };
+      script = ''
+        set -euo pipefail
+
+        db_password="$(tr -d '\r\n' < ${lib.escapeShellArg cfg.postgresPasswordFile})"
+        db_password_sql="$(printf '%s' "$db_password" | python3 -c "import sys; print(sys.stdin.read().replace(chr(39), chr(39) * 2), end=\"\")")"
+        setup_sql="$(mktemp)"
+        trap 'rm -f "$setup_sql"' EXIT
+
+        cat > "$setup_sql" <<SQL
+DO \$\$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'zulip') THEN
+    CREATE ROLE zulip LOGIN;
+  END IF;
+END
+\$\$;
+ALTER ROLE zulip WITH LOGIN PASSWORD '$db_password_sql';
+SQL
+
+        su postgres -s ${pkgs.bash}/bin/bash -c "psql -v ON_ERROR_STOP=1 -f '$setup_sql'"
+      '';
+    };
+
+    systemd.services.burrow-zulip-rabbitmq-bootstrap = {
+      description = "Bootstrap RabbitMQ user for Burrow Zulip";
+      after = [ "rabbitmq.service" ];
+      wants = [ "rabbitmq.service" ];
+      requiredBy = [ "burrow-zulip.service" ];
+      before = [ "burrow-zulip.service" ];
+      path = [
+        config.services.rabbitmq.package
+        pkgs.bash
+        pkgs.coreutils
+        pkgs.gawk
+        pkgs.gnugrep
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "root";
+        Group = "root";
+      };
+      script = ''
+        set -euo pipefail
+
+        rabbit_password="$(tr -d '\r\n' < ${lib.escapeShellArg cfg.rabbitmqPasswordFile})"
+        export HOME=${config.services.rabbitmq.dataDir}
+
+        rabbitmqctl await_startup
+
+        if rabbitmqctl list_users -q | awk '{ print $1 }' | grep -qx zulip; then
+          rabbitmqctl change_password zulip "$rabbit_password"
+        else
+          rabbitmqctl add_user zulip "$rabbit_password"
+        fi
+
+        rabbitmqctl set_permissions -p / zulip '.*' '.*' '.*'
+
+        if rabbitmqctl list_users -q | awk '{ print $1 }' | grep -qx guest; then
+          rabbitmqctl delete_user guest
+        fi
+      '';
+    };
+
     systemd.services.burrow-zulip-runtime = {
       description = "Prepare Burrow Zulip compose and SAML runtime files";
       after = [
+        "postgresql.service"
+        "redis-zulip.service"
+        "memcached.service"
+        "rabbitmq.service"
+        "burrow-zulip-postgres-bootstrap.service"
+        "burrow-zulip-rabbitmq-bootstrap.service"
         "burrow-authentik-ready.service"
         "burrow-authentik-zulip-saml.service"
         "network-online.target"
       ];
       wants = [
+        "postgresql.service"
+        "redis-zulip.service"
+        "memcached.service"
+        "rabbitmq.service"
+        "burrow-zulip-postgres-bootstrap.service"
+        "burrow-zulip-rabbitmq-bootstrap.service"
         "burrow-authentik-ready.service"
         "burrow-authentik-zulip-saml.service"
         "network-online.target"
@@ -218,7 +283,6 @@ in
       restartTriggers = [
         composeFile
         cfg.postgresPasswordFile
-        cfg.memcachedPasswordFile
         cfg.rabbitmqPasswordFile
         cfg.redisPasswordFile
         cfg.secretKeyFile
@@ -232,25 +296,22 @@ in
         set -euo pipefail
 
         install -d -m 0755 ${lib.escapeShellArg cfg.dataDir}
+        install -d -m 0755 ${lib.escapeShellArg "${cfg.dataDir}/data"}
+        install -d -m 0755 ${lib.escapeShellArg "${cfg.dataDir}/data/logs"}
+        install -d -m 0755 ${lib.escapeShellArg "${cfg.dataDir}/data/logs/emails"}
+        install -d -m 0700 ${lib.escapeShellArg "${cfg.dataDir}/data/secrets"}
         install -d -m 0700 ${lib.escapeShellArg "${cfg.dataDir}/secrets"}
         install -d -m 0755 ${lib.escapeShellArg "${cfg.dataDir}/logs"}
         install -m 0644 ${composeFile} ${lib.escapeShellArg "${cfg.dataDir}/compose.yaml"}
         : > ${lib.escapeShellArg "${cfg.dataDir}/secrets/email-password"}
         chmod 0600 ${lib.escapeShellArg "${cfg.dataDir}/secrets/email-password"}
-        install -m 0444 ${lib.escapeShellArg cfg.memcachedPasswordFile} ${lib.escapeShellArg "${cfg.dataDir}/secrets/memcached-password"}
-        cat > ${lib.escapeShellArg "${cfg.dataDir}/rabbitmq.conf"} <<EOF
-listeners.tcp.default = 0.0.0.0:5672
-default_user = zulip
-default_pass = "$(tr -d '\r\n' < ${lib.escapeShellArg cfg.rabbitmqPasswordFile})"
-EOF
-        chmod 0444 ${lib.escapeShellArg "${cfg.dataDir}/rabbitmq.conf"}
 
         metadata_xml="$(${pkgs.curl}/bin/curl -fsSL https://${cfg.authentikDomain}/application/saml/${cfg.authentikProviderSlug}/metadata/)"
         saml_cert="$(printf '%s' "$metadata_xml" | ${pkgs.python3}/bin/python3 -c '
-import re, sys, xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET, sys
 xml = sys.stdin.read()
 root = ET.fromstring(xml)
-ns = {"md": "urn:oasis:names:tc:SAML:2.0:metadata", "ds": "http://www.w3.org/2000/09/xmldsig#"}
+ns = {"ds": "http://www.w3.org/2000/09/xmldsig#"}
 node = root.find(".//ds:X509Certificate", ns)
 if node is None or not (node.text or "").strip():
     raise SystemExit("missing X509 certificate in Authentik metadata")
@@ -261,8 +322,6 @@ print((node.text or "").strip())
 secrets:
   zulip__postgres_password:
     file: ${cfg.postgresPasswordFile}
-  zulip__memcached_password:
-    file: ${cfg.memcachedPasswordFile}
   zulip__rabbitmq_password:
     file: ${cfg.rabbitmqPasswordFile}
   zulip__redis_password:
@@ -274,14 +333,15 @@ secrets:
 
 services:
   zulip:
-    ports:
-      - "127.0.0.1:${toString cfg.port}:80"
     environment:
       SETTING_EXTERNAL_HOST: "${cfg.domain}"
       SETTING_ZULIP_ADMINISTRATOR: "${cfg.administratorEmail}"
       TRUST_GATEWAY_IP: "True"
       SETTING_SEND_LOGIN_EMAILS: "False"
       ZULIP_AUTH_BACKENDS: "EmailAuthBackend,SAMLAuthBackend"
+      CONFIG_application_server__http_only: true
+      CONFIG_application_server__nginx_listen_port: ${toString cfg.port}
+      CONFIG_application_server__queue_workers_multiprocess: false
       ZULIP_CUSTOM_SETTINGS: |
         EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
         EMAIL_FILE_PATH = "/data/logs/emails"
@@ -305,13 +365,12 @@ services:
                 "attr_last_name": "lastName",
             },
         }
-      CONFIG_application_server__queue_workers_multiprocess: false
 EOF
       '';
     };
 
     systemd.services.burrow-zulip = {
-      description = "Run Burrow Zulip via the official compose topology";
+      description = "Run Burrow Zulip with host-managed dependencies";
       after = [
         "burrow-zulip-runtime.service"
         "network-online.target"
@@ -333,7 +392,6 @@ EOF
       restartTriggers = [
         composeFile
         cfg.postgresPasswordFile
-        cfg.memcachedPasswordFile
         cfg.rabbitmqPasswordFile
         cfg.redisPasswordFile
         cfg.secretKeyFile
@@ -354,32 +412,20 @@ EOF
           ${pkgs.podman-compose}/bin/podman-compose -p burrow-zulip "$@"
         }
 
-        wait_for_rabbitmq() {
-          local attempts=0
-          while ! podman exec burrow-zulip_rabbitmq_1 rabbitmq-diagnostics -q ping >/dev/null 2>&1; do
-            attempts=$((attempts + 1))
-            if [ "$attempts" -ge 90 ]; then
-              echo "error: RabbitMQ did not become ready for Zulip bootstrap" >&2
-              exit 1
-            fi
-            sleep 2
-          done
-        }
+        ensure_zulip_data_layout() {
+          local zulip_data_dir=${lib.escapeShellArg "${cfg.dataDir}/data"}
 
-        ensure_zulip_volume_layout() {
-          local zulip_volume_mount
-          zulip_volume_mount="$(podman volume inspect burrow-zulip_zulip --format '{{.Mountpoint}}')"
-          install -d -m 0755 "$zulip_volume_mount/logs"
-          install -d -m 0755 "$zulip_volume_mount/logs/emails"
-          install -d -m 0700 "$zulip_volume_mount/secrets"
-          chown 1000:1000 "$zulip_volume_mount/logs" "$zulip_volume_mount/logs/emails" "$zulip_volume_mount/secrets"
+          install -d -m 0755 "$zulip_data_dir/logs"
+          install -d -m 0755 "$zulip_data_dir/logs/emails"
+          install -d -m 0700 "$zulip_data_dir/secrets"
+          chown 1000:1000 "$zulip_data_dir/logs" "$zulip_data_dir/logs/emails" "$zulip_data_dir/secrets"
 
-          if [ ! -s "$zulip_volume_mount/secrets/bootstrap-owner-password" ]; then
+          if [ ! -s "$zulip_data_dir/secrets/bootstrap-owner-password" ]; then
             umask 077
-            openssl rand -base64 24 > "$zulip_volume_mount/secrets/bootstrap-owner-password"
+            openssl rand -base64 24 > "$zulip_data_dir/secrets/bootstrap-owner-password"
           fi
-          chown 1000:1000 "$zulip_volume_mount/secrets/bootstrap-owner-password"
-          chmod 0600 "$zulip_volume_mount/secrets/bootstrap-owner-password"
+          chown 1000:1000 "$zulip_data_dir/secrets/bootstrap-owner-password"
+          chmod 0600 "$zulip_data_dir/secrets/bootstrap-owner-password"
         }
 
         bootstrap_realm_if_needed() {
@@ -415,15 +461,11 @@ EOF
 
         if [ ! -e .initialized ]; then
           compose pull
-          compose up -d database memcached rabbitmq redis
-          wait_for_rabbitmq
           compose run --rm -T zulip app:init
           touch .initialized
         fi
 
-        compose up -d database memcached rabbitmq redis
-        wait_for_rabbitmq
-        ensure_zulip_volume_layout
+        ensure_zulip_data_layout
         compose up -d zulip
         bootstrap_realm_if_needed
       '';
