@@ -956,6 +956,7 @@ EOF
         ${lib.optionalString (cfg.zulipAccessGroupName != null) ''
           export AUTHENTIK_ZULIP_ACCESS_GROUP=${lib.escapeShellArg cfg.zulipAccessGroupName}
         ''}
+        export AUTHENTIK_ZULIP_ADMIN_GROUP=${lib.escapeShellArg cfg.adminGroupName}
 
         ${pkgs.bash}/bin/bash ${zulipSamlSyncScript}
       '';

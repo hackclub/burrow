@@ -10,6 +10,7 @@ acs_url="${AUTHENTIK_ZULIP_ACS_URL:-https://chat.burrow.net/complete/saml/}"
 audience="${AUTHENTIK_ZULIP_AUDIENCE:-https://chat.burrow.net}"
 launch_url="${AUTHENTIK_ZULIP_LAUNCH_URL:-https://chat.burrow.net/}"
 access_group="${AUTHENTIK_ZULIP_ACCESS_GROUP:-}"
+admin_group="${AUTHENTIK_ZULIP_ADMIN_GROUP:-}"
 issuer="${AUTHENTIK_ZULIP_ISSUER:-$authentik_url}"
 
 usage() {
@@ -28,6 +29,7 @@ Optional environment:
   AUTHENTIK_ZULIP_AUDIENCE
   AUTHENTIK_ZULIP_LAUNCH_URL
   AUTHENTIK_ZULIP_ACCESS_GROUP
+  AUTHENTIK_ZULIP_ADMIN_GROUP
   AUTHENTIK_ZULIP_ISSUER
 EOF
 }
@@ -257,6 +259,17 @@ last_name_mapping_pk="$(
     $'parts = (request.user.name or "").rsplit(" ", 1)\nif len(parts) == 2 and parts[1]:\n    return parts[1]\nreturn request.user.username'
 )"
 
+role_mapping_pk=""
+if [[ -n "$admin_group" ]]; then
+  role_mapping_pk="$(
+    reconcile_property_mapping \
+      "Burrow Zulip SAML Role" \
+      "zulip_role" \
+      "zulip_role" \
+      $'admin_group = "'$admin_group$'"\nif any(group.name == admin_group for group in request.user.ak_groups.all()):\n    return "owner"\nreturn None'
+  )"
+fi
+
 if [[ -z "$email_mapping_pk" || -z "$name_mapping_pk" || -z "$first_name_mapping_pk" || -z "$last_name_mapping_pk" ]]; then
   echo "error: failed to reconcile Zulip SAML property mappings" >&2
   exit 1
@@ -276,6 +289,7 @@ provider_payload="$(
     --arg name_mapping "$name_mapping_pk" \
     --arg first_name_mapping "$first_name_mapping_pk" \
     --arg last_name_mapping "$last_name_mapping_pk" \
+    --arg role_mapping "$role_mapping_pk" \
     '{
       name: $name,
       authorization_flow: $authorization_flow,
@@ -293,7 +307,7 @@ provider_payload="$(
         $name_mapping,
         $first_name_mapping,
         $last_name_mapping
-      ]
+      ] + (if $role_mapping != "" then [$role_mapping] else [] end)
     }'
 )"
 

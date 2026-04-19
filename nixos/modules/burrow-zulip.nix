@@ -374,12 +374,20 @@ services:
                 "url": "https://${cfg.authentikDomain}/application/saml/${cfg.authentikProviderSlug}/sso/binding/redirect/",
                 "display_name": "burrow.net",
                 "auto_signup": True,
+                "extra_attrs": ["zulip_role"],
                 "x509cert": """$saml_cert""",
                 "attr_user_permanent_id": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
                 "attr_username": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
                 "attr_email": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
                 "attr_first_name": "firstName",
                 "attr_last_name": "lastName",
+            },
+        }
+        SOCIAL_AUTH_SYNC_ATTRS_DICT = {
+            "authentik": {
+                "saml": {
+                    "role": "zulip_role",
+                },
             },
         }
 EOF
