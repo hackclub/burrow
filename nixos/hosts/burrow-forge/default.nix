@@ -3,6 +3,7 @@
 let
   contributors = import ../../../contributors.nix;
   identities = contributors.identities;
+  stripNewline = value: lib.replaceStrings [ "\n" ] [ "" ] value;
   authentikPasswordSecretPath = identity:
     if identity ? authentikPasswordSecret
     then config.age.secrets.${identity.authentikPasswordSecret}.path
@@ -27,6 +28,23 @@ let
       }
     )
     (lib.filterAttrs (_: identity: identity.bootstrapAuthentik or false) identities);
+  forgeUnixUsernames =
+    builtins.attrNames (lib.filterAttrs (_: identity: identity.forgeUnixUser or false) identities);
+  forgeUnixUsers = lib.genAttrs forgeUnixUsernames (username:
+    let
+      identity = identities.${username};
+      sshKeys = lib.optional (identity ? sshPublicKeyPath) (stripNewline (builtins.readFile identity.sshPublicKeyPath));
+    in
+    {
+      isNormalUser = true;
+      createHome = true;
+      home = "/home/${username}";
+      shell = pkgs.bashInteractive;
+      extraGroups = lib.optional (identity.isAdmin or false) "wheel";
+      openssh.authorizedKeys.keys = sshKeys;
+    });
+  forgeUnixAdminUsernames =
+    builtins.attrNames (lib.filterAttrs (_: identity: (identity.forgeUnixUser or false) && (identity.isAdmin or false)) identities);
   forgeAuthorizedKeys = map
     (username: builtins.readFile identities.${username}.sshPublicKeyPath)
     (builtins.attrNames (lib.filterAttrs (_: identity: identity.forgeAuthorized or false) identities));
@@ -51,6 +69,18 @@ in
     "nix-command"
     "flakes"
   ];
+
+  users.users = forgeUnixUsers;
+
+  security.sudo.extraRules = lib.map (username: {
+    users = [ username ];
+    commands = [
+      {
+        command = "ALL";
+        options = [ "NOPASSWD" ];
+      }
+    ];
+  }) forgeUnixAdminUsernames;
 
   environment.systemPackages = lib.optionals config.services.forgejo-nsc.enable [
     self.packages.${pkgs.stdenv.hostPlatform.system}.nsc

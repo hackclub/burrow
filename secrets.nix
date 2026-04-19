@@ -2,10 +2,12 @@ let
   conradev = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBueQxNbP2246pxr/m7au4zNVm+ShC96xuOcfEcpIjWZ";
   contact = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIO42guJ5QvNMw3k6YKWlQnjcTsc+X4XI9F2GBtl8aHOa";
   agent = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEN0+tRJy7Y2DW0uGYHb86N2t02WyU5lDNX6FaxBF/G8 agent@burrow.net";
+  jett = builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./nixos/keys/jett_at_burrow_net.pub);
   burrowForgeHost = "age1quxf27gnun0xghlnxf3jrmqr3h3a3fzd8qxpallsaztd2u74pdfq9e7w9l";
   burrowForgeRecipients = [
     contact
     agent
+    jett
     burrowForgeHost
   ];
   uiTestRecipients = burrowForgeRecipients ++ [ conradev ];

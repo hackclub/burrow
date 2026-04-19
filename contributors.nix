@@ -35,7 +35,9 @@
       canonicalEmail = "jett@burrow.net";
       isAdmin = true;
       forgeAuthorized = false;
+      forgeUnixUser = true;
       bootstrapAuthentik = true;
+      sshPublicKeyPath = ./nixos/keys/jett_at_burrow_net.pub;
       roles = [
         "member"
         "operator"
