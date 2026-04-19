@@ -174,7 +174,7 @@ sync_object() {
   local model="$2"
   local object_id="$3"
 
-  api POST "/api/v3/providers/scim/${provider_pk}/sync/object/" "$(
+  if ! api POST "/api/v3/providers/scim/${provider_pk}/sync/object/" "$(
     jq -cn \
       --arg model "$model" \
       --arg object_id "$object_id" \
@@ -183,7 +183,9 @@ sync_object() {
         sync_object_id: $object_id,
         override_dry_run: false
       }'
-  )" >/dev/null
+  )" >/dev/null; then
+    echo "warning: could not trigger immediate Linear SCIM sync for ${model} ${object_id}; provider will continue with its normal sync cycle." >&2
+  fi
 }
 
 wait_for_authentik
