@@ -179,7 +179,7 @@ in
         pkgs.bash
         pkgs.coreutils
         pkgs.python3
-        pkgs.shadow
+        pkgs.util-linux
       ];
       serviceConfig = {
         Type = "oneshot";
@@ -205,7 +205,7 @@ END
 ALTER ROLE zulip WITH LOGIN PASSWORD '$db_password_sql';
 SQL
 
-        ${pkgs.shadow}/bin/su postgres -s ${pkgs.bash}/bin/bash -c "psql -v ON_ERROR_STOP=1 -f '$setup_sql'"
+        ${pkgs.util-linux}/bin/runuser -u postgres -- psql -v ON_ERROR_STOP=1 -f "$setup_sql"
       '';
     };
 
