@@ -11,6 +11,8 @@ let
   directorySyncScript = ../../Scripts/authentik-sync-burrow-directory.sh;
   forgejoOidcSyncScript = ../../Scripts/authentik-sync-forgejo-oidc.sh;
   tailscaleOidcSyncScript = ../../Scripts/authentik-sync-tailscale-oidc.sh;
+  onePasswordOidcSyncScript = ../../Scripts/authentik-sync-1password-oidc.sh;
+  linearSamlSyncScript = ../../Scripts/authentik-sync-linear-saml.sh;
   googleSourceSyncScript = ../../Scripts/authentik-sync-google-source.sh;
   tailnetAuthFlowSyncScript = ../../Scripts/authentik-sync-tailnet-auth-flow.sh;
   authentikBlueprint = pkgs.writeText "burrow-authentik-blueprint.yaml" ''
@@ -148,6 +150,63 @@ in
       type = lib.types.nullOr lib.types.str;
       default = null;
       description = "Host-local file containing the Authentik Tailscale OIDC client secret.";
+    };
+
+    onePasswordDomain = lib.mkOption {
+      type = lib.types.str;
+      default = "burrow-team.1password.com";
+      description = "1Password team sign-in domain used for Burrow Unlock with SSO.";
+    };
+
+    onePasswordProviderSlug = lib.mkOption {
+      type = lib.types.str;
+      default = "onepassword";
+      description = "Authentik application slug for 1Password Unlock with SSO.";
+    };
+
+    onePasswordClientId = lib.mkOption {
+      type = lib.types.str;
+      default = "1password.burrow.net";
+      description = "Public OIDC client ID Authentik should present to 1Password.";
+    };
+
+    onePasswordRedirectUris = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [
+        "https://burrow-team.1password.com/sso/oidc/redirect/"
+        "onepassword://sso/oidc/redirect"
+      ];
+      description = "Allowed 1Password OIDC redirect URIs.";
+    };
+
+    linearProviderSlug = lib.mkOption {
+      type = lib.types.str;
+      default = "linear";
+      description = "Authentik application slug for Linear SAML.";
+    };
+
+    linearAcsUrl = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Linear SAML ACS URL.";
+    };
+
+    linearAudience = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Linear SAML audience/entity identifier.";
+    };
+
+    linearLaunchUrl = lib.mkOption {
+      type = lib.types.str;
+      default = "https://linear.app/burrownet";
+      description = "Linear workspace URL exposed in Authentik.";
+    };
+
+    linearDefaultRelayState = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Optional Linear relay state or login URL for IdP-initiated launches.";
     };
 
     forgejoClientId = lib.mkOption {
@@ -715,6 +774,100 @@ EOF
         export AUTHENTIK_TAILSCALE_REDIRECT_URIS_JSON='["https://login.tailscale.com/a/oauth_response"]'
 
         ${pkgs.bash}/bin/bash ${tailscaleOidcSyncScript}
+      '';
+    };
+
+    systemd.services.burrow-authentik-1password-oidc = {
+      description = "Reconcile the Burrow Authentik 1Password OIDC application";
+      after = [
+        "burrow-authentik-ready.service"
+        "network-online.target"
+      ];
+      wants = [
+        "burrow-authentik-ready.service"
+        "network-online.target"
+      ];
+      wantedBy = [ "multi-user.target" ];
+      restartTriggers = [
+        onePasswordOidcSyncScript
+        cfg.envFile
+      ];
+      path = [
+        pkgs.bash
+        pkgs.coreutils
+        pkgs.curl
+        pkgs.jq
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "root";
+        Group = "root";
+      };
+      script = ''
+        set -euo pipefail
+        set -a
+        source ${lib.escapeShellArg cfg.envFile}
+        set +a
+
+        export AUTHENTIK_URL=https://${cfg.domain}
+        export AUTHENTIK_ONEPASSWORD_APPLICATION_SLUG=${lib.escapeShellArg cfg.onePasswordProviderSlug}
+        export AUTHENTIK_ONEPASSWORD_APPLICATION_NAME=1Password
+        export AUTHENTIK_ONEPASSWORD_PROVIDER_NAME=1Password
+        export AUTHENTIK_ONEPASSWORD_TEMPLATE_SLUG=${lib.escapeShellArg cfg.headscaleProviderSlug}
+        export AUTHENTIK_ONEPASSWORD_CLIENT_ID=${lib.escapeShellArg cfg.onePasswordClientId}
+        export AUTHENTIK_ONEPASSWORD_LAUNCH_URL=https://${cfg.onePasswordDomain}/
+        export AUTHENTIK_ONEPASSWORD_REDIRECT_URIS_JSON='${builtins.toJSON cfg.onePasswordRedirectUris}'
+
+        ${pkgs.bash}/bin/bash ${onePasswordOidcSyncScript}
+      '';
+    };
+
+    systemd.services.burrow-authentik-linear-saml = lib.mkIf (
+      cfg.linearAcsUrl != null && cfg.linearAudience != null
+    ) {
+      description = "Reconcile the Burrow Authentik Linear SAML application";
+      after = [
+        "burrow-authentik-ready.service"
+        "network-online.target"
+      ];
+      wants = [
+        "burrow-authentik-ready.service"
+        "network-online.target"
+      ];
+      wantedBy = [ "multi-user.target" ];
+      restartTriggers = [
+        linearSamlSyncScript
+        cfg.envFile
+      ];
+      path = [
+        pkgs.bash
+        pkgs.coreutils
+        pkgs.curl
+        pkgs.jq
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+        User = "root";
+        Group = "root";
+      };
+      script = ''
+        set -euo pipefail
+        set -a
+        source ${lib.escapeShellArg cfg.envFile}
+        set +a
+
+        export AUTHENTIK_URL=https://${cfg.domain}
+        export AUTHENTIK_LINEAR_APPLICATION_SLUG=${lib.escapeShellArg cfg.linearProviderSlug}
+        export AUTHENTIK_LINEAR_APPLICATION_NAME=Linear
+        export AUTHENTIK_LINEAR_PROVIDER_NAME=Linear
+        export AUTHENTIK_LINEAR_ACS_URL=${lib.escapeShellArg cfg.linearAcsUrl}
+        export AUTHENTIK_LINEAR_AUDIENCE=${lib.escapeShellArg cfg.linearAudience}
+        export AUTHENTIK_LINEAR_LAUNCH_URL=${lib.escapeShellArg cfg.linearLaunchUrl}
+        ${lib.optionalString (cfg.linearDefaultRelayState != null) ''
+          export AUTHENTIK_LINEAR_DEFAULT_RELAY_STATE=${lib.escapeShellArg cfg.linearDefaultRelayState}
+        ''}
+
+        ${pkgs.bash}/bin/bash ${linearSamlSyncScript}
       '';
     };
 
