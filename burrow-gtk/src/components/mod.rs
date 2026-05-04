@@ -1,6 +1,6 @@
 use super::*;
+use crate::daemon_api;
 use adw::prelude::*;
-use burrow::{DaemonClient, DaemonCommand, DaemonResponseData};
 use gtk::Align;
 use relm4::{
     component::{
@@ -9,13 +9,9 @@ use relm4::{
     },
     prelude::*,
 };
-use std::sync::Arc;
-use tokio::sync::Mutex;
 
 mod app;
-mod settings;
-mod settings_screen;
-mod switch_screen;
+mod home_screen;
 
 pub use app::*;
-pub use settings::{DaemonGroupMsg, DiagGroupMsg};
+pub use home_screen::{HomeScreen, HomeScreenMsg};

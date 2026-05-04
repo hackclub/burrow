@@ -15,7 +15,7 @@ Note that the flatpak version can compile but will not run properly!
   1. Install build dependencies
 
   ```
-  sudo apt install -y clang meson cmake pkg-config libgtk-4-dev libadwaita-1-dev gettext desktop-file-utils
+  sudo apt install -y clang meson cmake pkg-config libssl-dev libgtk-4-dev libadwaita-1-dev gettext desktop-file-utils
   ```
 
   2. Install flatpak builder (Optional)
@@ -38,7 +38,7 @@ Note that the flatpak version can compile but will not run properly!
   1. Install build dependencies
 
   ```
-  sudo dnf install -y clang ninja-build cmake meson gtk4-devel glib2-devel libadwaita-devel desktop-file-utils libappstream-glib
+  sudo dnf install -y clang ninja-build cmake meson openssl-devel gtk4-devel glib2-devel libadwaita-devel desktop-file-utils libappstream-glib
   ```
 
   2. Install flatpak builder (Optional)
@@ -61,7 +61,7 @@ Note that the flatpak version can compile but will not run properly!
   1. Install build dependencies
 
   ```
-  sudo xbps-install -Sy gcc clang meson cmake pkg-config gtk4-devel gettext desktop-file-utils gtk4-update-icon-cache appstream-glib
+  sudo xbps-install -Sy gcc clang meson cmake pkg-config openssl-devel gtk4-devel gettext desktop-file-utils gtk4-update-icon-cache appstream-glib
   ```
 
   2. Install flatpak builder (Optional)
@@ -87,6 +87,12 @@ flatpak install --user \
 ```
 
 ## Building
+
+With Nix, enter the focused GTK shell before running the Meson build:
+
+```bash
+nix develop .#gtk
+```
 
 <details>
   <summary>General</summary>
@@ -138,6 +144,16 @@ flatpak install --user \
 
 
 ## Running
+
+The GTK app mirrors the Apple home surface: a Burrow header, Networks carousel,
+Accounts section, Tunnel action, and the same add flows for WireGuard, Tor, and
+Tailnet. It talks to the daemon over the same gRPC API used by Apple clients for
+network storage, tunnel state, Tailnet discovery, authority probing, browser
+sign-in, and Tailnet payloads.
+
+On Linux the GTK app first looks for a daemon on the configured gRPC socket. If
+none is reachable, it starts an embedded user-scoped daemon with a socket under
+`XDG_RUNTIME_DIR` and a database under `XDG_DATA_HOME` before refreshing the UI.
 
 <details>
   <summary>General</summary>

@@ -44,6 +44,7 @@ Burrow should formalize one Apple/runtime boundary: Apple clients speak only to 
 - Keeping control-plane I/O out of Swift UI reduces accidental secret, token, and callback sprawl across app code.
 - The daemon boundary makes testing and kill-switch behavior tractable because runtime integration is localized.
 - Apple daemon lifecycle ownership must be explicit: either the app ensures the daemon is running before RPC or the extension owns it and the UI surfaces daemon-unavailable state clearly.
+- Non-Apple presentation clients should follow the same daemon-first lifecycle pattern: connect to a managed daemon when present, or start a user-scoped embedded daemon before issuing RPCs, without adding platform-local control-plane paths.
 
 ## Contributor Playbook
 
@@ -54,6 +55,7 @@ Burrow should formalize one Apple/runtime boundary: Apple clients speak only to 
   - daemon unavailable behavior
   - successful RPC path
   - error propagation through the UI
+- Keep Linux GTK and Apple clients visually and functionally aligned around the same daemon-backed home surface: Networks, Accounts, Tunnel, and add flows should remain corresponding views over the daemon API.
 
 ## Alternatives Considered
 
@@ -63,6 +65,7 @@ Burrow should formalize one Apple/runtime boundary: Apple clients speak only to 
 ## Impact on Other Work
 
 - Governs the Tailnet refactor and future Apple runtime work.
+- Governs Linux GTK daemon startup parity where the same daemon API is reused from a user-scoped presentation process.
 - Interacts with BEP-0002 control-plane bootstrap and BEP-0003 transport refactoring.
 
 ## Decision

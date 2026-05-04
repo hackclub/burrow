@@ -37,6 +37,7 @@ Burrow should treat Tailnet as one protocol family. Tailscale-managed and self-h
   - Burrow-owned authority when explicitly applicable
 - Discovery returns authority and related metadata; editing the authority is the mechanism that moves a configuration from managed default to custom control server.
 - The daemon and control layer own provider inference; the UI should primarily present “Tailnet” plus the selected authority.
+- Platform clients consume the same daemon gRPC surface for Tailnet discovery, authority probing, browser sign-in, and saved network payloads. macOS/iOS SwiftUI and Linux GTK may differ in presentation and local credential stores, but neither should introduce a second control-plane path.
 
 ## Security and Operational Considerations
 
@@ -48,6 +49,7 @@ Burrow should treat Tailnet as one protocol family. Tailscale-managed and self-h
 
 - Remove provider pickers from Tailnet UI unless a concrete protocol difference requires one.
 - Store the authority explicitly in payloads and infer provider internally only when needed.
+- Keep Linux GTK and Apple clients at functional parity by routing Tailnet add/discover/probe/login through `TailnetControl` and `Networks` RPCs instead of platform-local HTTP or legacy JSON daemon commands.
 - Prefer tests that validate authority normalization and discovery behavior over UI-provider branching.
 
 ## Alternatives Considered
@@ -58,7 +60,7 @@ Burrow should treat Tailnet as one protocol family. Tailscale-managed and self-h
 ## Impact on Other Work
 
 - Refines BEP-0002’s Tailscale-shaped control-plane work.
-- Constrains the Tailnet Apple refactor and future daemon control-plane storage.
+- Constrains the Tailnet Apple and Linux GTK refactors plus future daemon control-plane storage.
 
 ## Decision
 
@@ -68,4 +70,5 @@ Pending.
 
 - `burrow/src/control/`
 - `Apple/UI/Networks/`
+- `burrow-gtk/src/`
 - `proto/burrow.proto`

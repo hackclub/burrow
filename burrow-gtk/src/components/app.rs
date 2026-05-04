@@ -1,24 +1,19 @@
 use super::*;
 use anyhow::Context;
-use std::time::Duration;
-
-const RECONNECT_POLL_TIME: Duration = Duration::from_secs(5);
 
 pub struct App {
-    daemon_client: Arc<Mutex<Option<DaemonClient>>>,
-    settings_screen: Controller<settings_screen::SettingsScreen>,
-    switch_screen: AsyncController<switch_screen::SwitchScreen>,
+    _home_screen: AsyncController<home_screen::HomeScreen>,
 }
 
 #[derive(Debug)]
 pub enum AppMsg {
     None,
-    PostInit,
 }
 
 impl App {
     pub fn run() {
         let app = RelmApp::new(config::ID);
+        relm4::set_global_css(APP_CSS);
         Self::setup_gresources().unwrap();
         Self::setup_i18n().unwrap();
 
@@ -49,7 +44,7 @@ impl AsyncComponent for App {
     view! {
         adw::Window {
             set_title: Some("Burrow"),
-            set_default_size: (640, 480),
+            set_default_size: (900, 760),
         }
     }
 
@@ -58,40 +53,11 @@ impl AsyncComponent for App {
         root: Self::Root,
         sender: AsyncComponentSender<Self>,
     ) -> AsyncComponentParts<Self> {
-        let daemon_client = Arc::new(Mutex::new(DaemonClient::new().await.ok()));
-
-        let switch_screen = switch_screen::SwitchScreen::builder()
-            .launch(switch_screen::SwitchScreenInit {
-                daemon_client: Arc::clone(&daemon_client),
-            })
-            .forward(sender.input_sender(), |_| AppMsg::None);
-
-        let settings_screen = settings_screen::SettingsScreen::builder()
-            .launch(settings_screen::SettingsScreenInit {
-                daemon_client: Arc::clone(&daemon_client),
-            })
+        let home_screen = home_screen::HomeScreen::builder()
+            .launch(())
             .forward(sender.input_sender(), |_| AppMsg::None);
 
         let widgets = view_output!();
-
-        let view_stack = adw::ViewStack::new();
-        view_stack.add_titled(switch_screen.widget(), None, "Switch");
-        view_stack.add_titled(settings_screen.widget(), None, "Settings");
-
-        let view_switcher_bar = adw::ViewSwitcherBar::builder().stack(&view_stack).build();
-        view_switcher_bar.set_reveal(true);
-
-        //  When libadwaita 1.4 support becomes more avaliable, this approach is more appropriate
-        //
-        // let toolbar = adw::ToolbarView::new();
-        // toolbar.add_top_bar(
-        //     &adw::HeaderBar::builder()
-        //         .title_widget(&gtk::Label::new(Some("Burrow")))
-        //         .build(),
-        // );
-        // toolbar.add_bottom_bar(&view_switcher_bar);
-        // toolbar.set_content(Some(&view_stack));
-        // root.set_content(Some(&toolbar));
 
         let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
         content.append(
@@ -99,59 +65,72 @@ impl AsyncComponent for App {
                 .title_widget(&gtk::Label::new(Some("Burrow")))
                 .build(),
         );
-        content.append(&view_stack);
-        content.append(&view_switcher_bar);
+        content.append(home_screen.widget());
 
         root.set_content(Some(&content));
 
-        sender.input(AppMsg::PostInit);
-
-        let model = App {
-            daemon_client,
-            switch_screen,
-            settings_screen,
-        };
+        let model = App { _home_screen: home_screen };
 
         AsyncComponentParts { model, widgets }
     }
 
     async fn update(
         &mut self,
-        _msg: Self::Input,
+        msg: Self::Input,
         _sender: AsyncComponentSender<Self>,
         _root: &Self::Root,
     ) {
-        loop {
-            tokio::time::sleep(RECONNECT_POLL_TIME).await;
-            {
-                let mut daemon_client = self.daemon_client.lock().await;
-                let mut disconnected_daemon_client = false;
-
-                if let Some(daemon_client) = daemon_client.as_mut() {
-                    if let Err(_e) = daemon_client.send_command(DaemonCommand::ServerInfo).await {
-                        disconnected_daemon_client = true;
-                        self.switch_screen
-                            .emit(switch_screen::SwitchScreenMsg::DaemonDisconnect);
-                        self.settings_screen
-                            .emit(settings_screen::SettingsScreenMsg::DaemonStateChange)
-                    }
-                }
-
-                if disconnected_daemon_client || daemon_client.is_none() {
-                    match DaemonClient::new().await {
-                        Ok(new_daemon_client) => {
-                            *daemon_client = Some(new_daemon_client);
-                            self.switch_screen
-                                .emit(switch_screen::SwitchScreenMsg::DaemonReconnect);
-                            self.settings_screen
-                                .emit(settings_screen::SettingsScreenMsg::DaemonStateChange)
-                        }
-                        Err(_e) => {
-                            //  TODO: Handle Error
-                        }
-                    }
-                }
-            }
+        match msg {
+            AppMsg::None => {}
         }
     }
 }
+
+const APP_CSS: &str = r#"
+.empty-state {
+  border-radius: 18px;
+  padding: 22px;
+  background: alpha(@card_bg_color, 0.72);
+}
+
+.summary-card {
+  border-radius: 18px;
+  padding: 14px;
+  background: alpha(@card_bg_color, 0.72);
+}
+
+.network-card {
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 6px alpha(black, 0.14);
+}
+
+.wireguard-card {
+  background: linear-gradient(135deg, #3277d8, #174ea6);
+}
+
+.tailnet-card {
+  background: linear-gradient(135deg, #31b891, #147d69);
+}
+
+.network-card-kind,
+.network-card-title,
+.network-card-detail {
+  color: white;
+}
+
+.network-card-kind {
+  opacity: 0.86;
+  font-weight: 700;
+}
+
+.network-card-title {
+  font-size: 1.22em;
+  font-weight: 700;
+}
+
+.network-card-detail {
+  opacity: 0.92;
+  font-family: monospace;
+}
+"#;
