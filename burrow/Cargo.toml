@@ -54,7 +54,7 @@ schemars = "0.8"
 futures = "0.3.28"
 once_cell = "1.19"
 arti-client = "0.40.0"
-hickory-proto = "0.25.2"
+hickory-proto = "0.26.1"
 netstack-smoltcp = "0.2.1"
 tokio-util = { version = "0.7.18", features = ["compat"] }
 tor-rtcompat = "0.40.0"
