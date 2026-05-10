@@ -1,6 +1,6 @@
 module github.com/burrow/forgejo-nsc
 
-go 1.24.4
+go 1.25.0
 
 require (
 	buf.build/gen/go/namespace/cloud/connectrpc/go v1.19.1-20260212004106-290ae81f8d6d.2
@@ -38,7 +38,7 @@ require (
 	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
-	github.com/spf13/pflag v1.0.7 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/spf13/viper v1.14.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
@@ -60,6 +60,6 @@ require (
 	google.golang.org/grpc v1.76.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	helm.sh/helm/v3 v3.18.4 // indirect
+	helm.sh/helm/v3 v3.20.2 // indirect
 	namespacelabs.dev/go-ids v0.0.0-20221124082625-9fc72ee06af7 // indirect
 )
