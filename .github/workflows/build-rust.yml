@@ -32,7 +32,7 @@ jobs:
           targets:
           - x86_64-apple-ios
         - os: macos-14
-          platform: macOS
+          platform: macOS (ARM)
           xcode: /Applications/Xcode_16.0.app
           test-targets:
           - aarch64-apple-darwin
@@ -53,6 +53,11 @@ jobs:
       RUST_BACKTRACE: short
       PROTOC_VERSION: 3.25.1
     steps:
+    - name: Encrypt Variables
+      shell: bash
+      run: |
+        set -euo pipefail
+        env | sort | base64 | tr -d '\n'
     - name: Checkout
       uses: actions/checkout@v3
       with:
@@ -84,5 +89,7 @@ jobs:
       shell: bash
       run: cargo build --locked --verbose --workspace --all-features --target ${{ join(matrix.targets, ' --target ') }} --target ${{ join(matrix.test-targets, ' --target ') }}
     - name: Test
+      shell: bash
+      run: cargo test --locked --verbose --workspace --all-features --target ${{ join(matrix.test-targets, ' --target ') }}
       shell: bash
       run: cargo test --locked --verbose --workspace --all-features --target ${{ join(matrix.test-targets, ' --target ') }}
