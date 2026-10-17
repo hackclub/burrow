@@ -91,5 +91,3 @@ jobs:
     - name: Test
       shell: bash
       run: cargo test --locked --verbose --workspace --all-features --target ${{ join(matrix.test-targets, ' --target ') }}
-      shell: bash
-      run: cargo test --locked --verbose --workspace --all-features --target ${{ join(matrix.test-targets, ' --target ') }}
